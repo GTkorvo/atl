@@ -31,10 +31,10 @@ typedef struct _atom_server {
     thr_mutex_t hash_lock;
     Tcl_HashTable string_hash_table;
     Tcl_HashTable value_hash_table;
+    int next_atom_id;
 } atom_server_struct;
 
 static char *atom_server_host = NULL;
-int next_atom_id = 1000;
 
 static
  send_get_atom_msg_ptr
@@ -132,8 +132,9 @@ char *str;
 	    (send_get_atom_msg_ptr) malloc(sizeof(send_get_atom_msg));
 
 	    stored->atom_string = str;
-	    stored->atom = next_atom_id++;
+	    stored->atom = as->next_atom_id++;
 
+	    thr_mutex_lock(as->hash_lock);
 	    /* enter into string hash table */
 	    entry = Tcl_CreateHashEntry(&as->string_hash_table, str, &new);
 	    Tcl_SetHashValue(entry, stored);
@@ -150,6 +151,7 @@ char *str;
 		exit(1);
 	    }
 	    return_msg =  Tcl_GetHashValue(entry);
+	    thr_mutex_unlock(as->hash_lock);
 #else
 	int return_format_id;
 	DEport_write_data(as->dep, as->get_send_format_id,
@@ -195,32 +197,7 @@ atom_t atom;
 
     if (entry == NULL) {
 #ifndef USE_DATAEXCHANGE
-	    int new;
-	    send_get_atom_msg_ptr msg = &inquiry_msg;
-
-	    char *str = strdup(msg->atom_string);
-	    send_get_atom_msg_ptr stored =
-	    (send_get_atom_msg_ptr) malloc(sizeof(send_get_atom_msg));
-
-	    stored->atom_string = str;
-	    stored->atom = next_atom_id++;
-
-	    /* enter into string hash table */
-	    entry = Tcl_CreateHashEntry(&as->string_hash_table, str, &new);
-	    Tcl_SetHashValue(entry, stored);
-	    if (!new) {
-		fprintf(stderr, "Serious internal error in atom server.  Duplicate string hash entry.\n");
-		exit(1);
-	    }
-	    /* enter into value hash table */
-	    entry = Tcl_CreateHashEntry(&as->value_hash_table,
-					(char *) stored->atom, &new);
-	    Tcl_SetHashValue(entry, stored);
-	    if (!new) {
-		printf("Serious internal error in atom server.  Duplicate value hash entry.\n");
-		exit(1);
-	    }
-	    return_msg =  Tcl_GetHashValue(entry);
+	assert(0);
 #else
 	int return_format_id;
 	DEport_write_data(as->dep, as->get_send_format_id,
@@ -300,7 +277,7 @@ atom_cache_type cache_style;
     Tcl_InitHashTable(&as->string_hash_table, TCL_STRING_KEYS);
     Tcl_InitHashTable(&as->value_hash_table, TCL_ONE_WORD_KEYS);
     as->hash_lock = thr_mutex_alloc();
-
+    as->next_atom_id = 1000;
 #ifdef USE_DATAEXCHANGE
     {
 	send_get_atom_msg_ptr return_msg;

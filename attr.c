@@ -31,15 +31,40 @@ typedef struct _attr_list_struct {
 
 atom_server global_as = NULL;
 
+static
+void
+init_global_atom_server(asp)
+atom_server *asp;
+{
+    char *addr_str;
+    char var_str[60];
+    
+    if (*asp != NULL) return;
+    /*
+     * for notes on my we're doing funny things with the "global" value, 
+     * global_as, see the comments in gen_info.c.  This is similar.
+     */
+    sprintf(var_str, "ATOM_SERVER_ADDRESS_%lx", (long) getpid());
+    if ((addr_str = getenv(var_str)) == NULL) {
+	char addr_tmp[64];
+	*asp = init_atom_server(prefill_atom_cache);
+	printf("New global AS = %lx addr = %lx\n", *asp, asp);
+	sprintf(addr_tmp, "%s=%lx", var_str, *asp);
+	addr_str = strdup(addr_tmp);
+	putenv(addr_str);
+	printf("after putenv, value is %s\n", getenv(var_str));
+    } else {
+	sscanf(addr_str, "%lx", asp);
+	printf("Set global AS = %lx addr = %lx\n", *asp, asp);
+    }
+}
 /* operations on attr_lists */
 extern attr_list
 create_attr_list()
 {
     attr_list list = malloc(sizeof(attr_list_struct));
 
-    if (global_as == NULL) {
-	global_as = init_atom_server(prefill_atom_cache);
-    }
+    init_global_atom_server(&global_as);
     list->list_of_lists = 0;
     list->ref_count = 1;
     Tcl_InitHashTable(&(list->l.list.attr_hash_table), TCL_ONE_WORD_KEYS);
@@ -71,9 +96,7 @@ attr_list list2;
     }
     list = malloc(sizeof(attr_list_struct));
 
-    if (global_as == NULL) {
-	global_as = init_atom_server(prefill_atom_cache);
-    }
+    init_global_atom_server(&global_as);
     list->list_of_lists = 1;
     list->ref_count = 1;
     list->l.lists.lists = (attr_list *)malloc(sizeof(attr_list) *2);
@@ -90,9 +113,7 @@ attr_add_list(list1, list2)
 attr_list list1;
 attr_list list2;
 {
-    if (global_as == NULL) {
-	global_as = init_atom_server(prefill_atom_cache);
-    }
+    init_global_atom_server(&global_as);
     if (list1->list_of_lists == 0) {
 	return attr_join_lists(list1, list2);
     }
@@ -202,6 +223,7 @@ attr_list list;
 int indent;
 {
     int i;
+    init_global_atom_server(&global_as);
     if (list == NULL) {
 	printf("[NULL]\n");
 	return;
@@ -236,6 +258,24 @@ int indent;
 		printf("    { %s, Attr_String, NULL }\n", attr_name);
 	    }
 	    break;
+	case Attr_Opaque:
+	    if (((char*)list->l.list.attributes[i].value) != NULL) {
+		int j;
+		attr_opaque_p o = 
+		    (attr_opaque_p) list->l.list.attributes[i].value;
+		printf("    { %s, Attr_Opaque, \"", attr_name);
+		for (j=0; j< o->length; j++) {
+		    printf("%c", ((char*)o->buffer)[j]);
+		}
+		printf("\"\n		<");
+		for (j=0; j< o->length; j++) {
+		    printf(" %02x", ((unsigned char*)o->buffer)[j]);
+		}
+		printf(">}\n");
+	    } else {
+		printf("    { %s, Attr_Opaque, NULL }\n", attr_name);
+	    }
+	    break;
 	case Attr_Atom:
 	    atom_str = string_from_atom(global_as,
 				     (atom_t) (long)list->l.list.attributes[i].value);
@@ -264,6 +304,8 @@ extern void
 dump_attr_list(list)
 attr_list list;
 {
+    
+    init_global_atom_server(&global_as);
     internal_dump_attr_list(list, 0);
 }
 
@@ -295,15 +337,236 @@ int indent;
     printf("]\n");
 }
 
+static char*
+strdqcat(str, size_p, str2)
+char *str;
+int *size_p;
+char *str2;
+{
+    int str2_len = strlen(str2);
+    str = realloc(str, *size_p + str2_len + 1);
+    strcpy(str + *size_p, str2);
+    (*size_p) += str2_len;
+    return str;
+}
+
+static char*
+strdcat(str, size_p, str2)
+char *str;
+int *size_p;
+char *str2;
+{
+    return strdqcat(str, size_p, str2);
+}
+
+static const char xchars [] = "0123456789abcdef";
+
+#define nibble2hex(val) (xchars[val & 0x0f])
+
+static
+unsigned char
+hex2byte (char c)
+{
+    if (isdigit ((int)c))
+	return (unsigned char) (c - '0');
+    else if (islower ((int)c))
+	return (unsigned char) (10 + c - 'a');
+    else
+	return (unsigned char) (10 + c - 'A');
+}
+
+static char *
+add_list_to_string(str, size_p, list)
+char *str;
+int *size_p;
+attr_list list;
+{
+    int i;
+    init_global_atom_server(&global_as);
+    for (i = 0; i < attr_count(list); i++) {
+	attr_p tmp = get_attr(list, i);
+	char str_tmp[128];
+	memset(str_tmp, 0, sizeof(str_tmp));
+	if (tmp->val_type == Attr_List) continue;
+#ifdef SHARED_ATTR_NUMS
+	sprintf(str_tmp, "{%d", tmp->attr_id);
+#else
+	sprintf(str_tmp, "{%s", string_from_atom(global_as, tmp->attr_id));
+#endif
+	str = strdcat(str, size_p, str_tmp);
+	switch(tmp->val_type) {
+	case Attr_Undefined:
+	    str = strdcat(str, size_p, ",U,");
+	    break;
+	case Attr_Int4:
+	    sprintf(str_tmp, ",4,%d", (int) (long)tmp->value);
+	    str = strdcat(str, size_p, str_tmp);
+	    break;
+	case Attr_Int8:
+	    sprintf(str_tmp, ",8,%ld", (long) tmp->value);
+	    str = strdcat(str, size_p, str_tmp);
+	    break;
+	case Attr_String:
+	    {
+		char tmp_str[24];
+		sprintf(tmp_str, ",S%d,", strlen(tmp->value));
+		str = strdcat(str, size_p, tmp_str);
+		str = strdcat(str, size_p, (char*)tmp->value);
+	    }
+	    break;
+	case Attr_Opaque: {
+	    attr_opaque_p o = (attr_opaque_p) tmp->value;
+	    if (o == NULL) {
+		str = strdcat(str, size_p, ",O0,");
+	    } else {
+		char tmp3[3];
+		int i;
+		sprintf(str_tmp, ",O%d,", o->length);
+		str = strdcat(str, size_p, str_tmp);
+		tmp3[2] = 0;
+		for (i=0; i<o->length; i++) {
+		    tmp3[0] = nibble2hex(((char*)o->buffer)[i] >> 4);
+		    tmp3[1] = nibble2hex(((char*)o->buffer)[i]);
+		    str = strdcat(str, size_p, tmp3);
+		}
+	    }
+	    break;
+	}
+	case Attr_Atom:
+	    sprintf(str_tmp, ",A,%d", (int) (long)tmp->value);
+	    str = strdcat(str, size_p, str_tmp);
+	    break;
+	case Attr_List:
+	default:
+	    assert(0);
+	}
+	str = strdqcat(str, size_p, "},");
+    }
+    return str;
+}
+
+static int
+add_list_from_string(str, list)
+char *str;
+attr_list list;
+{
+    while (1) {
+	char *first_comma = strchr(str, ',');
+	char *value = first_comma ? strchr(first_comma+1, ',') : NULL;
+	char *end = NULL;
+	int attr_id, length;
+	attr_value_type val_type = Attr_Undefined;
+	attr_value val;
+	
+	if (*str == 0) return 1;   /* success */
+	if (value == NULL) return 0;
+#ifdef SHARED_ATTR_NUMS
+	if (sscanf(str, "{%d,", &attr_id) != 1) return 0;
+#else
+	
+	{ 
+	    int len = first_comma - str - 1;
+	    char * atom_name = malloc(len + 1);
+	    strncat(atom_name, (str+1), len);
+	    atom_name[len] = 0;
+	    attr_id = attr_atom_from_string(atom_name);
+	    free(atom_name);
+	}
+#endif
+	switch(*(first_comma+1)) {
+	case 'U':
+	    val_type = Attr_Undefined;
+	    end = value + 2;
+	    break;
+	case '4':
+	    val_type = Attr_Int4;
+	    if (sscanf(value, ",%d", (int*)&val) != 1) return 0;
+	    end = strchr(value+1, ',') + 1;
+	    if (end == (char*)1) end = value + strlen(value);
+	    break;
+	case '8':
+	    val_type = Attr_Int8;
+	    if (sscanf(value, ",%ld", (long*)&val) != 1) return 0;
+	    end = strchr(value+1, ',') + 1;
+	    if (end == (char*)1) end = value + strlen(value);
+	    break;
+	case 'A':
+	    val_type = Attr_Atom;
+	    if (sscanf(value, ",%d", (int*)&val) != 1) return 0;
+	    end = strchr(value+1, ',') + 1;
+	    if (end == (char*)1) end = value + strlen(value);
+	    break;
+	case 'S':
+	    val_type = Attr_String;
+	    sscanf(first_comma+2, "%d", &length);
+	    end = value+1+length;
+	    val = malloc(length+1);
+	    strncpy(val, value+1, length);
+	    ((char*)val)[length] = 0; /* terminate string */
+	    end += 2;
+	    break;
+	case 'O': {
+	    int len;
+	    if (sscanf(first_comma + 2, "%d", &len) != 1) return 0;
+	    while (*value != ',') value++; /* skip to start of buffer */
+	    value++;
+	    val_type = Attr_Opaque;
+	    if (len == 0) {
+		val = (attr_value) NULL;
+	    } else {
+		attr_opaque_p o = malloc(sizeof(attr_opaque));
+		int i;
+		val = (attr_value)o;
+		o->length = len;
+		o->buffer = malloc(len);
+		for (i=0 ; i < len; i++) {
+		    unsigned char	byte;
+		    byte = (unsigned char) (hex2byte (value[0]) << 4);
+		    byte |= hex2byte (value [1]);
+		    ((char*)o->buffer)[i] = byte;
+		    value += 2;
+		}
+	    }
+	    end = value + 2;
+	    break;
+	}    
+	default:
+	    assert(0);
+	}
+	add_attr(list, attr_id, val_type, val);
+	str = end;
+    }
+}
+
+extern
+char *
+attr_list_to_string(attrs)
+attr_list attrs;
+{
+    int size = 0;
+    return(add_list_to_string(malloc(1), &size, attrs));
+}
+
+extern
+attr_list
+attr_list_from_string(str)
+char * str;
+{
+    attr_list ret_val = create_attr_list();
+    if (add_list_from_string(str, ret_val) != 1) {
+	free_attr_list(ret_val);
+	return NULL;
+    }
+    return ret_val;
+}
+
 extern
  atom_t
 attr_atom_from_string(str)
-char *str;
+const char *str;
 {
-    if (global_as == NULL) {
-	global_as = init_atom_server(prefill_atom_cache);
-    }
-    return atom_from_string(global_as, str);
+    init_global_atom_server(&global_as);
+    return atom_from_string(global_as, (char*)str);
 }
 
 extern
@@ -311,9 +574,7 @@ char *
 attr_string_from_atom(atom)
 atom_t atom;
 {
-    if (global_as == NULL) {
-	global_as = init_atom_server(prefill_atom_cache);
-    }
+    init_global_atom_server(&global_as);
     return string_from_atom(global_as, atom);
 }
 
@@ -389,6 +650,15 @@ attr_list list;
 	    case Attr_String:
 		free((char *)list->l.list.attributes[i].value);
 		break;
+	    case Attr_Opaque: {
+		attr_opaque_p o = 
+		    (attr_opaque_p) list->l.list.attributes[i].value;
+		if (o) {
+		    free(o->buffer);
+		    free(o);
+		}
+		break;
+	    }
 	    case Attr_List:
 		free_attr_list((attr_list)list->l.list.attributes[i].value);
 		break;

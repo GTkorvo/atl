@@ -41,12 +41,17 @@ char *
 get_server_id ARGS((atom_server as));
 
 typedef enum _attr_value_type { Attr_Undefined, Attr_Int4, Attr_Int8, 
-				Attr_String, Attr_Atom, Attr_List } attr_value_type;
+				Attr_String, Attr_Opaque, Attr_Atom, Attr_List } attr_value_type;
 
 /* opaque type for attr_lists */
 typedef struct _attr_list_struct *attr_list;
 
 typedef void *attr_value;
+
+typedef struct attr_opaque {
+    int length;
+    void *buffer;
+} attr_opaque, *attr_opaque_p;
 
 typedef struct attr {
 #ifdef STRING_ATOMS
@@ -100,7 +105,7 @@ extern void dump_attr_list ARGS(( attr_list attrs ));
 
 extern
 atom_t
-attr_atom_from_string ARGS((char *str));
+attr_atom_from_string ARGS((const char *str));
 
 extern
 char *
@@ -109,6 +114,14 @@ attr_string_from_atom ARGS((atom_t atom));
 extern int attr_count ARGS((attr_list attrs));
 
 extern attr_p get_attr ARGS((attr_list attrs, int index));
+
+extern
+char *
+attr_list_to_string ARGS((attr_list attrs));
+
+extern
+attr_list
+attr_list_from_string ARGS((char * str));
 
 extern
 xmit_object
