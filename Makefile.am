@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = no-dependencies foreign
 
 lib_LTLIBRARIES = libatl.la
 
-noinst_HEADERS = acconfig.h atom_formats.h tclHash.h unix_defs.h
+noinst_HEADERS = atom_formats.h tclHash.h unix_defs.h
 
 libatl_la_SOURCES = atom.c atom_formats.c attr.c tclHash.c gen_info.c
 libatl_la_LIBADD =  

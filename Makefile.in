@@ -62,20 +62,23 @@ host_triplet = @host@
 AS = @AS@
 CC = @CC@
 DLLTOOL = @DLLTOOL@
+EXEEXT = @EXEEXT@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+STRIP = @STRIP@
 VERSION = @VERSION@
 
 AUTOMAKE_OPTIONS = no-dependencies foreign
 
 lib_LTLIBRARIES = libatl.la
 
-noinst_HEADERS = acconfig.h atom_formats.h tclHash.h unix_defs.h
+noinst_HEADERS = atom_formats.h tclHash.h unix_defs.h
 
 libatl_la_SOURCES = atom.c atom_formats.c attr.c tclHash.c gen_info.c
 libatl_la_LIBADD = 
@@ -96,7 +99,7 @@ atom_test_LDADD = libatl.la
 atom_test_LDFLAGS = 
 atom_test_DEPENDENCIES = libatl.la
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = 
 LTLIBRARIES =  $(lib_LTLIBRARIES)
@@ -108,10 +111,11 @@ LDFLAGS = @LDFLAGS@
 libatl_la_DEPENDENCIES = 
 libatl_la_OBJECTS =  atom.lo atom_formats.lo attr.lo tclHash.lo \
 gen_info.lo
+bin_PROGRAMS =  attr_test$(EXEEXT) atom_test$(EXEEXT)
 PROGRAMS =  $(bin_PROGRAMS)
 
-attr_test_OBJECTS =  attr_test.o
-atom_test_OBJECTS =  atom_test.o
+attr_test_OBJECTS =  attr_test.$(OBJEXT)
+atom_test_OBJECTS =  atom_test.$(OBJEXT)
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -119,9 +123,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
 HEADERS =  $(include_HEADERS) $(noinst_HEADERS)
 
-DIST_COMMON =  ./stamp-h.in Makefile.am Makefile.in acconfig.h \
-aclocal.m4 config.guess config.h.in config.sub configure configure.in \
-install-sh ltconfig ltmain.sh missing mkinstalldirs
+DIST_COMMON =  ./stamp-h.in Makefile.am Makefile.in aclocal.m4 \
+config.h.in configure configure.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -133,7 +136,7 @@ OBJECTS = $(libatl_la_OBJECTS) $(attr_test_OBJECTS) $(atom_test_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .lo .o .obj .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign Makefile
 
@@ -164,7 +167,7 @@ $(srcdir)/config.h.in: $(srcdir)/stamp-h.in
 		rm -f $(srcdir)/stamp-h.in; \
 		$(MAKE) $(srcdir)/stamp-h.in; \
 	else :; fi
-$(srcdir)/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) acconfig.h
+$(srcdir)/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOHEADER)
 	@echo timestamp > $(srcdir)/stamp-h.in 2> /dev/null
 
@@ -205,6 +208,11 @@ uninstall-libLTLIBRARIES:
 .c.o:
 	$(COMPILE) -c $<
 
+# FIXME: We should only use cygpath when building on Windows,
+# and only if it is available.
+.c.obj:
+	$(COMPILE) -c `cygpath -w $<`
+
 .s.o:
 	$(COMPILE) -c $<
 
@@ -213,6 +221,7 @@ uninstall-libLTLIBRARIES:
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
+	-rm -f *.$(OBJEXT)
 
 clean-compile:
 
@@ -268,12 +277,12 @@ uninstall-binPROGRAMS:
 	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
 
-attr_test: $(attr_test_OBJECTS) $(attr_test_DEPENDENCIES)
-	@rm -f attr_test
+attr_test$(EXEEXT): $(attr_test_OBJECTS) $(attr_test_DEPENDENCIES)
+	@rm -f attr_test$(EXEEXT)
 	$(LINK) $(attr_test_LDFLAGS) $(attr_test_OBJECTS) $(attr_test_LDADD) $(LIBS)
 
-atom_test: $(atom_test_OBJECTS) $(atom_test_DEPENDENCIES)
-	@rm -f atom_test
+atom_test$(EXEEXT): $(atom_test_OBJECTS) $(atom_test_DEPENDENCIES)
+	@rm -f atom_test$(EXEEXT)
 	$(LINK) $(atom_test_LDFLAGS) $(atom_test_OBJECTS) $(atom_test_LDADD) $(LIBS)
 
 install-includeHEADERS: $(include_HEADERS)
@@ -282,7 +291,7 @@ install-includeHEADERS: $(include_HEADERS)
 	@list='$(include_HEADERS)'; for p in $$list; do \
 	  if test -f "$$p"; then d= ; else d="$(srcdir)/"; fi; \
 	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(includedir)/$$p"; \
-	  cmp -s $$d$$p $(DESTDIR)$(includedir)/$$p || $(INSTALL_DATA) $$d$$p $(DESTDIR)$(includedir)/$$p; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(includedir)/$$p; \
 	done
 
 uninstall-includeHEADERS:
