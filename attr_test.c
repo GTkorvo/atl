@@ -20,6 +20,7 @@ main()
     string = attr_list_to_string(list);
     printf("\n");
     printf("String is >%s<\n", string);
+    add_attr(list2, attr_atom_from_string("sublists?"), Attr_List, list);
     list3 = attr_list_from_string(string);
     printf("\n");
     dump_attr_list(list3);
