@@ -55,8 +55,6 @@ atom_to_string(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_hash_tab
 int
 string_to_atom(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_hash_table, char *a)
 {
-    static int next_atom_value = 2000;
-
     Tcl_HashEntry *entry = NULL;
     send_get_atom_msg_ptr return_msg;
 
@@ -68,11 +66,8 @@ string_to_atom(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_hash_tab
     if (entry) {
 	return_msg = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
 	return return_msg->atom;
-    } else {
-	set_string_and_atom(string_hash_table, value_hash_table, a,
-			    next_atom_value++);
     }
-    return next_atom_value - 1;	/* the string was not in the db */
+    return -1;	/* the string was not in the db */
 
 }
 

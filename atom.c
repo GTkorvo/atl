@@ -301,7 +301,12 @@ char *str;
 
 	tmp_rec.atom_string = str;
 	tmp_rec.atom = atoi(&buf[1]);
-	enter_atom_into_cache(as, &tmp_rec);
+	/* enter into cache only if we got an answer */
+	if (tmp_rec.atom != -1) {
+	    enter_atom_into_cache(as, &tmp_rec);
+	} else {
+	    printf("No atom value found for string\"%s\".\n", str);
+	}
 	return tmp_rec.atom;
     } else {
 	return ((send_get_atom_msg_ptr) Tcl_GetHashValue(entry))->atom;
