@@ -21486,8 +21486,95 @@ _ACEOF
 
 fi
 
-AC_PUTENV_DEFINED
-AC_SSCANF_DEFINED
+echo "$as_me:$LINENO: checking whether unistd.h or stdlib.h declares putenv" >&5
+echo $ECHO_N "checking whether unistd.h or stdlib.h declares putenv... $ECHO_C" >&6
+if test "${ac_cv_putenv_found+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <stdlib.h>
+
+_ACEOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  $EGREP "[^a-zA-Z_]putenv[^a-zA-Z_]" >/dev/null 2>&1; then
+  ac_cv_putenv_found=yes
+else
+  ac_cv_putenv_found=no
+fi
+rm -f conftest*
+
+if test $ac_cv_putenv_found != yes; then
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <unistd.h>
+
+_ACEOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  $EGREP "[^a-zA-Z_]putenv[^a-zA-Z_]" >/dev/null 2>&1; then
+  ac_cv_putenv_found=yes
+else
+  ac_cv_putenv_found=no
+fi
+rm -f conftest*
+
+fi
+
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_putenv_found" >&5
+echo "${ECHO_T}$ac_cv_putenv_found" >&6
+if test $ac_cv_putenv_found = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define PUTENV_DEFINED 1
+_ACEOF
+
+fi
+
+echo "$as_me:$LINENO: checking whether stdio.h declares sscanf" >&5
+echo $ECHO_N "checking whether stdio.h declares sscanf... $ECHO_C" >&6
+if test "${ac_cv_sscanf_found+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <stdio.h>
+
+_ACEOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  $EGREP "[^a-zA-Z_]sscanf[^a-zA-Z_]" >/dev/null 2>&1; then
+  ac_cv_sscanf_found=yes
+else
+  ac_cv_sscanf_found=no
+fi
+rm -f conftest*
+
+
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_sscanf_found" >&5
+echo "${ECHO_T}$ac_cv_sscanf_found" >&6
+if test $ac_cv_sscanf_found = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define SSCANF_DEFINED 1
+_ACEOF
+
+fi
+
 
 echo "$as_me:$LINENO: checking return type of signal handlers" >&5
 echo $ECHO_N "checking return type of signal handlers... $ECHO_C" >&6
