@@ -271,7 +271,7 @@ attr_value value;
 	    list->l.list.iattrs = realloc(list->l.list.iattrs, size);
 	}
 	list->l.list.iattrs->iattr[count].attr_id = attr_id;
-	list->l.list.iattrs->iattr[count].value = (int4) value;
+	list->l.list.iattrs->iattr[count].value = (int4) (long) value;
 	list->l.list.iattrs->int_attr_count++;
     } else {
 	int count = list->l.list.iattrs->other_attr_count;
@@ -314,7 +314,7 @@ attr_value value;
     if (val_type == Attr_Int4) {
 	while (index < list->l.list.iattrs->int_attr_count) {
 	    if (list->l.list.iattrs->iattr[index].attr_id == attr_id) {
-		list->l.list.iattrs->iattr[index].value = (int)value;
+		list->l.list.iattrs->iattr[index].value = (int4)(long)value;
 		return 1;
 	    }
 	}
@@ -783,12 +783,12 @@ char * str;
     } else {
 	attr_list ret_val;
 	unsigned char *output = (unsigned char *)str;
-	if (((int)str & 0x3) != 0) { /* not aligned */
-	    output = strdup((char *)str);
+	if (((int)(long)str & 0x3) != 0) { /* not aligned */
+	    output = (unsigned char *) strdup((char *)str);
 	}
 	base64_decode((unsigned char *)str, output);
 	ret_val = decode_attr_from_xmit(output);
-	if (((int)str & 0x3) != 0) { /* not aligned */
+	if (((int)(long)str & 0x3) != 0) { /* not aligned */
 	    free(output);
 	}
 	return ret_val;
@@ -1047,7 +1047,7 @@ static
 void *
 add_to_tmp_buffer(buf, size)
 AttrBuffer buf;
-int size;
+unsigned int size;
 {
     int old_size = buf->tmp_buffer_in_use_size;
     size += old_size;
@@ -1079,7 +1079,7 @@ recursive_encode(attr_list l, AttrBuffer b, attr_value_type t)
 	    int attr_count = l->l.list.iattrs->int_attr_count;
 	    void *buffer_end;
 	    if (attr_count == 0) return;
-	    buffer_end = add_to_tmp_buffer(b, attr_count * sizeof(int_attr));
+	    buffer_end = add_to_tmp_buffer(b, (int) attr_count * sizeof(int_attr));
 	    memcpy(buffer_end, &l->l.list.iattrs->iattr[0], 
 		   attr_count * sizeof(int_attr));
 	    ((int_attr_p) b->tmp_buffer)->int_attr_count += attr_count;
@@ -1099,7 +1099,7 @@ recursive_encode(attr_list l, AttrBuffer b, attr_value_type t)
 		    break;
 		case Attr_Atom:
 		    buffer_end = add_to_tmp_buffer(b, 4);
-		    *((int*)buffer_end) = (int) attr->value;
+		    *((int*)buffer_end) = (int) (long)attr->value;
 		    break;
 		case Attr_Int8:
 		    buffer_end = add_to_tmp_buffer(b, 8);
@@ -1268,7 +1268,7 @@ decode_attr_from_xmit(void * buf)
 
 static const char num_to_char[] =
    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-static const char char_to_num[256] = {
+static const char signed char_to_num[256] = {
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,62, -1,-1,-1,63,
