@@ -23,7 +23,9 @@ print_atom(int atom)
 int
 main()
 {
-    atom_server as = init_atom_server(prefill_atom_cache);
+    atom_server as;
+    gen_pthread_init();
+    as = init_atom_server(prefill_atom_cache);
     printf("Connected to server \"%s\"\n", get_server_id(as));
     printf("Usage:   D<number> to translate a decimal value to a string\n");
     printf("         X<number> to translate a hex value to a string\n");

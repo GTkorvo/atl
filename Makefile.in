@@ -92,11 +92,11 @@ noinst_HEADERS = tclHash.h unix_defs.h
 
 libatl_la_SOURCES = atom.c attr.c tclHash.c
 libatl_la_DEPENDENCIES = @KERNEL_OBJS@
-libatl_la_LIBADD = @KERNEL_OBJS@
+libatl_la_LIBADD = @KERNEL_OBJS@ -lcercs_env
 libatl_la_LDFLAGS = -no-undefined $(SOCKET_LIBS) $(THREAD_LIBS)
 
 @KERNEL_TRUE@bin_PROGRAMS = 
-@KERNEL_FALSE@bin_PROGRAMS = attr_test atom_test atom_server
+@KERNEL_FALSE@bin_PROGRAMS = attr_test atom_test atom_server attr_dump
 @KERNEL_TRUE@BUILT_SOURCES = strtol.c env.c katl.c
 @KERNEL_TRUE@MOSTLYCLEANFILES = atl_module.o
 @KERNEL_FALSE@lib_LTLIBRARIES = libatl.la
@@ -114,6 +114,9 @@ atom_test_LDADD = libatl.la
 atom_test_LDFLAGS = 
 atom_test_DEPENDENCIES = libatl.la
 
+attr_dump_LDADD = libatl.la
+attr_dump_DEPENDENCIES = libatl.la
+
 atom_server_SOURCES = atom_server.c tclHash.c
 atom_server_LDADD = $(SOCKET_LIBS)
 atom_server_LDFLAGS = -static
@@ -129,13 +132,16 @@ am_libatl_la_OBJECTS = atom.lo attr.lo tclHash.lo
 libatl_la_OBJECTS = $(am_libatl_la_OBJECTS)
 @KERNEL_TRUE@bin_PROGRAMS =
 @KERNEL_FALSE@bin_PROGRAMS = attr_test$(EXEEXT) atom_test$(EXEEXT) \
-@KERNEL_FALSE@	atom_server$(EXEEXT)
+@KERNEL_FALSE@	atom_server$(EXEEXT) attr_dump$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
 am_atom_server_OBJECTS = atom_server.$(OBJEXT) tclHash.$(OBJEXT)
 atom_server_OBJECTS = $(am_atom_server_OBJECTS)
 am_atom_test_OBJECTS = atom_test.$(OBJEXT)
 atom_test_OBJECTS = $(am_atom_test_OBJECTS)
+attr_dump_SOURCES = attr_dump.c
+attr_dump_OBJECTS = attr_dump.$(OBJEXT)
+attr_dump_LDFLAGS =
 am_attr_test_OBJECTS = attr_test.$(OBJEXT)
 attr_test_OBJECTS = $(am_attr_test_OBJECTS)
 
@@ -153,15 +159,15 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(libatl_la_SOURCES) $(atom_server_SOURCES) \
-	$(atom_test_SOURCES) $(attr_test_SOURCES)
+	$(atom_test_SOURCES) attr_dump.c $(attr_test_SOURCES)
 HEADERS = $(include_HEADERS) $(noinst_HEADERS)
 
-DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) ././stamp-h1.in \
-	./stamp-h1.in Makefile.am Makefile.in aclocal.m4 config.h.in \
+DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) ./stamp-h1.in \
+	Makefile.am Makefile.in acinclude.m4 aclocal.m4 config.h.in \
 	config/config.guess config/config.sub config/install-sh \
 	config/ltconfig config/ltmain.sh config/missing \
 	config/mkinstalldirs configure configure.in
-SOURCES = $(libatl_la_SOURCES) $(atom_server_SOURCES) $(atom_test_SOURCES) $(attr_test_SOURCES)
+SOURCES = $(libatl_la_SOURCES) $(atom_server_SOURCES) $(atom_test_SOURCES) attr_dump.c $(attr_test_SOURCES)
 
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -190,7 +196,7 @@ $(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 $(srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.in 
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.in acinclude.m4
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 config.h: stamp-h1
 	@if test ! -f $@; then \
@@ -268,6 +274,9 @@ atom_server$(EXEEXT): $(atom_server_OBJECTS) $(atom_server_DEPENDENCIES)
 atom_test$(EXEEXT): $(atom_test_OBJECTS) $(atom_test_DEPENDENCIES) 
 	@rm -f atom_test$(EXEEXT)
 	$(LINK) $(atom_test_LDFLAGS) $(atom_test_OBJECTS) $(atom_test_LDADD) $(LIBS)
+attr_dump$(EXEEXT): $(attr_dump_OBJECTS) $(attr_dump_DEPENDENCIES) 
+	@rm -f attr_dump$(EXEEXT)
+	$(LINK) $(attr_dump_LDFLAGS) $(attr_dump_OBJECTS) $(attr_dump_LDADD) $(LIBS)
 attr_test$(EXEEXT): $(attr_test_OBJECTS) $(attr_test_DEPENDENCIES) 
 	@rm -f attr_test$(EXEEXT)
 	$(LINK) $(attr_test_LDFLAGS) $(attr_test_OBJECTS) $(attr_test_LDADD) $(LIBS)
@@ -348,7 +357,7 @@ GZIP_ENV = --best
 distdir: $(DISTFILES)
 	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/./. $(distdir)/config
+	$(mkinstalldirs) $(distdir)/config
 	@for file in $(DISTFILES); do \
 	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \

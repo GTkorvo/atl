@@ -103,9 +103,16 @@ char *msg;
 		(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
 		if ((atom_entry != NULL) && (atom_entry->atom != atom)) {
 		    printf("Warning:  Atom use inconsistency.\n");
-		    printf("\tThis program associates the string \"%s\" with atom value %d\n",
-			   str, atom_entry->atom);
-		    printf("\tOther programs use the atom value %d\n", atom);
+		    printf("\tThis program associates the string \"%s\" with atom value %d, %x, '%c%c%c%c'\n",
+			   str, atom_entry->atom, atom_entry->atom,
+			   ((char*)&atom_entry->atom)[0],
+			   ((char*)&atom_entry->atom)[1],
+			   ((char*)&atom_entry->atom)[2],
+			   ((char*)&atom_entry->atom)[3]);
+		    printf("\tOther programs use the atom value %d, %x, '%c%c%c%c'\n", atom,
+			   atom, ((char*)&atom)[0], ((char*)&atom)[1], 
+			((char*)&atom)[2], ((char*)&atom)[3]
+			);
 		}
 	    }
 	    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) atom);
@@ -115,12 +122,18 @@ char *msg;
 		if ((atom_entry != NULL) &&
 		    (strcmp(atom_entry->atom_string, str) != 0)) {
 		    printf("Warning:  Atom use inconsistency.\n");
-		    printf("\tThis program associates the string \"%s\" with atom value %d\n",
-			   atom_entry->atom_string, atom_entry->atom);
+		    printf("\tThis program associates the string \"%s\" with atom value %d, %x, '%c%c%c%c'\n",
+			   atom_entry->atom_string, atom_entry->atom,
+			   atom_entry->atom, 
+			   ((char*)&atom_entry->atom)[0],
+			   ((char*)&atom_entry->atom)[1],
+			   ((char*)&atom_entry->atom)[2],
+			   ((char*)&atom_entry->atom)[3]);
 		    printf("\tOther programs associate the string \"%s\" with that value\n", str);
 		}
-		printf("Atom cache inconsistency, tried to associate value %d with string \"%s\"\n	Previous association was string \"%s\"\n",
-		       atom, str, atom_entry->atom_string);
+		printf("Atom cache inconsistency, tried to associate value %d %x, '%c%c%c%c' with string \"%s\"\n	Previous association was string \"%s\"\n",
+		       atom, atom, ((char*)&atom)[0], ((char*)&atom)[1], 
+		       ((char*)&atom)[2], ((char*)&atom)[3], str, atom_entry->atom_string);
 	    }
 	    thr_mutex_unlock(as->hash_lock);
 	    break;
@@ -189,7 +202,6 @@ atom_t atom;
     int numbytes, len;
     char buf[MAXDATASIZE];
     int addr_len = sizeof(struct sockaddr);
-    printf("Set string and atom called with %s, %d\n", str, atom);
 
     thr_mutex_lock(as->hash_lock);
     entry = Tcl_FindHashEntry(&as->string_hash_table, str);
@@ -197,26 +209,35 @@ atom_t atom;
 	send_get_atom_msg_ptr atom_entry =
 	(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
 	if ((atom_entry != NULL) && (atom_entry->atom != atom)) {
-	    printf("Atom cache inconsistency, tried to associate string \"%s\" with value %d\n	Previous association was value %d\n",
-		   str, atom, atom_entry->atom);
+	    printf("Atom cache inconsistency, tried to associate string \"%s\" with value %d, %x, '%c%c%c%c'\n	Previous association was value %d, %x, '%c%c%c%c'\n", 
+
+		   str, atom, atom, ((char*)&atom)[0], ((char*)&atom)[1], 
+		   ((char*)&atom)[2], ((char*)&atom)[3], atom_entry->atom,
+		   atom_entry->atom, ((char*)&atom_entry->atom)[0],
+		   ((char*)&atom_entry->atom)[1],
+		   ((char*)&atom_entry->atom)[2],
+		   ((char*)&atom_entry->atom)[3]);
+	    thr_mutex_unlock(as->hash_lock);
 	    return;
 	}
     }
     entry2 = Tcl_FindHashEntry(&as->value_hash_table, (char *) atom);
+    thr_mutex_unlock(as->hash_lock);
     if (entry2 != NULL) {
 	send_get_atom_msg_ptr atom_entry =
 	(send_get_atom_msg_ptr) Tcl_GetHashValue(entry2);
 	if ((atom_entry != NULL) &&
 	    (strcmp(atom_entry->atom_string, str) != 0)) {
-	    printf("Atom cache inconsistency, tried to associate value %d with string \"%s\"\n	Previous association was string \"%s\"\n",
-		   atom, str, atom_entry->atom_string);
+	    printf("Atom cache inconsistency, tried to associate value %d, %x, '%c%c%c%c' with string \"%s\"\n	Previous association was string \"%s\"\n",
+		   atom, atom, ((char*)&atom)[0], ((char*)&atom)[1], 
+		   ((char*)&atom)[2], ((char*)&atom)[3], str, 
+		   atom_entry->atom_string);
 	    return;
 	}
     }
     tmp_value.atom = atom;
     tmp_value.atom_string = str;
     enter_atom_into_cache(as, &tmp_value);
-    thr_mutex_unlock(as->hash_lock);
 
     sprintf(buf, "A%d %s", atom, str);
     len = strlen(buf);

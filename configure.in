@@ -61,6 +61,10 @@ AC_SUBST(KERNEL_TARGET_MOD)
 dnl Checks for libraries.
 AC_REQUIRE_HPPCEL_PACKAGE(pbio, io.h, ${LIB_PRE}IO${LIB_POST})
 AC_REQUIRE_HPPCEL_PACKAGE(gen_thread, gen_thread.h,libgen_thread.la)
+CERCS_REQUIRE_PACKAGE(cercs_env, cercs_env.h,libcercs_env.la)
+if test -n "$cercs_cv_cercs_env_link_dir"; then
+LDFLAGS="$LDFLAGS -L$cercs_cv_cercs_env_link_dir"
+fi
 if test -n "$ac_cv_gen_thread_link_arg"; then
 THREAD_LIBS="-lgen_thread"
 fi
@@ -85,6 +89,9 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS(malloc.h sys/time.h unistd.h windows.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_BIGENDIAN_CROSS($bigendian_default)
+AC_COMPILE_CHECK_SIZEOF(int)
+AC_COMPILE_CHECK_SIZEOF(short)
 AC_C_CONST
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T

@@ -11,6 +11,116 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
+dnl @synopsis AC_COMPILE_CHECK_SIZEOF(TYPE [, HEADERS [, EXTRA_SIZES...]])
+dnl
+dnl This macro checks for the size of TYPE using compile checks, not
+dnl run checks. You can supply extra HEADERS to look into. the check
+dnl will cycle through 1 2 4 8 16 and any EXTRA_SIZES the user
+dnl supplies. If a match is found, it will #define SIZEOF_`TYPE' to
+dnl that value. Otherwise it will emit a configure time error
+dnl indicating the size of the type could not be determined.
+dnl
+dnl The trick is that C will not allow duplicate case labels. While
+dnl this is valid C code:
+dnl
+dnl      switch (0) case 0: case 1:;
+dnl
+dnl The following is not:
+dnl
+dnl      switch (0) case 0: case 0:;
+dnl
+dnl Thus, the AC_TRY_COMPILE will fail if the currently tried size
+dnl does not match.
+dnl
+dnl Here is an example skeleton configure.in script, demonstrating the
+dnl macro's usage:
+dnl
+dnl      AC_PROG_CC
+dnl      AC_CHECK_HEADERS(stddef.h unistd.h)
+dnl      AC_TYPE_SIZE_T
+dnl      AC_CHECK_TYPE(ssize_t, int)
+dnl
+dnl      headers='#ifdef HAVE_STDDEF_H
+dnl      #include <stddef.h>
+dnl      #endif
+dnl      #ifdef HAVE_UNISTD_H
+dnl      #include <unistd.h>
+dnl      #endif
+dnl      '
+dnl
+dnl      AC_COMPILE_CHECK_SIZEOF(char)
+dnl      AC_COMPILE_CHECK_SIZEOF(short)
+dnl      AC_COMPILE_CHECK_SIZEOF(int)
+dnl      AC_COMPILE_CHECK_SIZEOF(long)
+dnl      AC_COMPILE_CHECK_SIZEOF(unsigned char *)
+dnl      AC_COMPILE_CHECK_SIZEOF(void *)
+dnl      AC_COMPILE_CHECK_SIZEOF(size_t, $headers)
+dnl      AC_COMPILE_CHECK_SIZEOF(ssize_t, $headers)
+dnl      AC_COMPILE_CHECK_SIZEOF(ptrdiff_t, $headers)
+dnl      AC_COMPILE_CHECK_SIZEOF(off_t, $headers)
+dnl
+dnl @author Kaveh Ghazi <ghazi@caip.rutgers.edu>
+dnl @version $Id: aclocal.m4,v 1.20 2002-08-06 18:35:15 eisen Exp $
+dnl
+AC_DEFUN(AC_COMPILE_CHECK_SIZEOF,
+[changequote(<<, >>)dnl
+dnl The name to #define.
+define(<<AC_TYPE_NAME>>, translit(sizeof_$1, [a-z *], [A-Z_P]))dnl
+dnl The cache variable name.
+define(<<AC_CV_NAME>>, translit(ac_cv_sizeof_$1, [ *], [_p]))dnl
+changequote([, ])dnl
+AC_MSG_CHECKING(size of $1)
+AC_CACHE_VAL(AC_CV_NAME,
+[for ac_size in 4 8 1 2 16 $2 ; do # List sizes in rough order of prevalence.
+  AC_TRY_COMPILE([#include "confdefs.h"
+#include <sys/types.h>
+$2
+], [switch (0) case 0: case (sizeof ($1) == $ac_size):;], AC_CV_NAME=$ac_size)
+  if test x$AC_CV_NAME != x ; then break; fi
+done
+])
+if test x$AC_CV_NAME = x ; then
+  AC_CV_NAME=0;
+fi
+AC_MSG_RESULT($AC_CV_NAME)
+AC_DEFINE_UNQUOTED(AC_TYPE_NAME, $AC_CV_NAME, [The number of bytes in type $1])
+undefine([AC_TYPE_NAME])dnl
+undefine([AC_CV_NAME])dnl
+])
+dnl
+dnl AC_C_BIGENDIAN_CROSS([CROSS-BIGENIAN])
+dnl
+AC_DEFUN(AC_C_BIGENDIAN_CROSS,
+[AC_CACHE_CHECK(whether byte ordering is bigendian, ac_cv_c_bigendian,
+[ac_cv_c_bigendian=unknown
+# See if sys/param.h defines the BYTE_ORDER macro.
+AC_TRY_COMPILE([#include <sys/types.h>
+#include <sys/param.h>], [
+#if !BYTE_ORDER || !BIG_ENDIAN || !LITTLE_ENDIAN
+ bogus endian macros
+#endif], [# It does; now see whether it defined to BIG_ENDIAN or not.
+AC_TRY_COMPILE([#include <sys/types.h>
+#include <sys/param.h>], [
+#if BYTE_ORDER != BIG_ENDIAN
+ not big endian
+#endif], ac_cv_c_bigendian=yes, ac_cv_c_bigendian=no)])
+if test $ac_cv_c_bigendian = unknown; then
+AC_TRY_RUN([main () {
+  /* Are we little or big endian?  From Harbison&Steele.  */
+  union
+  {
+    long l;
+    char c[sizeof (long)];
+  } u;
+  u.l = 1;
+  exit (u.c[sizeof (long) - 1] == 1);
+}], ac_cv_c_bigendian=no, ac_cv_c_bigendian=yes, ac_cv_c_bigendian=$1)
+fi])
+if test $ac_cv_c_bigendian = yes; then
+  AC_DEFINE(WORDS_BIGENDIAN,1,[Define if byteorder is bigendian])
+fi
+])
+
 # Do all the work for Automake.  This macro actually does too much --
 # some checks are only needed if your package does certain things.
 # But this isn't really a big deal.
@@ -2087,16 +2197,15 @@ else
     # Microsoft Visual C++.
     # hardcode_libdir_flag_spec is actually meaningless, as there is
     # no search path for DLLs.
+    always_export_symbols=yes
     hardcode_libdir_flag_spec=' '
     allow_undefined_flag=unsupported
-    # Tell ltmain to make .lib files, not .a files.
-    libext=lib
-    # FIXME: Setting linknames here is a bad hack.
-    archive_cmds='$CC -o $lib $libobjs $compiler_flags `echo "$deplibs" | sed -e '\''s/ -lc$//'\''` -link -dll~linknames='
+    export_symbols_cmds='$NM $libobjs $convenience | $global_symbol_pipe | sed '\''/^B/ s/\(.*\)/\1 DATA/; s/^.[[ 	]][[^ 	]]*[[ 	]]//'\'' | sort | uniq > $export_symbols'
+    archive_expsym_cmds='echo EXPORTS | cat - $export_symbols > ${export_symbols}D~$CC -o $lib $libobjs $compiler_flags `echo "$deplibs" | sed -e '\''s/ -lc$//;s/\.dll/\.lib/'\''` -link -dll /def:${export_symbols}D'
     # The linker will automatically build a .lib file if we build a DLL.
-    old_archive_from_new_cmds='true'
+    old_archive_from_new_cmds=''
     # FIXME: Should let the user specify the lib program.
-    old_archive_cmds='lib /OUT:$oldlib$oldobjs$old_deplibs'
+    old_archive_cmds='$CC /lib -o \$oldlib $oldobjs$old_deplibs'
     fix_srcfile_path='`cygpath -w "$srcfile"`'
     ;;
 
@@ -2552,10 +2661,20 @@ cygwin* | mingw* | pw32*)
     ;;
   yes,mingw*)
     library_names_spec='${libname}`echo ${release} | sed -e 's/[[.]]/-/g'`${versuffix}.dll'
-    sys_lib_search_path_spec="/usr/lib/mingw /usr/lib/w32api "`$CC -print-search-dirs | grep "^libraries:" | sed -e "s/^libraries://" -e "s/;/ /g"`
+    sys_lib_search_path_spec=`$CC -print-search-dirs | grep "^libraries:" | sed -e "s/^libraries://" -e "s/;/ /g"`
     ;;
   yes,pw32*)
     library_names_spec='`echo ${libname} | sed -e 's/^lib/pw/'``echo ${release} | sed -e 's/[.]/-/g'`${versuffix}.dll'
+    ;;
+  ,cygwin*)
+    # When not using gcc, we currently assume that we are using
+    # Microsoft Visual C++.
+    library_names_spec="\${libname}\`echo \${release} | sed -e s/[.]/-/g\`\${versuffix}.dll"
+    soname_spec="\${libname}\`echo \${release} | sed -e s/[.]/-/g\`\${versuffix}.lib"
+    postinstall_cmds="\$install_prog \`echo \$dir/\$srcname | sed -e 's/\\.dll/\\.lib/;s/T\$//'\` \$destdir"
+    # Tell ltmain to make .lib files, not .a files.
+    libext=lib
+    libname_spec='$name'
     ;;
   *)
     library_names_spec='${libname}`echo ${release} | sed -e 's/[[.]]/-/g'`${versuffix}.dll $libname.lib'
@@ -4388,6 +4507,212 @@ ifelse([$4], , , [$4
 fi
 ])
 
+
+dnl
+dnl cercs_require_package(package, include_file, library_file)
+dnl   either include file or library_file may be left off if not needed
+dnl   this macro searches for the files using find_cercs_file().  If
+dnl   found, it adds directory in which the found file resides to either 
+dnl   CPPFLAGS (with a -I prefix)  or LDFLAGS (with a -L prefix)
+dnl
+AC_DEFUN(CERCS_REQUIRE_PACKAGE,
+[
+AC_REQUIRE([CERCS_SET_ARCHIVE])
+AC_REQUIRE([CERCS_HAS_CYGPATH])
+AC_ARG_WITH(translit($1, `/',`_'), translit([  --with-$1=DIR	Where to find $1 package], `/',`_'))
+define([with_translit], translit(with_$1, `/',`_'))
+if test -n "$with_translit"; then
+dnl
+dnl if they did a with, kill the cache variables
+dnl
+translit(unset cercs_cv_$1_include_arg,  `/',`_')
+translit(unset cercs_cv_$1_link_arg,  `/',`_')
+if test `echo $with_translit | sed 's/\(.\).*/\1/g'` != "/"; then
+with_translit=`pwd`/$with_translit
+fi
+fi
+ifelse([$2], , ,
+dnl
+dnl  if arg2 (include_file) is specified
+dnl
+AC_MSG_CHECKING(needed include args for $1 package)
+AC_CACHE_VAL(translit(cercs_cv_$1_include_arg, `/',`_'), 
+[CERCS_FIND_FILE($1, $2, cercs_tmp, $with_translit, include)
+if test -n "$cercs_tmp"; then
+translit(cercs_cv_$1_include_arg, `/',`_')=-I`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.$2//g"`
+fi
+])
+AC_MSG_RESULT(translit($cercs_cv_$1_include_arg, `/',`_'))
+dnl
+dnl  add the result to CPPFLAGS if it is absent
+dnl
+translit(if test -n "$cercs_cv_$1_include_arg"; then, `/',`_')
+translit(arg="$cercs_cv_$1_include_arg", `/',`_')
+no_dash_arg=`echo $arg | sed 's/^-//g'`
+[if test `echo $CPPFLAGS | grep -c "$no_dash_arg"` -eq 0; then
+if test `echo $arg | grep -c "$1"` -eq 0; then
+CPPFLAGS="$CPPFLAGS $arg";
+else
+CPPFLAGS="$arg $CPPFLAGS"
+fi
+fi]
+fi
+)
+ifelse([$3], , ,
+dnl
+dnl  if arg3 (library_file) is specified
+dnl
+AC_MSG_CHECKING(needed link args for $1 package)
+AC_CACHE_VAL(translit(cercs_cv_$1_link_dir,  `/',`_'), 
+[CERCS_FIND_FILE($1, $3, cercs_tmp, $with_translit, lib)
+if test -n "$cercs_tmp" -a "$cercs_tmp" != "$3"; then
+translit(cercs_cv_$1_link_dir, `/',`_')=`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.$3//g"`
+else
+translit(cercs_cv_$1_link_dir="",  `/',`_')
+fi
+])
+AC_MSG_RESULT(translit($cercs_cv_$1_link_dir, `/',`_'))
+ld_arg="-L"
+new_flags=$LDFLAGS
+dnl
+dnl  add the result to LDFLAGS if it is absent
+dnl
+translit(cercs_cv_$1_link_arg=`echo $cercs_cv_$1_link_dir, `/',`_') | sed "/./ s/^/$ld_arg/1"`
+translit(if test -n "$cercs_cv_$1_link_arg"; then, `/',`_')
+translit(arg=$cercs_cv_$1_link_arg, `/',`_')
+no_dash_arg=`echo $arg | sed 's/^-//g'`
+[if test `echo $new_flags | grep -c "$no_dash_arg"` -eq 0; then
+if test `echo $arg | grep -c "$1"` -eq 0; then
+dnl if arg does not includes a project spec add it at the end
+new_flags="$new_flags $arg"
+else
+new_flags="$arg $new_flags"
+fi
+fi]
+LDFLAGS=$new_flags
+fi
+)
+])dnl
+dnl
+dnl cercs_find_file(package, file_to_find, variable_to_set, suggestion, dir_name)
+dnl    search a set of standard directories to find file_to_find.  When found,
+dnl    set $variable_to_set to the path of the file.  Use package and
+dnl    suggestions to help search.  Mostly this searches ~chaos (if it exists)
+dnl    and the usual suspects like:
+dnl    /usr/{include,lib} /usr/local/{include,lib} /opt/<package>/{include,lib}
+dnl    /opt/misc/{include,lib}.
+dnl
+AC_DEFUN(CERCS_FIND_FILE,
+[
+AC_REQUIRE([CERCS_HAS_CSH])
+AC_REQUIRE([CERCS_SET_ARCHIVE])
+$3=""
+search_list="./$2"
+CHAOS_HOMEDIR=""
+if test -n "$CSH"; then
+CHAOS_HOMEDIR=`echo "echo ~chaos" | csh -sf  2>/dev/null | sed 's%/$%%'` || CHAOS_HOMEDIR=""
+fi
+if test -n "$4"; then
+if test `echo $4 | cut -c1` = "~"; then
+EXPANDED=`echo "echo $4" | csh -sf 2>/dev/null` || EXPANDED=""
+else
+EXPANDED=$4
+fi
+
+search_list="$search_list $EXPANDED/$2 $EXPANDED/$5/$2 $EXPANDED/share/$2 $EXPANDED/$5/$cercs_cv_archive/$2 $EXPANDED/$cercs_cv_archive/$5/$2 $EXPANDED/$1/$2 $EXPANDED/$1/$cercs_cv_archive/$2 $EXPANDED/$1/$5/$2 $EXPANDED/$1/$5/$cercs_cv_archive/$2"
+fi
+if test -z "$with_installed_specified"; then
+search_list="$search_list `pwd`/../$1/$2 `pwd`/../$5/$2 `pwd`/../share/$2 $HOME/$1/$2 $HOME/$cercs_cv_archive/$5/$2 $HOME/$5/$2"
+search_list="$search_list `pwd`/../$1/.libs/$2 $HOME/$1/.libs/$2"
+fi
+if test "$libdir" != '${exec_prefix}/lib'; then
+search_list="$search_list $libdir/$2"
+fi
+if test "$exec_prefix" != "NONE"; then
+search_list="$search_list $exec_prefix/lib/$2"
+fi
+if test "$includedir" != '${prefix}/include'; then
+search_list="$search_list $includedir/$2"
+fi
+if test "$prefix" != "NONE"; then
+search_list="$search_list $prefix/$5/$2"
+fi
+if test -n "$CHAOS_HOMEDIR" -a -n "$cercs_cv_archive"; then
+search_list="$search_list $CHAOS_HOMEDIR/$5/$2 $CHAOS_HOMEDIR/$5/$cercs_cv_archive/$2 $CHAOS_HOMEDIR/$1/$5/$cercs_cv_archive/$2 $CHAOS_HOMEDIR/$1/$5/$2"
+fi
+search_list="$search_list /usr/$5/$2 /usr/local/$5/$2 /opt/$1/$5/$2 /opt/misc/$5/$2 /opt/misc/$5/$cercs_cv_archive/$2"
+CERCS_SEARCH($search_list)
+if test -n "$tmp_search_results"; then
+$3=$tmp_search_results
+fi
+])dnl
+AC_DEFUN(CERCS_SET_INSTALLED,[AC_ARG_WITH(installed, [  --with-installed        Don't use local copies of CERCS packages],with_installed_specified=1)])
+dnl
+dnl CERCS_SET_ARCHIVE()
+dnl   set the $cercs_cv_machine_target variable to a standard archive name
+dnl
+AC_DEFUN(CERCS_SET_ARCHIVE,[
+AC_REQUIRE([CERCS_SET_INSTALLED])
+AC_REQUIRE([CERCS_HAS_CSH])
+CHAOS_HOMEDIR=""
+if test -n "$CSH"; then
+CHAOS_HOMEDIR=`echo "echo ~chaos" | csh -sf  2>/dev/null | sed 's%/$%%'` || CHAOS_HOMEDIR=""
+fi
+if test "$cross_compiling" = yes ; then
+  cpu=$host_cpu
+  vendor=$host_vendot
+  os=$host_os
+else
+  cpu=
+  vendor=
+  os=
+fi
+if test -x $CHAOS_HOMEDIR/bin/cercs_arch; then
+cercs_cv_archive=`$CHAOS_HOMEDIR/bin/cercs_arch "$cpu" "$vendor" "$os"`
+else
+cercs_cv_archive=`cercs_arch` || cercs_cv_archive=""
+fi
+])dnl
+dnl
+dnl  CERCS_SEARCH(variable to define, options to try)
+define(CERCS_SEARCH,
+[tmp_search_results=""
+echo "configure:__oline__: searching for $1 " >&5
+for tmp_search_value in $1; do 
+   if test -r $tmp_search_value; then 
+	tmp_search_results=$tmp_search_value
+	echo "configure:__oline__: first found $tmp_search_results " >&5
+	break
+   fi 
+done
+])dnl
+dnl
+dnl
+dnl CERCS_LIB_PREFIX
+dnl  this macro tries to set a reasonable default for the prefix value
+dnl  call with two arguments, project name and library name
+dnl
+AC_DEFUN(CERCS_LIB_PREFIX,
+[if test "x$prefix" = xNONE; then
+AC_REQUIRE([CERCS_SET_ARCHIVE])
+search_list=""
+CHAOS_HOMEDIR=""
+if test -n "$CSH"; then
+CHAOS_HOMEDIR=`echo "echo ~chaos" | csh -sf  2>/dev/null | sed 's%/$%%'` || CHAOS_HOMEDIR=""
+fi
+if test -n "$CHAOS_HOMEDIR"; then
+search_list="$search_list $CHAOS_HOMEDIR/$cercs_cv_archive/lib/$2 $CHAOS_HOMEDIR/lib/$2"
+fi
+search_list="$search_list /usr/lib/$2 /usr/local/lib/$2 /opt/$1/lib/$2 /opt/misc/lib/$2"
+CERCS_SEARCH($search_list)
+if test -n "$tmp_search_results"; then
+    prefix=`echo $tmp_search_results|sed "s%$cercs_cv_archive/lib/$2%%g;s%lib/$2%%g;s%/[^/][^/]*//*[^/][^/]*$%%"`
+    exec_prefix=`echo $tmp_search_results|sed 's%lib/$2%%g;s%/[^/][^/]*//*[^/][^/]*$%%'`
+fi
+fi
+])dnl
+AC_DEFUN(CERCS_HAS_CSH, [AC_PATH_PROG(CSH,csh)])dnl
+AC_DEFUN(CERCS_HAS_CYGPATH, [AC_CHECK_PROG(PATHPROG,cygpath,[cygpath -w],[echo])])dnl
 
 AC_DEFUN(AC_FPRINTF_DEFINED,
 [AC_MSG_CHECKING(whether stdio.h declares fprintf)

@@ -24,13 +24,38 @@
 #include "kernel/kernel_defs.h"
 
 #endif
-#include "tclHash.h"
 #include "assert.h"
+#include "cercs_env.h"
+
+#if SIZEOF_INT == 4
+typedef int int4;
+#endif
+#if SIZEOF_SHORT == 2
+typedef short int2;
+#endif
+
+typedef struct attr {
+    atom_t attr_id;
+    attr_value_type val_type;
+    attr_value value;
+} attr, *attr_p;
+
+typedef struct int_attr {
+    int4 attr_id;
+    int4 value;
+} int_attr;
+
+typedef struct int_attr_struct {
+    unsigned char byte_order;
+    unsigned char int_attr_count;
+    unsigned char other_attr_count;
+    unsigned char junk;
+    int_attr iattr[1];
+} *int_attr_p;
 
 typedef struct _attr_sublist_struct {
-    Tcl_HashTable attr_hash_table;
-    int attr_count;
     attr_p attributes;
+    struct int_attr_struct *iattrs;
 } attr_sublist_struct;
 
 typedef struct _attr_list_of_lists_struct {
@@ -40,18 +65,19 @@ typedef struct _attr_list_of_lists_struct {
 
 /* opaque type for attr_lists */
 typedef struct _attr_list_struct {
-    int list_of_lists;
-    int ref_count;
+    short list_of_lists;
+    short ref_count;
     union {
-	attr_list_of_lists_struct lists;
-	attr_sublist_struct list;
+        attr_list_of_lists_struct lists;
+        attr_sublist_struct list;
     } l;
 } attr_list_struct;
 
-#ifdef HAVE_WINDOWS_H
-__declspec(dllexport) 
-#endif
+static char * base64_encode ARGS((char *binStr, unsigned int len));
+static int base64_decode ARGS((unsigned char *input, unsigned char *output));
+
 atom_server global_as = NULL;
+static int use_base64_string_encoding = 0;
 
 static
 void
@@ -60,8 +86,12 @@ atom_server *asp;
 {
     char *addr_str = NULL;
     char var_str[60];
+    char *base64;
 
     if (*asp != NULL) return;
+    if ((base64 = cercs_getenv("ATL_BASE64_STRINGS")) != NULL) {
+	sscanf(base64, "%d", &use_base64_string_encoding);
+    }
     /*
      * for notes on my we're doing funny things with the "global" value, 
      * global_as, see the comments in gen_info.c.  This is similar.
@@ -106,19 +136,42 @@ atom_server *asp;
         *(long*)asp = strtol((char *)addr_str, NULL, 16); 
     }
 }
+
+#ifndef WORDS_BIGENDIAN
+#define WORDS_BIGENDIAN 0
+#endif
+
 /* operations on attr_lists */
-extern attr_list
-create_attr_list()
+static attr_list
+internal_create_attr_list(int iattr_count, int oattr_count)
 {
     attr_list list = malloc(sizeof(attr_list_struct));
 
-    init_global_atom_server(&global_as);
     list->list_of_lists = 0;
     list->ref_count = 1;
-    Tcl_InitHashTable(&(list->l.list.attr_hash_table), TCL_ONE_WORD_KEYS);
-    list->l.list.attr_count = 0;
-    list->l.list.attributes = (attr_p) malloc(sizeof(attr));
-    return list;
+    if (oattr_count == 0) {
+	list->l.list.attributes = NULL;
+    } else {
+	list->l.list.attributes = malloc(oattr_count * sizeof(attr));
+    }
+    if (iattr_count == 0) {
+	list->l.list.iattrs = malloc(sizeof(struct int_attr_struct));
+    } else {
+	list->l.list.iattrs = malloc(sizeof(struct int_attr_struct) +
+				     (iattr_count -1) * sizeof(int_attr));
+    }
+    list->l.list.iattrs->other_attr_count = oattr_count;
+    list->l.list.iattrs->int_attr_count = iattr_count;
+    list->l.list.iattrs->byte_order = WORDS_BIGENDIAN;
+    list->l.list.iattrs->junk = 0;
+    return list;  
+}
+
+extern attr_list
+create_attr_list()
+{
+    init_global_atom_server(&global_as);
+    return internal_create_attr_list(0, 0);
 }
 
 extern void
@@ -139,8 +192,8 @@ attr_list list2;
     attr_list list;
 
     if (list2 == NULL) {
-	list1->ref_count++;
-	return list1;
+        list1->ref_count++;
+        return list1;
     }
     list = malloc(sizeof(attr_list_struct));
 
@@ -153,7 +206,7 @@ attr_list list2;
     list1->ref_count++;
     list->l.lists.lists[1] = list2;
     list2->ref_count++;
-    return list;
+    return list;     
 }
 
 extern attr_list
@@ -163,15 +216,15 @@ attr_list list2;
 {
     init_global_atom_server(&global_as);
     if (list1->list_of_lists == 0) {
-	return attr_join_lists(list1, list2);
+        return attr_join_lists(list1, list2);
     }
-    list1->l.lists.lists = 
-	   (attr_list *)realloc(list1->l.lists.lists, sizeof(attr_list) * 
-				(list1->l.lists.sublist_count+1));
+    list1->l.lists.lists =
+           (attr_list *)realloc(list1->l.lists.lists, sizeof(attr_list) *
+                                (list1->l.lists.sublist_count+1));
     list1->l.lists.lists[list1->l.lists.sublist_count] = list2;
     list2->ref_count++;
     list1->l.lists.sublist_count += 1;
-    return list1;
+    return list1;   
 }
 
 /*
@@ -182,21 +235,22 @@ attr_merge_lists (list1, list2)
      attr_list list1;
      attr_list list2;
 {
-  attr_p attr_guy;
+  attr attr_guy;
   int i;
   int c = attr_count (list2);
   
   for (i = 0; i < c; i++)
     {
-      attr_guy = get_attr (list2, i);
-      if (attr_guy->val_type == Attr_String)
+	get_attr (list2, i, &attr_guy.attr_id, &attr_guy.val_type,
+			   &attr_guy.value);
+      if (attr_guy.val_type == Attr_String)
         {
-          char* s = strdup ((char*)attr_guy->value);
-          set_attr (list1, attr_guy->attr_id, attr_guy->val_type, s);
+          char* s = strdup ((char*)attr_guy.value);
+          set_attr (list1, attr_guy.attr_id, attr_guy.val_type, s);
         }
       else
         {
-          set_attr (list1, attr_guy->attr_id, attr_guy->val_type, attr_guy->value);
+          set_attr (list1, attr_guy.attr_id, attr_guy.val_type, attr_guy.value);
         }
     }
 }
@@ -209,19 +263,30 @@ atom_t attr_id;
 attr_value_type val_type;
 attr_value value;
 {
-    Tcl_HashEntry *entry = NULL;
-    int new;
-
-    list->l.list.attributes = (attr_p) realloc(list->l.list.attributes, sizeof(attr) *
-					(list->l.list.attr_count + 1));
-    list->l.list.attributes[list->l.list.attr_count].attr_id = attr_id;
-    list->l.list.attributes[list->l.list.attr_count].val_type = val_type;
-    list->l.list.attributes[list->l.list.attr_count].value = value;
-    entry = Tcl_CreateHashEntry(&list->l.list.attr_hash_table, (char *) attr_id,
-				&new);
-    Tcl_SetHashValue(entry, (char *) list->l.list.attr_count);
-    list->l.list.attr_count++;
-    return new;
+    if (val_type == Attr_Int4) {
+	int count = list->l.list.iattrs->int_attr_count;
+	if (count > 0) {
+	    int size = sizeof(struct int_attr_struct) + 
+			    count* sizeof(int_attr);
+	    list->l.list.iattrs = realloc(list->l.list.iattrs, size);
+	}
+	list->l.list.iattrs->iattr[count].attr_id = attr_id;
+	list->l.list.iattrs->iattr[count].value = (int4) value;
+	list->l.list.iattrs->int_attr_count++;
+    } else {
+	int count = list->l.list.iattrs->other_attr_count;
+	if (count == 0) {
+	    list->l.list.attributes = (attr_p) malloc(sizeof(attr));
+	} else {	    
+	    list->l.list.attributes = (attr_p) realloc(list->l.list.attributes,
+						       sizeof(attr)*(count+1));
+	}
+	list->l.list.attributes[count].attr_id = attr_id;
+	list->l.list.attributes[count].val_type = val_type;
+	list->l.list.attributes[count].value = value;
+	list->l.list.iattrs->other_attr_count++;
+    }
+    return 1;
 }
 
 extern int 
@@ -244,17 +309,25 @@ atom_t attr_id;
 attr_value_type val_type;
 attr_value value;
 {
-    Tcl_HashEntry *entry = NULL;
-
-    entry = Tcl_FindHashEntry(&list->l.list.attr_hash_table, (char *) attr_id);
-
-    if (entry) {
-	long index = (long) Tcl_GetHashValue(entry);
-	list->l.list.attributes[index].val_type = val_type;
-	list->l.list.attributes[index].value = value;
-	return 1;
+    int index = 0;
+    assert(list->list_of_lists == 0);
+    if (val_type == Attr_Int4) {
+	while (index < list->l.list.iattrs->int_attr_count) {
+	    if (list->l.list.iattrs->iattr[index].attr_id == attr_id) {
+		list->l.list.iattrs->iattr[index].value = (int)value;
+		return 1;
+	    }
+	}
+    } else {
+	while (index < list->l.list.iattrs->other_attr_count) {
+	    if (list->l.list.attributes[index].attr_id == attr_id) {
+		list->l.list.attributes[index].val_type = val_type;
+		list->l.list.attributes[index].value = value;
+		return 1;
+	    }
+	}
     }
-    return 0;
+    return 0;  
 }
 
 extern int
@@ -264,42 +337,57 @@ atom_t attr_id;
 attr_value_type *val_type_p;
 attr_value *value_p;
 {
-    Tcl_HashEntry *entry = NULL;
-
     if (list->list_of_lists) {
-	int i;
-	for (i=0; i< list->l.lists.sublist_count; i++) {
-	    if (query_attr(list->l.lists.lists[i], attr_id, val_type_p,
-			   value_p)) {
+        int i;
+        for (i=0; i< list->l.lists.sublist_count; i++) {
+            if (query_attr(list->l.lists.lists[i], attr_id, val_type_p,
+                           value_p)) {
+                return 1;
+            }
+        }
+        return 0;
+    } else {
+	int index = 0;
+	while(index < list->l.list.iattrs->int_attr_count) {
+	    if (list->l.list.iattrs->iattr[index].attr_id == attr_id) {
+		if (val_type_p != NULL) {
+		    *val_type_p = Attr_Int4;
+		}
+		if (value_p != NULL) {
+		    if (sizeof(long) != 4){
+			*((int*)value_p) = (int)(long)list->l.list.iattrs->iattr[index].value;
+		    } else {
+			*((int*)value_p) = list->l.list.iattrs->iattr[index].value;
+		    }
+		}
 		return 1;
 	    }
-	}
-	return 0;
-    } else {
-	entry = Tcl_FindHashEntry(&list->l.list.attr_hash_table,
-				  (char *) attr_id);
-	if (entry) {
-	    long index = (long) Tcl_GetHashValue(entry);
-	    if (val_type_p != NULL) {
-	      *val_type_p = list->l.list.attributes[index].val_type;
-	    }
-	    if (value_p != NULL) {
-		if ((sizeof(long) != 4) && 
-		    (list->l.list.attributes[index].val_type == Attr_Int4)){
-		    
-		    *((int*)value_p) = (int)(long)list->l.list.attributes[index].value;
-		} else {
-		    *value_p = list->l.list.attributes[index].value;
+	    index++;
+        }
+	index = 0;
+	while(index < list->l.list.iattrs->other_attr_count) {
+	    if (list->l.list.attributes[index].attr_id == attr_id) {
+		if (val_type_p != NULL) {
+		    *val_type_p = list->l.list.attributes[index].val_type;
 		}
+		if (value_p != NULL) {
+		    if ((sizeof(long) != 4) &&
+			(list->l.list.attributes[index].val_type == Attr_Int4)){
+			*((int*)value_p) = (int)(long)list->l.list.attributes[index].value;
+		    } else {
+			*value_p = list->l.list.attributes[index].value;
+		    }
+		}
+		return 1;
 	    }
-	    return 1;
-	}
-	return 0;
-    }
+	    index++;
+        }
+        return 0;
+    }                 
 }
 
 static void
-internal_dump_attr_list	ARGS((attr_list list, int indent));
+internal_dump_attr_list ARGS((attr_list list, int indent));
 
 static void
 dump_attr_sublist(list, indent)
@@ -309,117 +397,129 @@ int indent;
     int i;
     init_global_atom_server(&global_as);
     if (list == NULL) {
-	printf("[NULL]\n");
-	return;
+        printf("[NULL]\n");
+        return;
     }
-    for (i = 0; i < list->l.list.attr_count; i++) {
-	char *attr_name = string_from_atom(global_as,
-					   list->l.list.attributes[i].attr_id);
-	char *atom_str = NULL;
-	int j;
-	if (attr_name == NULL)
-	    attr_name = "<null attr name>";
-	for (j = 0; j < indent; j++) {
-	    printf("    ");
-	}
-	switch (list->l.list.attributes[i].val_type) {
-	case Attr_Undefined:
-	    printf("    { %s, Undefined, Undefined }\n", attr_name);
-	    break;
-	case Attr_Int4:
-	    printf("    { %s, Attr_Int4, %ld }\n", attr_name,
-		   (long) list->l.list.attributes[i].value);
-	    break;
-	case Attr_Int8:
-	    printf("    { %s, Attr_Int4, %ld }\n", attr_name,
-		   (long) list->l.list.attributes[i].value);
-	    break;
-	case Attr_String:
-	    if (((char*)list->l.list.attributes[i].value) != NULL) {
-		printf("    { %s, Attr_String, %s }\n", attr_name,
-		       (char *) list->l.list.attributes[i].value);
-	    } else {
-		printf("    { %s, Attr_String, NULL }\n", attr_name);
-	    }
-	    break;
-	case Attr_Opaque:
-	    if (((char*)list->l.list.attributes[i].value) != NULL) {
-		int j;
-		attr_opaque_p o = 
-		    (attr_opaque_p) list->l.list.attributes[i].value;
-		printf("    { %s, Attr_Opaque, \"", attr_name);
-		for (j=0; j< o->length; j++) {
-		    printf("%c", ((char*)o->buffer)[j]);
-		}
-		printf("\"\n		<");
-		for (j=0; j< o->length; j++) {
-		    printf(" %02x", ((unsigned char*)o->buffer)[j]);
-		}
-		printf(">}\n");
-	    } else {
-		printf("    { %s, Attr_Opaque, NULL }\n", attr_name);
-	    }
-	    break;
- 	case Attr_Atom:
-	    atom_str = string_from_atom(global_as,
-				     (atom_t) (long)list->l.list.attributes[i].value);
-	    printf("    { %s, Attr_Atom, %s }\n", attr_name,
-		   (char *) atom_str);
-	    break;
-	case Attr_List:
-	    printf("    { %s, Attr_List, ->\n", attr_name);
-	    internal_dump_attr_list((attr_list) list->l.list.attributes[i].value,
-				    indent+1);
-	    for (j = 0; j< indent; j++) {
-		printf("    ");
-	    }
-	    printf(" }\n");
-	    break;
-	default:
+    for (i = 0; i < list->l.list.iattrs->int_attr_count; i++) {
+        char *attr_name = string_from_atom(global_as,
+                                           list->l.list.iattrs->iattr[i].attr_id);
+        int j;
+        if (attr_name == NULL)
+            attr_name = "<null attr name>";
+        for (j = 0; j < indent; j++) {
+            printf("    ");
+        }
+	printf("    { %s, Attr_Int4, %ld }\n", attr_name,
+	       (long) list->l.list.iattrs->iattr[i].value);
+    }
+	
+    for (i = 0; i < list->l.list.iattrs->other_attr_count; i++) {
+        char *attr_name = string_from_atom(global_as,
+                                           list->l.list.attributes[i].attr_id);
+        char *atom_str = NULL;
+        int j;
+        if (attr_name == NULL)
+            attr_name = "<null attr name>";
+        for (j = 0; j < indent; j++) {
+            printf("    ");
+        }
+        switch (list->l.list.attributes[i].val_type) {
+        case Attr_Undefined:
+            printf("    { %s, Undefined, Undefined }\n", attr_name);
+            break;
+        case Attr_Int4:
 	    assert(0);
-	}
-	free(attr_name);
-	if (atom_str)
-	    free(atom_str);
+            break;
+        case Attr_Int8:
+            printf("    { %s, Attr_Int8, %ld }\n", attr_name,
+                   (long) list->l.list.attributes[i].value);
+            break;
+        case Attr_String:
+            if (((char*)list->l.list.attributes[i].value) != NULL) {
+                printf("    { %s, Attr_String, %s }\n", attr_name,
+                       (char *) list->l.list.attributes[i].value);
+            } else {
+                printf("    { %s, Attr_String, NULL }\n", attr_name);
+            }
+            break;          
+        case Attr_Opaque:
+            if (((char*)list->l.list.attributes[i].value) != NULL) {
+                int j;
+                attr_opaque_p o =
+                    (attr_opaque_p) list->l.list.attributes[i].value;
+                printf("    { %s, Attr_Opaque, \"", attr_name);
+                for (j=0; j< o->length; j++) {
+                    printf("%c", ((char*)o->buffer)[j]);
+                }
+                printf("\"\n            <");
+                for (j=0; j< o->length; j++) {
+                    printf(" %02x", ((unsigned char*)o->buffer)[j]);
+                }
+                printf(">}\n");
+            } else {
+                printf("    { %s, Attr_Opaque, NULL }\n", attr_name);
+            }
+            break;
+        case Attr_Atom:
+            atom_str = string_from_atom(global_as,
+                                     (atom_t) (long)list->l.list.attributes[i].value);
+            printf("    { %s, Attr_Atom, %s }\n", attr_name,
+                   (char *) atom_str);
+            break;
+        case Attr_List:
+            printf("    { %s, Attr_List, ->\n", attr_name);
+            internal_dump_attr_list((attr_list) list->l.list.attributes[i].value,
+                                    indent+1);
+            for (j = 0; j< indent; j++) {
+                printf("    ");
+            }
+            printf(" }\n");
+            break;
+        default:
+            assert(0);
+        }
+        free(attr_name);
+        if (atom_str)
+            free(atom_str);
     }
 }
 
 extern void
-dump_attr_list(list)
+dump_attr_list(list)           
 attr_list list;
 {
-    
+
     init_global_atom_server(&global_as);
     internal_dump_attr_list(list, 0);
 }
 
 static void
-internal_dump_attr_list	(list, indent)
+internal_dump_attr_list (list, indent)
 attr_list list;
 int indent;
 {
     int i = 0;
     for (i = 0; i< indent; i++) {
-	printf("    ");
+        printf("    ");
     }
     if (list == NULL) {
-	printf("[NULL]\n");
-	return;
+        printf("[NULL]\n");
+        return;
     }
     printf("[\n");
     if (!list->list_of_lists) {
-	dump_attr_sublist(list, indent);
+        dump_attr_sublist(list, indent);
     } else {
-	int i;
-	for (i=0; i<list->l.lists.sublist_count; i++) {
-	    dump_attr_sublist(list->l.lists.lists[i], indent);
-	}
+        int i;
+        for (i=0; i<list->l.lists.sublist_count; i++) {
+            dump_attr_sublist(list->l.lists.lists[i], indent);
+        }
     }
     for (i=0; i< indent; i++) {
-	printf("    ");
+        printf("    ");
     }
     printf("]\n");
-}
+}                   
 
 static char*
 strdqcat(str, size_p, str2)
@@ -459,6 +559,8 @@ hex2byte (char c)
 	return (unsigned char) (10 + c - 'A');
 }
 
+#define roundup4(a) ((a + 3) & ~3)
+
 static char *
 add_list_to_string(str, size_p, list)
 char *str;
@@ -467,70 +569,88 @@ attr_list list;
 {
     int i;
     init_global_atom_server(&global_as);
-    for (i = 0; i < attr_count(list); i++) {
-	attr_p tmp = get_attr(list, i);
-	char str_tmp[128];
-	char *atom_string;
-	memset(str_tmp, 0, sizeof(str_tmp));
-	if (tmp->val_type == Attr_List) continue;
+    
+    for (i = 0; i < list->l.list.iattrs->int_attr_count; i++) {
+        char str_tmp[128];
+        char *atom_string;
+        memset(str_tmp, 0, sizeof(str_tmp));
 #ifdef SHARED_ATTR_NUMS
-	sprintf(str_tmp, "{%d", tmp->attr_id);
+        sprintf(str_tmp, "{%d", tmp.attr_id);
 #else
-	sprintf(str_tmp, "{%s", atom_string = 
-		string_from_atom(global_as, tmp->attr_id));
-	free(atom_string);
+        sprintf(str_tmp, "{%s", atom_string =
+                string_from_atom(global_as, list->l.list.iattrs->iattr[i].attr_id));
+        free(atom_string);
 #endif
+        str = strdcat(str, size_p, str_tmp);
+	sprintf(str_tmp, ",4,%d},", (int) (long)list->l.list.iattrs->iattr[i].value);
 	str = strdcat(str, size_p, str_tmp);
-	switch(tmp->val_type) {
-	case Attr_Undefined:
-	    str = strdcat(str, size_p, ",U,");
-	    break;
-	case Attr_Int4:
-	    sprintf(str_tmp, ",4,%d", (int) (long)tmp->value);
-	    str = strdcat(str, size_p, str_tmp);
-	    break;
-	case Attr_Int8:
-	    sprintf(str_tmp, ",8,%ld", (long) tmp->value);
-	    str = strdcat(str, size_p, str_tmp);
-	    break;
-	case Attr_String:
-	    {
-		char tmp_str[24];
-		sprintf(tmp_str, ",S%d,", (int)strlen(tmp->value));
-		str = strdcat(str, size_p, tmp_str);
-		str = strdcat(str, size_p, (char*)tmp->value);
-	    }
-	    break;
-	case Attr_Opaque: {
-	    attr_opaque_p o = (attr_opaque_p) tmp->value;
-	    if (o == NULL) {
-		str = strdcat(str, size_p, ",O0,");
-	    } else {
-		char tmp3[3];
-		int i;
-		sprintf(str_tmp, ",O%d,", o->length);
-		str = strdcat(str, size_p, str_tmp);
-		tmp3[2] = 0;
-		for (i=0; i<o->length; i++) {
-		    tmp3[0] = nibble2hex(((char*)o->buffer)[i] >> 4);
-		    tmp3[1] = nibble2hex(((char*)o->buffer)[i]);
-		    str = strdcat(str, size_p, tmp3);
-		}
-	    }
-	    break;
-	}
-	case Attr_Atom:
-	    sprintf(str_tmp, ",A,%d", (int) (long)tmp->value);
-	    str = strdcat(str, size_p, str_tmp);
-	    break;
-	case Attr_List:
-	default:
+    }
+	
+    for (i = 0; i < list->l.list.iattrs->other_attr_count; i++) {
+        attr_p tmp;
+        char str_tmp[128];
+        char *atom_string;
+	tmp = &list->l.list.attributes[i];
+
+        memset(str_tmp, 0, sizeof(str_tmp));
+        if (tmp->val_type == Attr_List) continue;
+#ifdef SHARED_ATTR_NUMS
+        sprintf(str_tmp, "{%d", tmp->attr_id);
+#else
+        sprintf(str_tmp, "{%s", atom_string =
+                string_from_atom(global_as, tmp->attr_id));
+        free(atom_string);
+#endif
+        str = strdcat(str, size_p, str_tmp);
+        switch(tmp->val_type) {
+        case Attr_Undefined:
+            str = strdcat(str, size_p, ",U,");
+            break;
+        case Attr_Int4:
 	    assert(0);
-	}
-	str = strdqcat(str, size_p, "},");
+            break;
+        case Attr_Int8:
+            sprintf(str_tmp, ",8,%ld", (long) tmp->value);
+            str = strdcat(str, size_p, str_tmp);
+            break;
+        case Attr_String:
+            {
+                char tmp_str[24];
+                sprintf(tmp_str, ",S%d,", (int)strlen(tmp->value));
+                str = strdcat(str, size_p, tmp_str);
+                str = strdcat(str, size_p, (char*)tmp->value);
+            }
+            break;
+        case Attr_Opaque: {
+            attr_opaque_p o = (attr_opaque_p) tmp->value;
+           if (o == NULL) {
+                str = strdcat(str, size_p, ",O0,");
+            } else {
+                char tmp3[3];
+                int i;
+                sprintf(str_tmp, ",O%d,", o->length);
+                str = strdcat(str, size_p, str_tmp);
+                tmp3[2] = 0;
+                for (i=0; i<o->length; i++) {
+                    tmp3[0] = nibble2hex(((char*)o->buffer)[i] >> 4);
+                    tmp3[1] = nibble2hex(((char*)o->buffer)[i]);
+                    str = strdcat(str, size_p, tmp3);
+                }
+            }
+            break;
+        }
+        case Attr_Atom:
+            sprintf(str_tmp, ",A,%d", (int) (long)tmp->value);
+            str = strdcat(str, size_p, str_tmp);
+            break;
+        case Attr_List:
+        default:
+            assert(0);
+        }
+        str = strdqcat(str, size_p, "},");
     }
     return str;
-}
+}                 
 
 static int
 add_list_from_string(str, list)
@@ -544,7 +664,6 @@ attr_list list;
 	int attr_id, length;
 	attr_value_type val_type = Attr_Undefined;
 	attr_value val = 0;
-	int int_value;
 	long long_value;
 
 	if (*str == 0) return 1;   /* success */
@@ -569,9 +688,9 @@ attr_list list;
 	    break;
 	case '4':
 	    val_type = Attr_Int4;
-	    val = (attr_value) atoi(value+1);
-	    end = strchr(value+1, ',') + 1;
-	    if (end == (char*)1) end = value + strlen(value);
+            val = (attr_value) atoi(value+1);
+            end = strchr(value+1, ',') + 1;
+ 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
 	case '8':
 	    val_type = Attr_Int8;
@@ -582,14 +701,13 @@ attr_list list;
 	    break;
 	case 'A':
 	    val_type = Attr_Atom;
-            
 	    val = (attr_value)atoi(value+1);
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
 	case 'S':
 	    val_type = Attr_String;
-            length = atoi(first_comma+2);
+	    length = atoi(first_comma+2);
 	    end = value+1+length;
 	    val = malloc(length+1);
 	    strncpy(val, value+1, length);
@@ -598,7 +716,7 @@ attr_list list;
 	    break;
 	case 'O': {
 	    int len;
-            len = atoi(first_comma+2);
+	    len = atoi(first_comma+2);
 	    while (*value != ',') value++; /* skip to start of buffer */
 	    value++;
 	    val_type = Attr_Opaque;
@@ -635,7 +753,19 @@ attr_list_to_string(attrs)
 attr_list attrs;
 {
     int size = 0;
-    return(add_list_to_string(malloc(1), &size, attrs));
+    if (use_base64_string_encoding) {
+	char * result;
+	void *encoded;
+	int len;
+	AttrBuffer tmp = create_AttrBuffer();
+
+	encoded = encode_attr_for_xmit(attrs, tmp, &len);
+	result = base64_encode(encoded, len);
+	free_AttrBuffer(tmp);
+	return result;
+    } else {
+	return(add_list_to_string(malloc(1), &size, attrs));
+    }
 }
 
 extern
@@ -643,12 +773,26 @@ attr_list
 attr_list_from_string(str)
 char * str;
 {
-    attr_list ret_val = create_attr_list();
-    if (add_list_from_string(str, ret_val) != 1) {
-	free_attr_list(ret_val);
-	return NULL;
+    if ((*str == ' ') || (*str == '\t') || (*str == '{')) {
+	attr_list ret_val = create_attr_list();
+	if (add_list_from_string(str, ret_val) != 1) {
+	    free_attr_list(ret_val);
+	    return NULL;
+	} 
+	return ret_val;
+    } else {
+	attr_list ret_val;
+	unsigned char *output = (unsigned char *)str;
+	if (((int)str & 0x3) != 0) { /* not aligned */
+	    output = strdup((char *)str);
+	}
+	base64_decode((unsigned char *)str, output);
+	ret_val = decode_attr_from_xmit(output);
+	if (((int)str & 0x3) != 0) { /* not aligned */
+	    free(output);
+	}
+	return ret_val;
     }
-    return ret_val;
 }
 
 extern
@@ -676,37 +820,51 @@ attr_list list;
 {
     if (list == NULL) return 0;
     if (!list->list_of_lists) {
-	return list->l.list.attr_count;
+        return list->l.list.iattrs->int_attr_count +
+	    list->l.list.iattrs->other_attr_count;
     } else {
-	int count = 0;
-	int i;
-	for (i=0; i<list->l.lists.sublist_count; i++) {
-	    count += attr_count(list->l.lists.lists[i]);
-	}
-	return count;
-    }
+        int count = 0;
+        int i;
+        for (i=0; i<list->l.lists.sublist_count; i++) {
+            count += attr_count(list->l.lists.lists[i]);
+        }
+        return count;
+    }           
 }
 
-extern
-attr_p 
-get_attr(list, index)
-attr_list list;
-int index;
+
+int
+get_attr(attr_list list,int index, atom_t *name,
+	  attr_value_type *val_type, attr_value *value)
 {
     if (!list->list_of_lists) {
-	return &list->l.list.attributes[index];
-    } else {
-	int i;
-	for (i=0; i<list->l.lists.sublist_count; i++) {
-	    int count = attr_count(list->l.lists.lists[i]);
-	    if (index < count) {
-		return get_attr(list->l.lists.lists[i], index);
-	    } else {
-		index -= count;
-	    }
+	if (index < list->l.list.iattrs->int_attr_count) {
+	    *name = list->l.list.iattrs->iattr[index].attr_id;
+	    *val_type = Attr_Int4;
+	    *value = (attr_value) list->l.list.iattrs->iattr[index].value;
+	    return 1;
 	}
-	return NULL;
-    }
+	index -= list->l.list.iattrs->int_attr_count;
+	if (index < list->l.list.iattrs->other_attr_count) {
+	    *name = list->l.list.attributes[index].attr_id;
+	    *val_type = list->l.list.attributes[index].val_type;
+	    *value = list->l.list.attributes[index].value;
+	    return 1;
+	}
+	return 0;
+    } else {
+        int i;
+        for (i=0; i<list->l.lists.sublist_count; i++) {
+            int count = attr_count(list->l.lists.lists[i]);
+            if (index < count) {
+                return get_attr(list->l.lists.lists[i], index, name, 
+				val_type, value);
+            } else {
+                index -= count;
+            }
+        }
+        return 0;
+    }   
 }
 
 void
@@ -717,156 +875,53 @@ attr_list list;
     list->ref_count--;
     if (list->ref_count > 0) return;
     if (list->list_of_lists) {
-	int i;
-	for (i=0; i<list->l.lists.sublist_count; i++) {
-	    free_attr_list(list->l.lists.lists[i]);
-	}
-	free(list->l.lists.lists);
-	free(list);
+        int i;
+        for (i=0; i<list->l.lists.sublist_count; i++) {
+            free_attr_list(list->l.lists.lists[i]);
+        }
+        free(list->l.lists.lists);
+        free(list);
     } else {
-	int i;
-	for (i=0; i< list->l.list.attr_count; i++) {
-#ifdef STRING_ATOMS
-	    free(list->l.list.attributes[i].attr_id);
-#endif
-	    switch (list->l.list.attributes[i].val_type) {
-	    case Attr_Undefined:
-	    case Attr_Int4:
-		break;
-	    case Attr_Atom:
-#ifdef STRING_ATOMS
-		free((char *)list->l.list.attributes[i].value);
-#endif
-		break;
-	    case Attr_String:
-		free((char *)list->l.list.attributes[i].value);
-		break;
-	    case Attr_Opaque: {
-		attr_opaque_p o = 
-		    (attr_opaque_p) list->l.list.attributes[i].value;
-		if (o) {
-		    free(o->buffer);
-		    free(o);
-		}
-		break;
-	    }
-	    case Attr_List:
-		free_attr_list((attr_list)list->l.list.attributes[i].value);
-		break;
-	    default:
-		assert(0);
-	    }
-	}
-	Tcl_DeleteHashTable(&(list->l.list.attr_hash_table));
-	if (list->l.list.attributes != NULL) {
-	    free(list->l.list.attributes);
-	}
-	free(list);
-    }
+        int i;
+        for (i=0; i< list->l.list.iattrs->other_attr_count; i++) {
+            switch (list->l.list.attributes[i].val_type) {
+            case Attr_Undefined:
+            case Attr_Int4:
+                break;
+            case Attr_Atom:
+                break;
+            case Attr_String:
+                free((char *)list->l.list.attributes[i].value);
+                break;
+            case Attr_Opaque: {
+                attr_opaque_p o =
+                    (attr_opaque_p) list->l.list.attributes[i].value;
+                if (o) {
+                    free(o->buffer);
+                    free(o);
+                }
+                break;
+            }
+            case Attr_List:
+                free_attr_list((attr_list)list->l.list.attributes[i].value);
+                break;                  
+            default:
+                assert(0);
+            }
+        }
+        if (list->l.list.attributes != NULL) {
+            free(list->l.list.attributes);
+        }
+        free(list);
+    }      
 }
 
-
-extern
-xmit_object
-pack_attr_list (attr_list attribute_list)
-{
-  attr_p tmp;
-  xmit_object xo;
-  int i;
- 
-  xo.attr_count = attr_count (attribute_list);
-  xo.attrs = (xmit_attr_ref) malloc (sizeof (xmit_attr) * xo.attr_count);
-  
-  for (i = 0; i < xo.attr_count; i++)
-    {
-      tmp = get_attr (attribute_list, i);
-      xo.attrs[i].attr_name = tmp->attr_id;
-      xo.attrs[i].attr_type = tmp->val_type;
-      if (tmp->val_type == Attr_String)
-	{
-	  xo.attrs[i].attr_atom_val = (long) 0;
-	  xo.attrs[i].attr_string_val = (char*) tmp->value;
-	}
-      else
-	{
-	  xo.attrs[i].attr_atom_val = (long) tmp->value;
-	  xo.attrs[i].attr_string_val = (char*) 0;
-	}
-    }
-
-  return xo;
-}
-
-extern
-void
-pack_attr_list_1 (attr_list attribute_list, xmit_object xo)
-{
-  attr_p tmp;
-  int i;
-  int s = attr_count (attribute_list);
-
-  xo.attrs = (xmit_attr_ref) 
-    realloc (xo.attrs, sizeof (xmit_attr) * (xo.attr_count + s));
-				      
-  for (i = 0; i < s; i++)
-    {
-      tmp = get_attr (attribute_list, i);
-      xo.attrs[xo.attr_count + i].attr_name = tmp->attr_id;
-      xo.attrs[xo.attr_count + i].attr_type = tmp->val_type;
-      if (tmp->val_type == Attr_String)
-	{
-	  xo.attrs[xo.attr_count + i].attr_atom_val = (long) 0;
-	  xo.attrs[xo.attr_count + i].attr_string_val = (char*) tmp->value;
-	}
-      else
-	{
-	  xo.attrs[xo.attr_count + i].attr_atom_val = (long) tmp->value;
-	  xo.attrs[xo.attr_count + i].attr_string_val = (char*) 0;
-	}
-    }
-}
-
-
-extern
-attr_list
-unpack_attr_list (xmit_object xo)
-{
-  attr_list al = create_attr_list();
-  unpack_attr_list_2 (xo.attr_count, xo.attrs, al);
-  return al;
-}
-
-
-extern
-void
-unpack_attr_list_1 (xmit_object xo, attr_list al)
-{
-  unpack_attr_list_2 (xo.attr_count, xo.attrs, al);
-}
-
-extern
-void
-unpack_attr_list_2 (int xmit_count,
-		    xmit_attr *xmit_list,
-		    attr_list al)
-{
-  int i;
-
-  for (i = 0; i < xmit_count; i++)
-    {
-      if (xmit_list[i].attr_type == Attr_String)
-	set_attr (al,
-		  xmit_list[i].attr_name,
-		  xmit_list[i].attr_type,
-		  strdup ((char*)xmit_list[i].attr_string_val));
-      else
-	set_attr (al,
-		  xmit_list[i].attr_name,
-		  xmit_list[i].attr_type,
-		  (void*)xmit_list[i].attr_atom_val);
-    }
-}
-
+#define ATTR_INT4_8_EQ(ap1,ap2) ((ap1)->value == (ap2)->value)
+#define ATTR_ATOM_EQ(ap1,ap2) ((ap1)->value == (ap2)->value)
+#define ATTR_STRING_EQ(ap1,ap2) \
+  (strcmp ((char*)(ap1)->value, "*") == 0 \
+  || strcmp ((char*)(ap2)->value, "*") == 0 \
+  || strcmp ((char*)(ap1)->value, (char*)(ap2)->value) == 0)
 
 extern
 int
@@ -909,37 +964,6 @@ compare_attr_p_by_val (attr_p a1, attr_p a2)
 
 extern
 int
-compare_attr_p_xmit_attr_by_val (attr_p ap, xmit_attr_ref xa)
-{
-  int eq = 0;
-
-  if (ap->val_type == xa->attr_type)
-    {
-      if (ap->val_type == Attr_Int4 || ap->val_type == Attr_Int8)
-	{
-	  eq = ATTR_INT4_8_XMIT_ATTR_EQ(ap,xa);
-	}
-      else if (ap->val_type == Attr_String)
-	{
-	  eq = ATTR_STRING_XMIT_ATTR_EQ(ap,xa);
-	}
-      else if (ap->val_type == Attr_Atom)
-	{
-	  eq = ATTR_ATOM_XMIT_ATTR_EQ(ap,xa);
-	}
-      else
-	{
-	  eq = 1;
-	}
-
-    }
-  return eq;
-}
-
-
-
-extern
-int
 attr_list_subset (attr_list l1, attr_list l2)
 {
   /*
@@ -951,7 +975,7 @@ attr_list_subset (attr_list l1, attr_list l2)
   int i, j, keep_going = 1;
   int l1_count;
   int l2_count;
-  attr_p l1_tmp, l2_tmp;
+  attr l1_tmp, l2_tmp;
 
   l1_count = attr_count (l1);
   l2_count = attr_count (l2);
@@ -961,13 +985,14 @@ attr_list_subset (attr_list l1, attr_list l2)
   for (i = 0; i < l1_count && keep_going; i++)
     {
       int found = 0;
-      l1_tmp = get_attr (l1, i);
+      get_attr (l1, i, &l1_tmp.attr_id, &l1_tmp.val_type, &l1_tmp.value);
 
       for (j = 0; !found && j < l2_count; j++)
 	{
-	  l2_tmp = get_attr (l2, j);
+	    get_attr (l2, j, &l2_tmp.attr_id, &l2_tmp.val_type,
+		      &l2_tmp.value);
 	  
-	  found = compare_attr_p_by_val (l1_tmp, l2_tmp);
+	  found = compare_attr_p_by_val (&l1_tmp, &l2_tmp);
 	}
 
       keep_going = found;
@@ -976,43 +1001,377 @@ attr_list_subset (attr_list l1, attr_list l2)
   return keep_going;
 }
 	
-	
-extern
-int
-attr_list_subset_xmit_object (xmit_object xo, attr_list l1)
+extern atom_t set_attr_atom_and_string(str, atom)
+const char *str;
+atom_t atom;
 {
-  /*
-   *  This function returns true if the attributes stored in the
-   *  given xmit_object would constitute an attr list that is
-   *  a subset of the given attr_list.  I wrote this function to
-   *  avoid the malloc'ing and string copying inherent in building
-   *  an attr list out of the xmit_object and then comparing it 
-   *  against the existing attr list.
-   */
-  int i, j, keep_going, l1_count;
-  attr_p l1_p;
+
+   atom_t ret_val;
+
+   init_global_atom_server(&global_as);
+   ret_val = set_string_and_atom(global_as, (char *)str, atom);
+   return ret_val;
+
+} 
   
-  keep_going = 1;
+typedef struct Attr_tmp_buffer {
+    void *tmp_buffer;
+    int tmp_buffer_size;
+    int tmp_buffer_in_use_size;
+} Attr_tmp_buffer;
 
-  l1_count = attr_count (l1);
-  if (l1_count < xo.attr_count) return 0;
-
-  for (i = 0; keep_going && i < xo.attr_count; i++)
-    {
-      int found = 0;
-      
-      for (j = 0; !found && j < l1_count; j++)
-	{
-	  l1_p = get_attr (l1, j);
-
-	  found = compare_attr_p_xmit_attr_by_val (l1_p, &xo.attrs[i]);
-	}
-      
-      keep_going = found;
-    }
-  
-  return keep_going;
+AttrBuffer
+create_AttrBuffer()
+{
+    AttrBuffer buf = malloc(sizeof(Attr_tmp_buffer));
+    buf->tmp_buffer = NULL;
+    buf->tmp_buffer_size = 0;
+    buf->tmp_buffer_in_use_size = 0;
+    return buf;
 }
-	    
+
+void
+free_AttrBuffer(buf)
+AttrBuffer buf;
+{
+    if (buf->tmp_buffer)
+	free(buf->tmp_buffer);
+    free(buf);
+}
+
+#define TMP_BUFFER_INIT_SIZE 128
+
+#define Max(i,j) ((i<j) ? j : i)
+
+static
+void *
+add_to_tmp_buffer(buf, size)
+AttrBuffer buf;
+int size;
+{
+    int old_size = buf->tmp_buffer_in_use_size;
+    size += old_size;
+
+    if (buf->tmp_buffer_size == 0) {
+	int tmp_size = Max(size, TMP_BUFFER_INIT_SIZE);
+	buf->tmp_buffer = malloc(tmp_size);
+    }
+    if (size > buf->tmp_buffer_size) {
+	buf->tmp_buffer = realloc(buf->tmp_buffer, size);
+	buf->tmp_buffer_size = size;
+    }
+    if (!buf->tmp_buffer) {
+	buf->tmp_buffer_size = 0;
+    } else {
+	buf->tmp_buffer_in_use_size = size;
+    }
+
+    return old_size + (char*)buf->tmp_buffer;
+}
+
+static void
+recursive_encode(attr_list l, AttrBuffer b, attr_value_type t)
+{
+    if (l->list_of_lists == 0) {
+	switch (t) {
+	case Attr_Int4: {
+	    /* marshalling only int4 attributes in this pass */
+	    int attr_count = l->l.list.iattrs->int_attr_count;
+	    void *buffer_end;
+	    if (attr_count == 0) return;
+	    buffer_end = add_to_tmp_buffer(b, attr_count * sizeof(int_attr));
+	    memcpy(buffer_end, &l->l.list.iattrs->iattr[0], 
+		   attr_count * sizeof(int_attr));
+	    ((int_attr_p) b->tmp_buffer)->int_attr_count += attr_count;
+	    break;
+	  }
+	default: {
+	    /* no bulk stuff here... marshal one by one */
+	    int i;
+	    for (i=0; i<l->l.list.iattrs->other_attr_count; i++) {
+		attr_p attr = &l->l.list.attributes[i];
+		void *buffer_end = add_to_tmp_buffer(b, 8);
+		memcpy(buffer_end, attr, 8);
+		switch (attr->val_type) {
+		case Attr_Int4:
+		case Attr_Undefined:
+		    assert(0);
+		    break;
+		case Attr_Atom:
+		    buffer_end = add_to_tmp_buffer(b, 4);
+		    *((int*)buffer_end) = (int) attr->value;
+		    break;
+		case Attr_Int8:
+		    buffer_end = add_to_tmp_buffer(b, 8);
+		    memcpy(buffer_end, &attr->value, 8);
+		    break;
+		case Attr_Opaque:
+		case Attr_String: {
+		    void *value;
+		    int len;
+		    int pad_len;
+		    if (attr->val_type == Attr_String) {
+			value = (char*) attr->value;
+			len = strlen((char*)value) + 1;
+		    } else {
+			value = ((attr_opaque_p)attr->value)->buffer;
+			len = ((attr_opaque_p)attr->value)->length;
+		    }
+		    pad_len = roundup4(len+2) - 2;
+		    buffer_end = add_to_tmp_buffer(b, 2 + pad_len);
+		    *((int2*)buffer_end) = (int2) len;
+		    memcpy((char*)buffer_end + 2, value, len);
+		    break;
+		  }
+		case Attr_List:
+		    assert(0);
+		    break;
+		}
+		((int_attr_p) b->tmp_buffer)->other_attr_count ++;
+	    }
+	  }
+	}
+    } else {
+        int i;
+        for (i=0; i<l->l.lists.sublist_count; i++) {
+	    recursive_encode(l, b, t);
+	}
+    }
+}
+
+	
+extern void *
+encode_attr_for_xmit(attr_list l, AttrBuffer b, int *length)
+{
+    if (l->list_of_lists == 0) {
+	if (l->l.list.iattrs->other_attr_count == 0) {
+	    /* fast case, a single list with no non-integer attributes */
+	    /* just return a pointer to the data block */
+	    *length = sizeof(struct int_attr_struct) + 
+		(l->l.list.iattrs->int_attr_count - 1) * sizeof(int_attr);
+	    return l->l.list.iattrs;
+	}
+    }
+    add_to_tmp_buffer(b, sizeof(struct int_attr_struct));
+    ((int_attr_p) b->tmp_buffer)->int_attr_count = 0;
+    ((int_attr_p) b->tmp_buffer)->other_attr_count = 0;
+    /* not the simple case */
+    b->tmp_buffer_in_use_size = 4;
+    /* first the int Attributes */
+    recursive_encode(l, b, Attr_Int4);
+    /* then the remaining Attributes */
+    recursive_encode(l, b, Attr_Undefined);
+    *length = b->tmp_buffer_in_use_size;
+    return b->tmp_buffer;
+}
 
   
+static void
+byte_swap(char *buf, int len)
+{
+    switch(len) {
+    case 8: {
+	int4 tmp;
+	tmp = ((int4*) buf)[0];
+	((int4*)buf)[0] = ((int4*) buf)[1];
+	((int4*) buf)[1] = tmp;
+	byte_swap(buf + 4, 4);
+	/* falling through */
+    }
+    case 4: {
+	int2 tmp;
+	tmp = ((int2*) buf)[0];
+	((int2*)buf)[0] = ((int2*) buf)[1];
+	((int2*) buf)[1] = tmp;
+	byte_swap(buf + 2, 2);
+	/* falling through */
+    }
+    case 2: {
+	char tmp;
+	tmp = buf[0];
+	buf[0] = buf[1];
+	buf[1] = tmp;
+	break;
+    }
+    default:
+	assert(0);
+    }
+}
+
+extern attr_list
+decode_attr_from_xmit(void * buf)
+{
+    int_attr_p header = (int_attr_p) buf;
+    int iattr_size = sizeof(struct int_attr_struct) + 
+	(header->int_attr_count -1) * sizeof(int_attr);
+    attr_list l = internal_create_attr_list(header->int_attr_count,
+					    header->other_attr_count);
+    /* byte swap if the encoders byte order is not equal to ours */
+    int bswap = header->byte_order != WORDS_BIGENDIAN;
+    char *optr = (char*)buf + iattr_size;
+    int i;
+    
+    memcpy(l->l.list.iattrs, buf, iattr_size);
+    l->l.list.iattrs->byte_order = WORDS_BIGENDIAN; /* overwrite original */
+    if (bswap) {
+	for (i=0; i < header->int_attr_count; i++) {
+	    byte_swap((char*)&l->l.list.iattrs->iattr[i].attr_id, 4);
+	    byte_swap((char*)&l->l.list.iattrs->iattr[i].value, 4);
+	}
+    }
+    for (i=0; i< header->other_attr_count; i++) {
+	memcpy(&l->l.list.attributes[i], optr, 8);
+	if (bswap) {
+	    byte_swap((char*)&l->l.list.attributes[i].attr_id, 4);
+	    byte_swap((char*)&l->l.list.attributes[i].val_type, 4);
+	}
+	optr += 8;
+	switch(l->l.list.attributes[i].val_type) {
+	case Attr_Int4:
+	case Attr_Undefined:
+	    assert(0);
+	    break;
+	case Attr_Int8:
+	    memcpy(&l->l.list.attributes[i].value, optr, 8);
+	    if (bswap) byte_swap((char*)&l->l.list.attributes[i].value, 8);
+	    optr += 8;
+	    break;
+	case Attr_Opaque:
+	case Attr_String: {
+	    int2 len = *(int2*)optr;
+	    int pad_len;
+	    if (bswap) byte_swap((char*)&len, 2);
+	    pad_len = roundup4(len + 2) - 2;
+	    optr += 2;
+	    if (l->l.list.attributes[i].val_type == Attr_String) {
+		char *value = malloc(len);
+		memcpy(value, optr, len);
+		l->l.list.attributes[i].value = (attr_value) value;
+	    } else {
+		attr_opaque_p op = malloc(sizeof(attr_opaque));
+		op->length = len;
+		op->buffer = malloc(len);
+		memcpy(op->buffer, optr, len);
+		l->l.list.attributes[i].value = (attr_value) op;
+	    }
+	    optr += pad_len;
+	    break;
+	  }
+	case Attr_List:
+	    assert(0);
+	    break;
+	}
+    }
+    return l;
+}
+
+
+static const char num_to_char[] =
+   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const char char_to_num[256] = {
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,62, -1,-1,-1,63,
+    52,53,54,55, 56,57,58,59, 60,61,-1,-1, -1,-1,-1,-1,
+    -1, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
+    15,16,17,18, 19,20,21,22, 23,24,25,-1, -1,-1,-1,-1,
+    -1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
+    41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+};
+
+/*
+ * Decode base64 data to 'output'.  Decode in-place if 'output' is NULL.
+ * Return the length of the decoded data, or -1 if there was an error.
+ */
+static int 
+base64_decode(input, output)
+unsigned char *input;
+unsigned char *output;
+{
+    int len = 0;
+    int c1, c2, c3, c4;
+
+    if (output == NULL) output = input;
+    while (*input) {
+	c1 = *input++;
+	if (char_to_num[c1] == -1) return -1;
+	c2 = *input++;
+	if (char_to_num[c2] == -1) return -1;
+	c3 = *input++;
+	if (c3 != '=' && char_to_num[c3] == -1) return -1; 
+	c4 = *input++;
+	if (c4 != '=' && char_to_num[c4] == -1) return -1;
+	*output++ = (char_to_num[c1] << 2) | (char_to_num[c2] >> 4);
+	++len;
+	if (c3 == '=') break;
+	*output++ = ((char_to_num[c2] << 4) & 0xf0) | (char_to_num[c3] >> 2);
+	++len;
+	if (c4 == '=') break;
+	*output++ = ((char_to_num[c3] << 6) & 0xc0) | char_to_num[c4];
+	++len;
+    }
+
+    return len;
+}
+	
+/*
+ * Do base64 encoding of binary buffer, returning a malloc'd string
+ */
+static char *
+base64_encode(buffer, len)
+char *buffer;
+unsigned int len;
+{
+    char * buf;
+    int buflen = 0;
+    int c1, c2, c3;
+    int maxlen = len*4/3 + 3;
+#ifdef OVERKILL
+    maxlen = len*2 + 1;
+#endif
+
+    if((buf = malloc(maxlen)) == NULL)
+	return NULL;
+    while (len) {
+	
+	c1 = (unsigned char)*buffer++;
+	buf[buflen++] = num_to_char[c1>>2];
+
+	if (--len == 0) c2 = 0;
+	else c2 = (unsigned char)*buffer++;
+	buf[buflen++] = num_to_char[((c1 & 0x3)<< 4) | ((c2 & 0xf0) >> 4)];
+
+	if (len == 0) {
+	    buf[buflen++] = '=';
+	    buf[buflen++] = '=';
+	    break;
+	}
+
+	if (--len == 0) c3 = 0;
+	else c3 = (unsigned char)*buffer++;
+
+	buf[buflen++] = num_to_char[((c2 & 0xf) << 2) | ((c3 & 0xc0) >>6)];
+	if (len == 0) {
+	    buf[buflen++] = '=';
+
+	    break;
+	}
+
+	--len;
+	buf[buflen++] = num_to_char[c3 & 0x3f];
+
+    }
+
+    buf[buflen]=0;
+
+    return buf;
+}
+
