@@ -457,6 +457,8 @@ server_init(int udp_socket, int tcp_socket)
     FD_SET(udp_socket, &server_fdset);
     FD_SET(tcp_socket, &server_fdset);
     clients = (ASClient)malloc(sizeof(struct _ASClient)*max_fd);
+    clients[udp_socket].created = -1;
+    clients[tcp_socket].created = -1;
     memset((char*)clients, 0, sizeof(struct _ASClient) *max_fd);
 }
 #define CONN_TIMEOUT_INTERVAL 3600
@@ -589,7 +591,8 @@ poll_and_handle()
 				i);
 			LOG("REmoving bad fd %d", i);
 			clients[i].created = -1;
-		    } else if (i != (long) conn_sock_inet) {
+		    } else if ((i !=  conn_sock_inet) && 
+			       (i !=  udp_sock)) {
 			close_client(i);
 		    }
 		    found_one++;
