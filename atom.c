@@ -150,7 +150,7 @@ char *str;
 		printf("Serious internal error in atom server.  Duplicate value hash entry.\n");
 		exit(1);
 	    }
-	    return_msg =  Tcl_GetHashValue(entry);
+	    return_msg =  (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
 	    thr_mutex_unlock(as->hash_lock);
 #else
 	int return_format_id;
