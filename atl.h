@@ -92,13 +92,13 @@ typedef struct xmit_object_s {
 #define ATTR_INT4_8_EQ(ap1,ap2) ((ap1)->value == (ap2)->value)
 
 /* equality between Attr_Int4, Attr_Int8 attr_p and xmit_attr_ref */
-#define ATTR_INT4_8_XMIT_ATTR_EQ(ap,xa) (((int)(ap)->value) == (xa)->attr_atom_val)
+#define ATTR_INT4_8_XMIT_ATTR_EQ(ap,xa) ((ap)->value == ((attr_value)(xa)->attr_atom_val))
 
 /* equality between Attr_Atom attr_p's */
 #define ATTR_ATOM_EQ(ap1,ap2) ((ap1)->value == (ap2)->value)
 
 /* equality between Attr_Int4, Attr_Int8 attr_p and xmit_attr_ref */
-#define ATTR_ATOM_XMIT_ATTR_EQ(ap,xa) (((atom_t)(ap)->value) == (xa)->attr_atom_val)
+#define ATTR_ATOM_XMIT_ATTR_EQ(ap,xa) ((ap)->value == ((attr_value)(xa)->attr_atom_val))
 
 /* equality between Attr_Opaque attr_p's 
    UGLY, but someone once said you can't have too many parentheses */

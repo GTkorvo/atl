@@ -51,6 +51,9 @@
 /* define if unistd.h or stdlib.h declares putenv */
 #undef PUTENV_DEFINED
 
+/* define if stdio.h declares fprintf */
+#undef FSCANF_DEFINED
+
 /* define if sprintf is declared in stdio.h */
 #undef SPRINTF_DEFINED
 
