@@ -33,7 +33,7 @@ extern int sscanf ARGS((const char *, const char *, ...));
 #ifndef PRINTF_DEFINED
 extern int printf ARGS((const char *, ...));
 #endif
-#ifndef PUTENV_DEFINED
+#ifndef HAVE_PUTENV
 extern int putenv ARGS((const char *));
 #endif
 extern pid_t getpid();

@@ -75,6 +75,49 @@ typedef struct xmit_object_s {
     xmit_attr	*attrs;
 } xmit_object, *xmit_object_ref;
 
+/* equality between two Attr_String attr_p's */
+#define ATTR_STRING_EQ(ap1,ap2) \
+ (strcmp ((char*)(ap1)->value, "*") == 0 \
+ || strcmp ((char*)(ap2)->value, "*") == 0 \
+ || strcmp ((char*)(ap1)->value, (char*)(ap2)->value) == 0)
+
+/* equality between an Attr_String attr_p and an 
+   Attr_String xmit_attr_ref */
+#define ATTR_STRING_XMIT_ATTR_EQ(ap,xa) \
+ (strcmp ((char*)ap->value, "*") == 0 \
+ || strcmp ((char*)xa->attr_string_val, "*") == 0 \
+ || strcmp ((char*)ap->value, (char*)xa->attr_string_val) == 0)
+
+/* equality between Attr_Int4, Attr_Int8 attr_p's */
+#define ATTR_INT4_8_EQ(ap1,ap2) ((ap1)->value == (ap2)->value)
+
+/* equality between Attr_Int4, Attr_Int8 attr_p and xmit_attr_ref */
+#define ATTR_INT4_8_XMIT_ATTR_EQ(ap,xa) (((int)(ap)->value) == (xa)->attr_atom_val)
+
+/* equality between Attr_Atom attr_p's */
+#define ATTR_ATOM_EQ(ap1,ap2) ((ap1)->value == (ap2)->value)
+
+/* equality between Attr_Int4, Attr_Int8 attr_p and xmit_attr_ref */
+#define ATTR_ATOM_XMIT_ATTR_EQ(ap,xa) (((atom_t)(ap)->value) == (xa)->attr_atom_val)
+
+/* equality between Attr_Opaque attr_p's 
+   UGLY, but someone once said you can't have too many parentheses */
+#define ATTR_OPAQUE_EQ(ap1,ap2) \
+ (((attr_opaque_p)(ap1)->value)->length == ((attr_opaque_p)(ap2)->value)->length \
+  && memcmp (((attr_opaque_p)(ap1)->value)->buffer,\
+             ((attr_opaque_p)(ap2)->value)->buffer,\
+             (((attr_opaque_p)(ap1)->value)->length <= ((attr_opaque_p)(ap2)->value)->length ? \
+               ((attr_opaque_p)(ap1)->value)->length : ((attr_opaque_p)(ap2)->value)->length)))
+
+/* equality between Attr_Opaque attr_p and xmit_attr_ref 
+   equally ugly as the above */
+#define ATTR_OPAQUE_XMIT_ATTR_EQ(ap,xa) \
+ (((attr_opaque_p)(ap)->value)->length == ((attr_opaque_p)(xa)->attr_string_val)->length \
+  && memcmp (((attr_opaque_p)(ap)->value)->buffer,\
+             ((attr_opaque_p)(xa)->attr_string_val)->buffer,\
+             (((attr_opaque_p)(ap)->value)->length <= ((attr_opaque_p)(xa)->attr_string_val)->length ? \
+              ((attr_opaque_p)(ap)->value)->length :  ((attr_opaque_p)(xa)->attr_string_val)->length)))
+
 
 /* operations on attr_lists */
 extern attr_list create_attr_list();
@@ -124,6 +167,14 @@ attr_list
 attr_list_from_string ARGS((char * str));
 
 extern
+int
+compare_attr_p_by_val (attr_p a1, attr_p a2);
+
+extern
+int
+compare_attr_p_xmit_attr_by_val (attr_p ap, xmit_attr_ref xa);
+
+extern
 xmit_object
 pack_attr_list (attr_list attrs);
 
@@ -150,5 +201,9 @@ unpack_attr_list_2 (int xmit_attr_count,
 extern
 int
 attr_list_subset (attr_list l1, attr_list l2);
+
+extern
+int
+attr_list_subset_xmit_object (xmit_object xo, attr_list l1);
 
 #endif

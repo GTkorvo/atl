@@ -274,7 +274,7 @@ int indent;
 		printf("    { %s, Attr_Opaque, NULL }\n", attr_name);
 	    }
 	    break;
-	case Attr_Atom:
+ 	case Attr_Atom:
 	    atom_str = string_from_atom(global_as,
 				     (atom_t) (long)list->l.list.attributes[i].value);
 	    printf("    { %s, Attr_Atom, %s }\n", attr_name,
@@ -789,13 +789,15 @@ compare_attr_p_by_val (attr_p a1, attr_p a2)
       if (a1->val_type == Attr_Int4 ||
 	  a1->val_type == Attr_Int8)
 	{
-	  eq = (a1->value == a2->value);
+	  eq = ATTR_INT4_8_EQ(a1,a2);
 	}
       else if (a1->val_type == Attr_String)
 	{
-	  eq = (strcmp ((char*)a1->value, "*") == 0 ||
-		strcmp ((char*)a2->value, "*") == 0 ||
-		strcmp ((char*)a1->value, (char*)a2->value) == 0);
+	  eq = ATTR_STRING_EQ(a1,a2);
+	}
+      else if (a1->val_type == Attr_Atom)
+	{
+	  eq = ATTR_ATOM_EQ(a1,a2);
 	}
       else if (a1->val_type == Attr_List)
 	{
@@ -812,6 +814,36 @@ compare_attr_p_by_val (attr_p a1, attr_p a2)
   return eq;
 }
 
+extern
+int
+compare_attr_p_xmit_attr_by_val (attr_p ap, xmit_attr_ref xa)
+{
+  int eq = 0;
+
+  if (ap->val_type == xa->attr_type)
+    {
+      if (ap->val_type == Attr_Int4 || ap->val_type == Attr_Int8)
+	{
+	  eq = ATTR_INT4_8_XMIT_ATTR_EQ(ap,xa);
+	}
+      else if (ap->val_type == Attr_String)
+	{
+	  eq = ATTR_STRING_XMIT_ATTR_EQ(ap,xa);
+	}
+      else if (ap->val_type == Attr_Atom)
+	{
+	  eq = ATTR_ATOM_XMIT_ATTR_EQ(ap,xa);
+	}
+      else
+	{
+	  eq = 1;
+	}
+
+    }
+  return eq;
+}
+
+
 
 extern
 int
@@ -823,7 +855,7 @@ attr_list_subset (attr_list l1, attr_list l2)
    *  of l2 with the same attribute name, attribute type, and attribute
    *  value.
    */
-  int i, j, eq = 1;
+  int i, j, keep_going = 1;
   int l1_count;
   int l2_count;
   attr_p l1_tmp, l2_tmp;
@@ -833,25 +865,61 @@ attr_list_subset (attr_list l1, attr_list l2)
   
   if (l2_count < l1_count) return 0;
 
-  for (i = 0; i < l1_count && eq; i++)
+  for (i = 0; i < l1_count && keep_going; i++)
     {
-      
+      int found = 0;
       l1_tmp = get_attr (l1, i);
 
-      for (j = 0; j < l2_count; j++)
+      for (j = 0; !found && j < l2_count; j++)
 	{
 	  l2_tmp = get_attr (l2, j);
 	  
-	  eq = compare_attr_p_by_val (l1_tmp, l2_tmp);
+	  found = compare_attr_p_by_val (l1_tmp, l2_tmp);
 	}
+
+      keep_going = found;
     }
 
-  return eq;
+  return keep_going;
 }
 	
 	
+extern
+int
+attr_list_subset_xmit_object (xmit_object xo, attr_list l1)
+{
+  /*
+   *  This function returns true if the attributes stored in the
+   *  given xmit_object would constitute an attr list that is
+   *  a subset of the given attr_list.  I wrote this function to
+   *  avoid the malloc'ing and string copying inherent in building
+   *  an attr list out of the xmit_object and then comparing it 
+   *  against the existing attr list.
+   */
+  int i, j, keep_going, l1_count;
+  attr_p l1_p;
   
+  keep_going = 1;
 
+  l1_count = attr_count (l1);
+  if (l1_count < xo.attr_count) return 0;
+
+  for (i = 0; keep_going && i < xo.attr_count; i++)
+    {
+      int found = 0;
+      
+      for (j = 0; !found && j < l1_count; j++)
+	{
+	  l1_p = get_attr (l1, j);
+
+	  found = compare_attr_p_xmit_attr_by_val (l1_p, &xo.attrs[i]);
+	}
+      
+      keep_going = found;
+    }
   
+  return keep_going;
+}
+	    
 
   
