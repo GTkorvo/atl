@@ -21,12 +21,6 @@
 /* Define if your <sys/time.h> declares struct tm.  */
 #undef TM_IN_SYS_TIME
 
-/* Define if getpeername is declared in unistd.h */
-#undef GETPEERNAME_DEFINED
-
-/* Define if putenv is declared in unistd.h */
-#undef PUTENV_DEFINED
-
 /* Define if you have the gethostname function.  */
 #undef HAVE_GETHOSTNAME
 
@@ -50,4 +44,16 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* define if sys/socket.h declares getpeername */
+#undef GETPEERNAME_DEFINED
+
+/* define if unistd.h or stdlib.h declares putenv */
+#undef PUTENV_DEFINED
+
+/* define if sprintf is declared in stdio.h */
+#undef SPRINTF_DEFINED
+
+/* define if stdio.h declares sscanf */
+#undef SSCANF_DEFINED
 

@@ -44,6 +44,13 @@ gen_thread_info_t *gen_thread_info = NULL;
 #ifndef SPRINTF_DEFINED
 extern int sprintf ARGS((char *, const char *,...));
 #endif
+#ifndef PUTENV_DEFINED
+extern int putenv ARGS((const char *));
+#endif
+extern char *getenv ARGS((const char *name));
+#ifndef SSCANF_DEFINED
+extern int sscanf ARGS((const char *, const char *,...));
+#endif
 int
 libgenthreads_init()
 {
