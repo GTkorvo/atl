@@ -1000,6 +1000,10 @@ attr_list list;
         if (list->l.list.attributes != NULL) {
             free(list->l.list.attributes);
         }
+	if (list->l.list.iattrs != NULL) {
+	    free(list->l.list.iattrs);
+	    list->l.list.iattrs = NULL;
+	}
         free(list);
     }      
 }
