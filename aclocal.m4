@@ -1670,9 +1670,6 @@ else
     always_export_symbols=yes
     hardcode_libdir_flag_spec=' '
     allow_undefined_flag=unsupported
-    # Tell ltmain to make .lib files, not .a files.
-#    libext=lib
-    # FIXME: Setting linknames here is a bad hack.
     archive_expsym_cmds='echo EXPORTS | cat - $export_symbols > ${export_symbols}D~$CC -o $lib $libobjs $compiler_flags `echo "$deplibs" | sed -e '\''s/ -lc$//;s/\.dll/\.lib/'\''` -link -dll /def:${export_symbols}D'
     # The linker will automatically build a .lib file if we build a DLL.
     old_archive_from_new_cmds=''
@@ -2144,6 +2141,9 @@ cygwin* | mingw* | pw32*)
     library_names_spec="\${libname}\`echo \${release} | sed -e s/[.]/-/g\`\${versuffix}.dll"
     soname_spec="\${libname}\`echo \${release} | sed -e s/[.]/-/g\`\${versuffix}.lib"
     postinstall_cmds="\$install_prog \`echo \$dir/\$srcname | sed -e 's/\\.dll/\\.lib/'\` \$destdir"
+    # Tell ltmain to make .lib files, not .a files.
+    libext=lib
+    libname_spec='$name'
     ;;
   *)
     library_names_spec='${libname}`echo ${release} | sed -e 's/[[.]]/-/g'`${versuffix}.dll $libname.lib'
