@@ -32,6 +32,8 @@ main()
     attr_add_list (al, al2);
     attr_list_to_string (al);
     dump_attr_list (al);
+    free_attr_list(al);
+    free_attr_list(al2);
 
     set_attr_atom_and_string("Fosters", FOSTERS_ATOM);
     set_attr_atom_and_string("IP_ADDR", ATL_CHAR_CONS('C','I','P','A'));
@@ -48,10 +50,15 @@ main()
     putenv("ATL_BASE64_STRINGS=1");
     string = attr_list_to_string(list);
     printf("stringified version is >%s<\n", string);
+    free_attr_list(list);
     list2 = attr_list_from_string(string);
     free(string);
     dump_attr_list(list2);
     printf("\n");
-
+    list = attr_copy_list(list2);
+    free_attr_list(list2);
+    dump_attr_list(list);
+    printf("\n");
+    free_attr_list(list);
     return 0;
 }

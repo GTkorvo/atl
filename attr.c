@@ -139,6 +139,36 @@ atom_server *asp;
     }
 }
 
+attr_list
+attr_copy_list(attr_list orig)
+{
+    attr_list list = malloc(sizeof(attr_list_struct));
+    memcpy(list, orig, sizeof(attr_list_struct));
+    if (orig->l.list.iattrs->int_attr_count != 0) {
+	int iattr_count = orig->l.list.iattrs->int_attr_count;
+	list->l.list.iattrs = malloc(sizeof(struct int_attr_struct) +
+				     (iattr_count -1) * sizeof(int_attr));
+	memcpy(list->l.list.iattrs, orig->l.list.iattrs, 
+	       sizeof(struct int_attr_struct) +
+	       (iattr_count -1) * sizeof(int_attr));
+    }
+    if (orig->l.list.iattrs->other_attr_count != 0) {
+	int i;
+	attr *a, *b;
+	int oattr_count = orig->l.list.iattrs->other_attr_count;
+	a = list->l.list.attributes = malloc(oattr_count * sizeof(attr));
+	b = orig->l.list.attributes;
+	memcpy(a, b, oattr_count * sizeof(attr));
+	for (i=0; i < oattr_count; i++) {
+	    if (a[i].val_type == Attr_String) {
+		char *s = strdup((char *) b[i].value);
+		a[i].value = (attr_value)s;
+	    }
+	}
+    }
+    return list;
+}
+
 #ifndef WORDS_BIGENDIAN
 #define WORDS_BIGENDIAN 0
 #endif
