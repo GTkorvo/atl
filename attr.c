@@ -392,12 +392,15 @@ attr_list list;
     for (i = 0; i < attr_count(list); i++) {
 	attr_p tmp = get_attr(list, i);
 	char str_tmp[128];
+	char *atom_string;
 	memset(str_tmp, 0, sizeof(str_tmp));
 	if (tmp->val_type == Attr_List) continue;
 #ifdef SHARED_ATTR_NUMS
 	sprintf(str_tmp, "{%d", tmp->attr_id);
 #else
-	sprintf(str_tmp, "{%s", string_from_atom(global_as, tmp->attr_id));
+	sprintf(str_tmp, "{%s", atom_string = 
+		string_from_atom(global_as, tmp->attr_id));
+	free(atom_string);
 #endif
 	str = strdcat(str, size_p, str_tmp);
 	switch(tmp->val_type) {
