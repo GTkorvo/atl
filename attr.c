@@ -466,9 +466,11 @@ int indent;
     }
     for (i = 0; i < list->l.list.iattrs->int_attr_count; i++) {
 	int attr_id = list->l.list.iattrs->iattr[i].attr_id;
-	char *c = (char*)&attr_id;
+	char c[15];
         char *attr_name = string_from_atom(global_as, attr_id), *print_name;
         int j;
+	memcpy(&c[0], &attr_id, 4);
+	c[4] = 0;
 	print_name = attr_name;
         if (attr_name == NULL)
             print_name = "<null attr name>";
@@ -484,20 +486,30 @@ int indent;
 		   ((ip & 0xff000000) >> 24), ((ip & 0x00ff0000) >> 16), 
 		   ((ip & 0x0000ff00) >> 8), (ip & 0x000000ff));
 	} else {
-	    printf("    { %s ('%c%c%c%c'), Attr_Int4, %ld }\n", print_name,
-		   c[0], c[1], c[2], c[3],
-		   (long) list->l.list.iattrs->iattr[i].value);
+	    char *print_id = &c[0];
+	    if ((!isprint(c[0])) || (!isprint(c[1])) || (!isprint(c[2])) || 
+		(!isprint(c[3]))) {
+		sprintf(print_id, "0x%x", attr_id);
+	    }
+	    printf("    { %s ('%s'), Attr_Int4, %ld }\n", print_name,
+		   print_id, (long) list->l.list.iattrs->iattr[i].value);
 	}
 	if (attr_name) free(attr_name);
     }
 	
     for (i = 0; i < list->l.list.iattrs->other_attr_count; i++) {
 	int attr_id = list->l.list.attributes[i].attr_id;
-	char *c = (char*)&attr_id;
+	char c[15];
 	char *attr_name = string_from_atom(global_as, attr_id);
         char *print_name;
         int j;
+	char *print_id = &c[0];
 	print_name = attr_name;
+	memcpy(&c[0], &attr_id, 4);
+	c[4] = 0;
+	if (!isprint(c[0]) || !isprint(c[1]) || !isprint(c[2]) || !isprint(c[3])) {
+	    sprintf(print_id, "0x%x", attr_id);
+	}
         if (attr_name == NULL)
             print_name = "<null attr name>";
         for (j = 0; j < indent; j++) {
@@ -505,25 +517,25 @@ int indent;
         }
         switch (list->l.list.attributes[i].val_type) {
         case Attr_Undefined:
-            printf("    { %s ('%c%c%c%c'), Undefined, Undefined }\n", 
-		   print_name, c[0], c[1], c[2], c[3]);
+            printf("    { %s ('%s'), Undefined, Undefined }\n", 
+		   print_name, print_id);
             break;
         case Attr_Int4:
 	    assert(0);
             break;
         case Attr_Int8:
-            printf("    { %s ('%c%c%c%c'), Attr_Int8, %ld }\n", print_name,
-		   c[0], c[1], c[2], c[3],
+            printf("    { %s ('%s'), Attr_Int8, %ld }\n", print_name,
+		   print_id,
                    (long) list->l.list.attributes[i].value);
             break;
         case Attr_String:
             if (((char*)list->l.list.attributes[i].value) != NULL) {
-                printf("    { %s ('%c%c%c%c'), Attr_String, %s }\n", 
-		       print_name, c[0], c[1], c[2], c[3],
+                printf("    { %s ('%s'), Attr_String, %s }\n", 
+		       print_name, print_id,
                        (char *) list->l.list.attributes[i].value);
             } else {
-                printf("    { %s ('%c%c%c%c'), Attr_String, NULL }\n", 
-		       print_name, c[0], c[1], c[2], c[3]);
+                printf("    { %s ('%s'), Attr_String, NULL }\n", 
+		       print_name, print_id);
             }
             break;          
         case Attr_Opaque:
@@ -531,8 +543,8 @@ int indent;
                 int j;
                 attr_opaque_p o =
                     (attr_opaque_p) list->l.list.attributes[i].value;
-                printf("    { %s ('%c%c%c%c'), Attr_Opaque, \"", 
-		       print_name, c[0], c[1], c[2], c[3]);
+                printf("    { %s ('%s'), Attr_Opaque, \"", 
+		       print_name, print_id);
                 for (j=0; j< o->length; j++) {
                     printf("%c", ((char*)o->buffer)[j]);
                 }
@@ -542,8 +554,8 @@ int indent;
                 }
                 printf(">}\n");
             } else {
-                printf("    { %s ('%c%c%c%c'), Attr_Opaque, NULL }\n", 
-		       print_name, c[0], c[1], c[2], c[3]);
+                printf("    { %s ('%s'), Attr_Opaque, NULL }\n", 
+		       print_name, print_id);
             }
             break;
         case Attr_Atom: {
@@ -553,15 +565,15 @@ int indent;
             print_str = atom_str = string_from_atom(global_as, atom_val);
 	    if (atom_str == NULL)
 		print_str = "<null attr name>";
-            printf("    { %s ('%c%c%c%c'), Attr_Atom, %s ('%c%c%c%c') }\n", 
-		   print_name, c[0], c[1], c[2], c[3],
+            printf("    { %s ('%s'), Attr_Atom, %s ('%c%c%c%c') }\n", 
+		   print_name, print_id,
                    (char *) print_str, cv[0], cv[1], cv[2], cv[3]);
 	    if (atom_str) free(atom_str);
             break;
 	}
         case Attr_List:
-            printf("    { %s ('%c%c%c%c'), Attr_List, ->\n", print_name,
-		   c[0], c[1], c[2], c[3]);
+            printf("    { %s ('%s'), Attr_List, ->\n", print_name,
+		   print_id);
             internal_dump_attr_list((attr_list) list->l.list.attributes[i].value,
                                     indent+1);
             for (j = 0; j< indent; j++) {
