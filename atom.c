@@ -252,7 +252,7 @@ atom_t atom;
     if (as->use_tcp) {
 	set_blocking(as, 1);
 	buf[0] = len;
-	establish_server_connection(as, 1);
+	if (establish_server_connection(as, 1) == 0) return;
 	if ((numbytes = write(as->tcp_fd, buf, len+1)) != len +1) {
 	    close(as->tcp_fd);
 	    return;
@@ -338,12 +338,13 @@ int do_fallback;
 
 
     if (atom_server_verbose == -1) {
-	if (getenv("ATOM_SERVER_VERBOSE") == NULL) {
+	if (cercs_getenv("ATOM_SERVER_VERBOSE") == NULL) {
 	    atom_server_verbose = 0;
 	} else {
 	    atom_server_verbose = 1;
 	}
     }
+    if (as->tcp_fd == -2) return 0;
     if ((as->tcp_fd == -1) || 
 	(write(as->tcp_fd, &ping_char, 1) != 1)) {
 	/* reestablish connection, name_str is the machine name */
@@ -425,6 +426,7 @@ int do_fallback;
 			sizeof sock_addr) < 0) {
 #endif
 		fprintf(stderr, "Failed to connect to primary or fallback atom servers.\n");
+		as->tcp_fd = -2;
 	        return 0;
 	    }
 	}
@@ -476,7 +478,7 @@ char *str;
     thr_mutex_unlock(as->hash_lock);
     if (entry == NULL) {
 #ifndef MODULE
-	establish_server_connection(as, 1);
+	if (establish_server_connection(as, 1) == 0) return -1;
 	set_blocking(as, 1);	/* set server fd blocking */
 	len = strlen(str) + 2;
 	buf[1] = 'S';		/* string message */
@@ -543,7 +545,7 @@ atom_t atom;
     if (entry == NULL) {
 #ifndef MODULE
 	sprintf(&buf[1], "N%d", atom);
-	establish_server_connection(as, 1);
+	if (establish_server_connection(as, 1) == 0) return NULL;
 	buf[0] = strlen(&buf[1]);
 	if (write(as->tcp_fd, buf, buf[0]+1) != buf[0] + 1) {
 	    perror("write");
