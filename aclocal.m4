@@ -1748,7 +1748,7 @@ else
     # FIXME: Setting linknames here is a bad hack.
     archive_cmds='$CC -o $lib $libobjs $compiler_flags `echo "$deplibs" | sed -e '\''s/ -lc$//'\''` -link -dll~linknames='
     # The linker will automatically build a .lib file if we build a DLL.
-    old_archive_from_new_cmds='true'
+    old_archive_from_new_cmds=''
     # FIXME: Should let the user specify the lib program.
     old_archive_cmds='lib /OUT:$oldlib$oldobjs$old_deplibs'
     fix_srcfile_path='`cygpath -w "$srcfile"`'
@@ -3757,6 +3757,60 @@ rm -f conftest*
 ])])
 
 
+
+dnl CHAOS_CHECK_LIB(LIBRARY, FUNCTION [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND
+dnl              [, OTHER-LIBRARIES]]])
+AC_DEFUN(CHAOS_CHECK_LIB,
+[AC_REQUIRE([AC_PROG_CC_VCPP])
+AC_MSG_CHECKING([for $2 in library $1])
+dnl Use a cache variable name containing both the library and function name,
+dnl because the test really is for library $1 defining function $2, not
+dnl just for library $1.  Separate tests with the same $1 and different $2s
+dnl may have different results.
+ac_lib_var=`echo $1['_']$2 | sed 'y%./+-%__p_%'`
+if test "$ac_cv_prog_vcpp" = "yes"; then
+LIBSPEC="$1.lib"
+INCLUDELIBS=`echo $5| sed 's/-l\([[^ 	]]*\)/\1.lib/g;'`
+else
+LIBSPEC="-l$1"
+INCLUDELIBS="$5"
+fi
+AC_CACHE_VAL(ac_cv_lib_$ac_lib_var,
+[ac_save_LIBS="$LIBS"
+LIBS="$LIBSPEC $INCLUDELIBS $LIBS $LDPOSTFLAGS"
+AC_TRY_LINK(dnl
+ifelse(AC_LANG, [FORTRAN77], ,
+ifelse([$2], [main], , dnl Avoid conflicting decl of main.
+[/* Override any gcc2 internal prototype to avoid an error.  */
+]ifelse(AC_LANG, CPLUSPLUS, [#ifdef __cplusplus
+extern "C"
+#endif
+])dnl
+[/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char $2();
+])),
+	    [$2()],
+	    eval "ac_cv_lib_$ac_lib_var=yes",
+	    eval "ac_cv_lib_$ac_lib_var=no")
+LIBS="$ac_save_LIBS"
+])dnl
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  AC_MSG_RESULT(yes)
+  ifelse([$3], ,
+[changequote(, )dnl
+  ac_tr_lib=HAVE_LIB`echo $1 | sed -e 's/[^a-zA-Z0-9_]/_/g' \
+    -e 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
+changequote([, ])dnl
+  AC_DEFINE_UNQUOTED($ac_tr_lib)
+  LIBS="$LIBSPEC $LIBS"
+], [$3])
+else
+  AC_MSG_RESULT(no)
+ifelse([$4], , , [$4
+])dnl
+fi
+])
 
 
 AC_DEFUN(AC_FPRINTF_DEFINED,

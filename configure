@@ -3655,7 +3655,7 @@ else
     # FIXME: Setting linknames here is a bad hack.
     archive_cmds='$CC -o $lib $libobjs $compiler_flags `echo "$deplibs" | sed -e '\''s/ -lc$//'\''` -link -dll~linknames='
     # The linker will automatically build a .lib file if we build a DLL.
-    old_archive_from_new_cmds='true'
+    old_archive_from_new_cmds=''
     # FIXME: Should let the user specify the lib program.
     old_archive_cmds='lib /OUT:$oldlib$oldobjs$old_deplibs'
     fix_srcfile_path='`cygpath -w "$srcfile"`'
