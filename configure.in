@@ -59,7 +59,6 @@ AC_SUBST(KERNEL_VERSION)
 AC_SUBST(KERNEL_TARGET_MOD)
 
 dnl Checks for libraries.
-CERCS_REQUIRE_PACKAGE(pbio, io.h, ${LIB_PRE}IO${LIB_POST})
 CERCS_REQUIRE_PACKAGE(gen_thread, gen_thread.h,libgen_thread.la)
 CERCS_REQUIRE_PACKAGE(cercs_env, cercs_env.h,libcercs_env.la)
 if test -n "$cercs_cv_cercs_env_link_dir"; then
