@@ -7,7 +7,7 @@ noinst_HEADERS = atom_formats.h tclHash.h unix_defs.h
 libatl_la_SOURCES = atom.c attr.c tclHash.c
 libatl_la_DEPENDENCIES = @KERNEL_OBJS@
 libatl_la_LIBADD = @KERNEL_OBJS@
-libatl_la_LDFLAGS = -no-undefined
+libatl_la_LDFLAGS = -no-undefined $SOCKET_LIBS
 
 
 if KERNEL
@@ -57,17 +57,17 @@ katl.h:
 
 attr_test_SOURCES = attr_test.c
 attr_test_LDADD =  libatl.la
-attr_test_LDFLAGS =
+attr_test_LDFLAGS = 
 attr_test_DEPENDENCIES = libatl.la
 
 atom_test_SOURCES = atom_test.c
 atom_test_LDADD =  libatl.la
-atom_test_LDFLAGS =
+atom_test_LDFLAGS = 
 atom_test_DEPENDENCIES = libatl.la
 
-atom_server_SOURCES = atom_server.c
-atom_server_LDADD =  libatl.la
-atom_server_LDFLAGS =
+atom_server_SOURCES = atom_server.c tclHash.c
+atom_server_LDADD =  $(SOCKET_LIBS)
+atom_server_LDFLAGS = -static
 atom_server_DEPENDENCIES = libatl.la
 
 libtool: $(LIBTOOL_DEPS)

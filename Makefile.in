@@ -77,7 +77,10 @@ OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+SERVER_LIBS = @SERVER_LIBS@
+SOCKET_LIBS = @SOCKET_LIBS@
 STRIP = @STRIP@
+THREAD_LIBS = @THREAD_LIBS@
 VERSION = @VERSION@
 am__include = @am__include@
 am__quote = @am__quote@
@@ -90,7 +93,7 @@ noinst_HEADERS = atom_formats.h tclHash.h unix_defs.h
 libatl_la_SOURCES = atom.c attr.c tclHash.c
 libatl_la_DEPENDENCIES = @KERNEL_OBJS@
 libatl_la_LIBADD = @KERNEL_OBJS@
-libatl_la_LDFLAGS = -no-undefined
+libatl_la_LDFLAGS = -no-undefined $SOCKET_LIBS
 
 @KERNEL_TRUE@bin_PROGRAMS = 
 @KERNEL_FALSE@bin_PROGRAMS = attr_test atom_test atom_server
@@ -111,9 +114,9 @@ atom_test_LDADD = libatl.la
 atom_test_LDFLAGS = 
 atom_test_DEPENDENCIES = libatl.la
 
-atom_server_SOURCES = atom_server.c
-atom_server_LDADD = libatl.la
-atom_server_LDFLAGS = 
+atom_server_SOURCES = atom_server.c tclHash.c
+atom_server_LDADD = $(SOCKET_LIBS)
+atom_server_LDFLAGS = -static
 atom_server_DEPENDENCIES = libatl.la
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -129,7 +132,7 @@ libatl_la_OBJECTS = $(am_libatl_la_OBJECTS)
 @KERNEL_FALSE@	atom_server$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
-am_atom_server_OBJECTS = atom_server.$(OBJEXT)
+am_atom_server_OBJECTS = atom_server.$(OBJEXT) tclHash.$(OBJEXT)
 atom_server_OBJECTS = $(am_atom_server_OBJECTS)
 am_atom_test_OBJECTS = atom_test.$(OBJEXT)
 atom_test_OBJECTS = $(am_atom_test_OBJECTS)

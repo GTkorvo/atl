@@ -36,6 +36,7 @@ AM_CONDITIONAL(KERNEL, test x$kernel_build = xtrue)
 dnl Configure libtool
 AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
+LIBTOOL="$LIBTOOL --silent"
 AC_SUBST(LIBTOOL_DEPS)
 test "$CC" = "gcc" && CFLAGS="$CFLAGS -Wall -DUSE_UDP"
 
@@ -57,13 +58,13 @@ AC_SUBST(KERNEL_TARGET_MOD)
 dnl Checks for libraries.
 AC_REQUIRE_HPPCEL_PACKAGE(pbio, io.h, ${LIB_PRE}IO${LIB_POST})
 AC_REQUIRE_HPPCEL_PACKAGE(gen_thread, gen_thread.h,libgen_thread.la)
-
 if test -n "$ac_cv_gen_thread_link_arg"; then
-LIBS="$LIBS -lgen_thread"
+THREAD_LIBS="-lgen_thread"
 fi
 
 checkBoth=0
 AC_CHECK_FUNC(connect, checkSocket=0, checkSocket=1)
+save_libs = $LIBS;
 if test "$checkSocket" = 1; then
     AC_CHECK_LIB(socket, connect, LIBS="$LIBS -lsocket", checkBoth=1)
     if test "$checkBoth" = 1; then
@@ -73,7 +74,9 @@ if test "$checkSocket" = 1; then
     fi
    AC_CHECK_FUNC(gethostbyname, , AC_CHECK_LIB(nsl, getdomainname, [LIBS="$LIBS -lnsl"]))
 fi
-
+SOCKET_LIBS=$LIBS
+LIBS=$save_libs
+AC_SUBST(SOCKET_LIBS)
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(malloc.h sys/time.h unistd.h windows.h)
@@ -93,7 +96,7 @@ dnl Checks for library functions.
 AC_FUNC_MEMCMP
 AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
-AC_CHECK_FUNCS(gethostname putenv strdup)
+AC_CHECK_FUNCS(fork gethostname putenv strdup)
 
 AC_ARG_WITH(atom_server, [  --with-atom-server=HOST    Which host will run the atom server.],ATOM_SERVER_HOST=$withval)
 
@@ -142,4 +145,8 @@ fi
 AC_ARG_WITH(service_domain, [  --with-service-domain=DOMAINNAME	What domain the server will serve.],ATOM_SERVER_DOMAIN=$withval)
 AC_DEFINE_UNQUOTED(ATOM_SERVER_HOST, "$ATOM_SERVER_HOST", [Define with the name of the host which will run the atom server])
 AC_DEFINE_UNQUOTED(ATOM_SERVICE_DOMAIN, "$ATOM_SERVICE_DOMAIN", [Define with the name of the domain which the atom server will service])
+SERVER_LIBS=$LIBS
+AC_SUBST(SERVER_LIBS)
+AC_SUBST(THREAD_LIBS)
+
 AC_OUTPUT(Makefile)

@@ -1,3 +1,4 @@
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -7,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <tcl.h>
 typedef int atom_t;
 #include "atom_internal.h"
@@ -23,7 +25,7 @@ extern int set_string_and_atom(Tcl_HashTable *, Tcl_HashTable *, char *, int);
 Tcl_HashTable *stringhash;
 Tcl_HashTable *valuehash;
 
-int verbose = 0;
+int verbose = 1;
 
 char *
 atom_to_string(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_hash_table, int value)
@@ -31,7 +33,8 @@ atom_to_string(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_hash_tab
     Tcl_HashEntry *entry = NULL;
     send_get_atom_msg_ptr value_string;
 
-    if (verbose) printf("Doing a atom_to_string\n");
+    if (verbose)
+	printf("Doing a atom_to_string\n");
 
     entry = Tcl_FindHashEntry(value_hash_table, (char *) value);
 
@@ -51,7 +54,8 @@ string_to_atom(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_hash_tab
     Tcl_HashEntry *entry = NULL;
     send_get_atom_msg_ptr return_msg;
 
-    if (verbose) printf("Doing a string_to_atom\n");
+    if (verbose)
+	printf("Doing a string_to_atom\n");
 
     entry = Tcl_FindHashEntry(string_hash_table, a);
 
@@ -98,31 +102,107 @@ Initialize(void)
 }
 
 int
-main(void)
+main(argc, argv)
+int argc;
+char **argv;
 {
     int sockfd;
+    int quiet = 0;
     int run = 1;
+    int no_fork = 0;
     struct sockaddr_in my_addr;	/* my address information */
+    struct sockaddr_in their_addr;	/* connector's address information */
 
-    struct sockaddr_in their_addr;	/* connector's address information 
-					 */
-
-    int addr_len, numbytes;
+    int addr_len, numbytes, i;
     char buf[MAXBUFLEN];
+
+    for (i = 1; i < argc; i++) {
+	if (strcmp(argv[i], "-no_fork") == 0) {
+	    no_fork++;
+	} else if (strcmp(argv[i], "-quiet") == 0) {
+	    quiet = 1;
+	    verbose = 0;
+	} else if (strcmp(argv[i], "-verbose") == 0) {
+	    quiet = 0;
+	    verbose = 1;
+	} else {
+	    fprintf(stderr, "Unknown argument \"%s\"\n", argv[i]);
+	    exit(1);
+	}
+    }
 
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 	perror("socket");
 	exit(1);
     }
     my_addr.sin_family = AF_INET;	/* host byte order */
-
     my_addr.sin_port = htons(PORT);	/* short, network byte order */
-
-    my_addr.sin_addr.s_addr = INADDR_ANY;	/* automatically fill with 
-						 * my IP */
-
-    memset(&(my_addr.sin_zero), '\0', 8);	/* zero the rest of the
+    my_addr.sin_addr.s_addr = INADDR_ANY; /* automatically fill with my IP */
+    memset(&(my_addr.sin_zero), '\0', 8);	/* zero the rest of the *
 						 * struct */
+    {
+	char ping_char = 'P';
+	int flags;
+	int start_time;
+	int cur_time;
+	int test_fd;
+	char response_char = 0;
+	if (!quiet)
+	    printf("Checking for already running atom server.\nPlease wait.");
+	fflush(stdout);
+	if ((test_fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+	    perror("socket");
+	    exit(1);
+	}
+	flags = fcntl(test_fd, F_GETFL);
+	flags |= O_NONBLOCK;
+	if (fcntl(test_fd, F_SETFL, flags) < 0) {
+	    perror("fcntl");
+	    exit(1);
+	}
+	cur_time = start_time = time(NULL);
+	while ((response_char != 'R') && ((cur_time - start_time < 30))) {
+	    if ((numbytes = sendto(test_fd, &ping_char, 1, 0,
+				   (struct sockaddr *) &my_addr,
+				   sizeof(struct sockaddr))) == -1) {
+		perror("sendto");
+		exit(1);
+	    }
+	    sleep(1);
+	    if ((numbytes = recvfrom(test_fd, &response_char, 1, 0,
+				     NULL, NULL)) == -1) {
+		if (errno != EWOULDBLOCK) {
+		    perror("recvfrom");
+		    exit(1);
+		}
+	    }
+	    if (!quiet)
+		printf(".");
+	    fflush(stdout);
+	    cur_time = time(NULL);
+	}
+	if (response_char == 'R') {
+	    if (!quiet)
+		printf("\n\tAtom server already running\n");
+	    exit(0);
+	}
+	close(test_fd);
+    }
+    if (!quiet)
+	printf("\n\tNo Atom server found - ");
+#ifdef HAVE_FORK
+    if (!no_fork) {
+	if (!quiet)
+	    printf("Forking server to background\n");
+	if (fork() != 0) {
+	    /* I'm the parent, return now */
+	    exit(0);
+	}
+    } else {
+	if (!quiet)
+	    printf("Running...\n");
+    }
+#endif
 
     if (bind(sockfd, (struct sockaddr *) &my_addr,
 	     sizeof(struct sockaddr)) == -1) {
@@ -142,96 +222,119 @@ main(void)
 	}
 	buf[numbytes] = 0;
 
-	if (verbose) printf("recd. %s\n", buf);
+	if (verbose)
+	    printf("recd. %s\n", buf);
 
-	switch(buf[0]) {
-	case 'N': {
-	    char *str;
-	    char buf2[MAXBUFLEN];
-	    int atom = 0;
-	    if (sscanf(&buf[1], "%d", &atom) != 1) break;
-	    str = atom_to_string(stringhash, valuehash, atom);
-	    buf2[0] = 'S';
-	    if (str) {
-		strncpy(&buf2[1], str, sizeof(buf2));
-	    } else {
-		buf2[1] = 0;
+	switch (buf[0]) {
+	case 'P':{
+		/* Ping */
+		char response_char = 'R';
+		if (verbose)
+		    printf("Sending %c\n", response_char);
+		if ((numbytes = sendto(sockfd, &response_char, 1, 0,
+				       (struct sockaddr *) &their_addr,
+				       sizeof(struct sockaddr))) == -1) {
+		    perror("sendto");
+		    exit(1);
+		}
+		break;
 	    }
-	    if (verbose) printf("Sending %s\n", buf2);
+	case 'N':{
+		/* request translation of numeric value to a string */
+		char *str;
+		char buf2[MAXBUFLEN];
+		int atom = 0;
+		if (sscanf(&buf[1], "%d", &atom) != 1)
+		    break;
+		str = atom_to_string(stringhash, valuehash, atom);
+		buf2[0] = 'S';
+		if (str) {
+		    strncpy(&buf2[1], str, sizeof(buf2));
+		} else {
+		    buf2[1] = 0;
+		}
+		if (verbose)
+		    printf("Sending %s\n", buf2);
 
-	    if ((numbytes = sendto(sockfd, buf2, strlen(buf2), 0,
-				   (struct sockaddr *) &their_addr, sizeof(struct sockaddr))) == -1) {
-		perror("sendto");
-		exit(1);
+		if ((numbytes = sendto(sockfd, buf2, strlen(buf2), 0,
+				       (struct sockaddr *) &their_addr, sizeof(struct sockaddr))) == -1) {
+		    perror("sendto");
+		    exit(1);
+		}
+		break;
 	    }
-	    break;
-	}
-	case 'S': {
-	    /* get value for string */
-	    char num_str[12];
-	    int value = string_to_atom(stringhash, valuehash, &buf[1]);
+	case 'S':{
+		/* request translation of string to a numeric value */
+		char num_str[12];
+		int value = string_to_atom(stringhash, valuehash, &buf[1]);
 
-	    sprintf(num_str, "N%d", value);
-	    if (verbose) printf("Sending %s\n", num_str);
-	    
-	    if ((numbytes = sendto(sockfd, num_str, strlen(num_str), 0,
-				   (struct sockaddr *) &their_addr, 
-				   sizeof(struct sockaddr))) == -1) {
-		perror("sendto");
-		exit(1);
+		sprintf(num_str, "N%d", value);
+		if (verbose)
+		    printf("Sending %s\n", num_str);
+
+		if ((numbytes = sendto(sockfd, num_str, strlen(num_str), 0,
+				       (struct sockaddr *) &their_addr,
+				       sizeof(struct sockaddr))) == -1) {
+		    perror("sendto");
+		    exit(1);
+		}
+		break;
 	    }
-	    break;
-	}
-	case 'A': {
-	    int atom = 0;
-	    char buf2[MAXBUFLEN];
-	    char *str;
-	    Tcl_HashEntry *entry = NULL;
+	case 'A':{
+		/* create an association between a string and a value */
+		int atom = 0;
+		char buf2[MAXBUFLEN];
+		char *str;
+		Tcl_HashEntry *entry = NULL;
 
-	    atom = strtol(&buf[1], &str, 10);
-	    str++;
-	    entry = Tcl_FindHashEntry(stringhash, str);
-	    if (entry != NULL) {
-		send_get_atom_msg_ptr atom_entry = 
+		atom = strtol(&buf[1], &str, 10);
+		str++;
+		entry = Tcl_FindHashEntry(stringhash, str);
+		if (entry != NULL) {
+		    send_get_atom_msg_ptr atom_entry =
 		    (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
-		if ((atom_entry != NULL) && (atom_entry->atom != atom)) {
-		    if (verbose) printf("Atom cache inconsistency, tried to associate string \"%s\" with value %d\n	Previous association was value %d\n",
-			   str, atom, atom_entry->atom);
-		    sprintf(buf2, "E%d %s", atom_entry->atom,
-			    atom_entry->atom_string);
-		    if (verbose) printf("Sending %s\n", buf2);
-		    
-		    if ((numbytes = sendto(sockfd, buf2, strlen(buf2), 0,
-					   (struct sockaddr *) &their_addr, 
-					   sizeof(struct sockaddr))) == -1) {
-			perror("sendto");
-			exit(1);
+		    if ((atom_entry != NULL) && (atom_entry->atom != atom)) {
+			if (verbose)
+			    printf("Atom cache inconsistency, tried to associate string \"%s\" with value %d\n	Previous association was value %d\n",
+				   str, atom, atom_entry->atom);
+			sprintf(buf2, "E%d %s", atom_entry->atom,
+				atom_entry->atom_string);
+			if (verbose)
+			    printf("Sending %s\n", buf2);
+
+			if ((numbytes = sendto(sockfd, buf2, strlen(buf2), 0,
+					 (struct sockaddr *) &their_addr,
+				       sizeof(struct sockaddr))) == -1) {
+			    perror("sendto");
+			    exit(1);
+			}
 		    }
 		}
-	    }
-	    entry = Tcl_FindHashEntry(valuehash, (char *) atom);
-	    if (entry != NULL) {
-		send_get_atom_msg_ptr atom_entry = 
+		entry = Tcl_FindHashEntry(valuehash, (char *) atom);
+		if (entry != NULL) {
+		    send_get_atom_msg_ptr atom_entry =
 		    (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
-		if ((atom_entry != NULL) && 
-		    (strcmp(atom_entry->atom_string, str) != 0)) {
-		    if (verbose) printf("Atom cache inconsistency, tried to associate value %d with string \"%s\"\n	Previous association was string \"%s\"\n",
-			   atom, str, atom_entry->atom_string);
-		    sprintf(buf2, "E%d %s", atom_entry->atom,
-			    atom_entry->atom_string);
-		    if (verbose) printf("Sending %s\n", buf2);
-		    
-		    if ((numbytes = sendto(sockfd, buf2, strlen(buf2), 0,
-					   (struct sockaddr *) &their_addr, 
-					   sizeof(struct sockaddr))) == -1) {
-			perror("sendto");
-			exit(1);
+		    if ((atom_entry != NULL) &&
+			(strcmp(atom_entry->atom_string, str) != 0)) {
+			if (verbose)
+			    printf("Atom cache inconsistency, tried to associate value %d with string \"%s\"\n	Previous association was string \"%s\"\n",
+				   atom, str, atom_entry->atom_string);
+			sprintf(buf2, "E%d %s", atom_entry->atom,
+				atom_entry->atom_string);
+			if (verbose)
+			    printf("Sending %s\n", buf2);
+
+			if ((numbytes = sendto(sockfd, buf2, strlen(buf2), 0,
+					 (struct sockaddr *) &their_addr,
+				       sizeof(struct sockaddr))) == -1) {
+			    perror("sendto");
+			    exit(1);
+			}
 		    }
 		}
+		set_string_and_atom(stringhash, valuehash, str, atom);
+		break;
 	    }
-	    set_string_and_atom(stringhash, valuehash, str, atom);
-	    break;
-	}
 	}
     }
     /* NOTREACHED */
