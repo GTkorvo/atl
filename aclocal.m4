@@ -60,7 +60,7 @@ dnl      AC_COMPILE_CHECK_SIZEOF(ptrdiff_t, $headers)
 dnl      AC_COMPILE_CHECK_SIZEOF(off_t, $headers)
 dnl
 dnl @author Kaveh Ghazi <ghazi@caip.rutgers.edu>
-dnl @version $Id: aclocal.m4,v 1.22 2003-03-25 16:14:07 eisen Exp $
+dnl @version $Id: aclocal.m4,v 1.23 2003-03-25 20:36:36 eisen Exp $
 dnl
 AC_DEFUN(AC_COMPILE_CHECK_SIZEOF,
 [changequote(<<, >>)dnl
@@ -6718,7 +6718,7 @@ dnl
 AC_MSG_CHECKING(needed include args for $1 package)
 AC_CACHE_VAL(translit(cercs_cv_$1_include_arg, `/',`_'), 
 [
-ifelse([$4],1,cercs_tmp=../$1,
+ifelse([$4],1,cercs_tmp=`pwd`/../$1,
 CERCS_FIND_FILE($1, $2, cercs_tmp, $with_translit, include))
 if test -n "$cercs_tmp"; then
 translit(cercs_cv_$1_include_arg, `/',`_')=-I`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.$2//g"`
@@ -6747,7 +6747,7 @@ dnl
 AC_MSG_CHECKING(needed link args for $1 package)
 AC_CACHE_VAL(translit(cercs_cv_$1_link_dir,  `/',`_'), 
 [
-ifelse([$4],1,cercs_tmp=../$1,
+ifelse([$4],1,cercs_tmp=`pwd`/../$1,
 CERCS_FIND_FILE($1, $3, cercs_tmp, $with_translit, lib))
 if test -n "$cercs_tmp" -a "$cercs_tmp" != "$3"; then
 translit(cercs_cv_$1_link_dir, `/',`_')=`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.$3//g"`

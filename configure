@@ -17945,7 +17945,7 @@ if test "${cercs_cv_pbio_include_arg+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
-cercs_tmp=../pbio
+cercs_tmp=`pwd`/../pbio
 if test -n "$cercs_tmp"; then
 cercs_cv_pbio_include_arg=-I`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.io.h//g"`
 fi
@@ -17972,7 +17972,7 @@ if test "${cercs_cv_pbio_link_dir+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
-cercs_tmp=../pbio
+cercs_tmp=`pwd`/../pbio
 if test -n "$cercs_tmp" -a "$cercs_tmp" != "${LIB_PRE}IO${LIB_POST}"; then
 cercs_cv_pbio_link_dir=`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.${LIB_PRE}IO${LIB_POST}//g"`
 else
@@ -18218,7 +18218,7 @@ if test "${cercs_cv_gen_thread_include_arg+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
-cercs_tmp=../gen_thread
+cercs_tmp=`pwd`/../gen_thread
 if test -n "$cercs_tmp"; then
 cercs_cv_gen_thread_include_arg=-I`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.gen_thread.h//g"`
 fi
@@ -18245,7 +18245,7 @@ if test "${cercs_cv_gen_thread_link_dir+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
-cercs_tmp=../gen_thread
+cercs_tmp=`pwd`/../gen_thread
 if test -n "$cercs_tmp" -a "$cercs_tmp" != "libgen_thread.la"; then
 cercs_cv_gen_thread_link_dir=`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.libgen_thread.la//g"`
 else
@@ -18491,7 +18491,7 @@ if test "${cercs_cv_cercs_env_include_arg+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
-cercs_tmp=../cercs_env
+cercs_tmp=`pwd`/../cercs_env
 if test -n "$cercs_tmp"; then
 cercs_cv_cercs_env_include_arg=-I`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.cercs_env.h//g"`
 fi
@@ -18518,7 +18518,7 @@ if test "${cercs_cv_cercs_env_link_dir+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
-cercs_tmp=../cercs_env
+cercs_tmp=`pwd`/../cercs_env
 if test -n "$cercs_tmp" -a "$cercs_tmp" != "libcercs_env.la"; then
 cercs_cv_cercs_env_link_dir=`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.libcercs_env.la//g"`
 else
