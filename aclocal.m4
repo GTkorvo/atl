@@ -60,7 +60,7 @@ dnl      AC_COMPILE_CHECK_SIZEOF(ptrdiff_t, $headers)
 dnl      AC_COMPILE_CHECK_SIZEOF(off_t, $headers)
 dnl
 dnl @author Kaveh Ghazi <ghazi@caip.rutgers.edu>
-dnl @version $Id: aclocal.m4,v 1.24 2003-04-03 21:10:41 eisen Exp $
+dnl @version $Id: aclocal.m4,v 1.25 2003-11-24 16:15:21 eisen Exp $
 dnl
 AC_DEFUN(AC_COMPILE_CHECK_SIZEOF,
 [changequote(<<, >>)dnl
@@ -6721,7 +6721,7 @@ AC_CACHE_VAL(translit(cercs_cv_$1_include_arg, `/',`_'),
 ifelse([$4],1,cercs_tmp=`pwd`/../$1,
 CERCS_FIND_FILE($1, $2, cercs_tmp, $with_translit, include))
 if test -n "$cercs_tmp"; then
-translit(cercs_cv_$1_include_arg, `/',`_')=-I`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.$2//g"`
+translit(cercs_cv_$1_include_arg, `/',`_')=-I`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s#.$2##g"`
 fi
 ])
 AC_MSG_RESULT(translit($cercs_cv_$1_include_arg, `/',`_'))
@@ -6807,7 +6807,6 @@ search_list="$search_list $EXPANDED/$2 $EXPANDED/$5/$2 $EXPANDED/share/$2 $EXPAN
 fi
 if test -z "$with_installed_specified"; then
 search_list="$search_list `pwd`/../$1/$2 `pwd`/../$5/$2 `pwd`/../share/$2 $HOME/$1/$2 $HOME/$cercs_cv_archive/$5/$2 $HOME/$5/$2"
-search_list="$search_list `pwd`/../$1/.libs/$2 $HOME/$1/.libs/$2"
 fi
 if test "$libdir" != '${exec_prefix}/lib'; then
 tmpdir=`echo ${libdir} |  sed 's%/$%%'` 
@@ -7486,7 +7485,7 @@ AC_DEFUN(AC_STRUCT_IOVEC,
 [struct iovec *vec;],
   ac_cv_struct_iovec=yes, ac_cv_struct_iovec=no)])
 if test $ac_cv_struct_iovec = no; then
-  AC_DEFINE(NEED_IOVEC_DEFINE)
+  AC_DEFINE(NEED_IOVEC_DEFINE,1,[define if struct iovec is not declared in sys/uio.h])
 fi
 ])
 
