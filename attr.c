@@ -404,26 +404,29 @@ int indent;
     for (i = 0; i < list->l.list.iattrs->int_attr_count; i++) {
 	int attr_id = list->l.list.iattrs->iattr[i].attr_id;
 	char *c = (char*)&attr_id;
-        char *attr_name = string_from_atom(global_as, attr_id);
+        char *attr_name = string_from_atom(global_as, attr_id), *print_name;
         int j;
+	print_name = attr_name;
         if (attr_name == NULL)
-            attr_name = "<null attr name>";
+            print_name = "<null attr name>";
         for (j = 0; j < indent; j++) {
             printf("    ");
         }
 	printf("    { %s ('%c%c%c%c'), Attr_Int4, %ld }\n", attr_name,
 	       c[0], c[1], c[2], c[3],
 	       (long) list->l.list.iattrs->iattr[i].value);
+	if (attr_name) free(attr_name);
     }
 	
     for (i = 0; i < list->l.list.iattrs->other_attr_count; i++) {
 	int attr_id = list->l.list.attributes[i].attr_id;
 	char *c = (char*)&attr_id;
 	char *attr_name = string_from_atom(global_as, attr_id);
-        char *atom_str = NULL;
+        char *print_name;
         int j;
+	print_name = attr_name;
         if (attr_name == NULL)
-            attr_name = "<null attr name>";
+            print_name = "<null attr name>";
         for (j = 0; j < indent; j++) {
             printf("    ");
         }
@@ -473,12 +476,14 @@ int indent;
         case Attr_Atom: {
 	    int atom_val = (atom_t)(long)list->l.list.attributes[i].value;
 	    char *cv = (char*)&atom_val;
-            atom_str = string_from_atom(global_as, atom_val);
+	    char *atom_str, *print_str;
+            print_str = atom_str = string_from_atom(global_as, atom_val);
 	    if (atom_str == NULL)
-		atom_str = "<null attr name>";
+		print_str = "<null attr name>";
             printf("    { %s ('%c%c%c%c'), Attr_Atom, %s ('%c%c%c%c') }\n", 
 		   attr_name, c[0], c[1], c[2], c[3],
                    (char *) atom_str, cv[0], cv[1], cv[2], cv[3]);
+	    if (atom_str) free(atom_str);
             break;
 	}
         case Attr_List:
@@ -494,9 +499,7 @@ int indent;
         default:
             assert(0);
         }
-        free(attr_name);
-        if (atom_str)
-            free(atom_str);
+        if (attr_name) free(attr_name);
     }
 }
 
