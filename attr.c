@@ -462,10 +462,9 @@ attr_list list;
 	char *end = NULL;
 	int attr_id, length;
 	attr_value_type val_type = Attr_Undefined;
-	attr_value val;
+	attr_value val = 0;
 	int int_value;
 	long long_value;
-	void *addr_value;
 
 	if (*str == 0) return 1;   /* success */
 	if (value == NULL) return 0;
