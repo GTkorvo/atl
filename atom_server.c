@@ -208,20 +208,49 @@ connect_to_atom_server()
 static void
 get_qual_hostname(char *buf, int len)
 {
+    struct hostent *host;
+
+    char *network_string = getenv("DEXCHANGE_NETWORK");
     gethostname(buf, len);
-    buf[len-1] = '\0';
+    buf[len - 1] = '\0';
     if (memchr(buf, '.', strlen(buf)) == NULL) {
-	 /* no dots, probably not fully qualified */
+	/* no dots, probably not fully qualified */
+	int end = strlen(buf);
+	buf[end] = '.';
 #ifdef HAVE_GETDOMAINNAME
-	 int end = strlen(buf);
-	 buf[end] = '.';
-	 getdomainname((&buf[end])+1, len-strlen(buf));
+	getdomainname((&buf[end]) + 1, len - strlen(buf));
+	if (buf[end+1] == 0) {
+	    char *tmp_name;
+	    buf[end] = 0;
+	    /* getdomainname was useless, hope that gethostbyname helps */
+	    tmp_name = (gethostbyname(buf))->h_name;
+	    strncpy(buf, tmp_name, len);
+	}
 #else
-	 /* no getdomainname, hope that gethostbyname will help */
-	 char *tmp_name = (gethostbyname(buf))->h_name;
-	 strncpy(buf, tmp_name, len);
+	/* no getdomainname, hope that gethostbyname will help */
+	char *tmp_name = (gethostbyname(buf))->h_name;
+	strncpy(buf, tmp_name, len);
 #endif
-	 buf[len-1] = '\0';
+	buf[len - 1] = '\0';
+    }
+    if (((host = gethostbyname(buf)) == NULL) ||
+	(memchr(buf, '.', strlen(buf)) == NULL)){
+	/* bloody hell, what do you have to do? */
+
+	gethostname(buf, len);
+	host  = gethostbyname(buf);
+	host = gethostbyaddr(host->h_addr_list[0], host->h_length, host->h_addrtype);
+	if (host != NULL) {
+	  strncpy(buf, host->h_name, len);
+	}
+    }
+    if (((host = gethostbyname(buf)) == NULL) ||
+	(memchr(buf, '.', strlen(buf)) == NULL)){
+	static int warn_once = 0;
+	if (warn_once == 0) {
+	    warn_once++;
+	    printf("Attempts to establish your fully qualified hostname have failed horribly.  Sorry.\n");
+	}
     }
 }
 
