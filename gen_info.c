@@ -1,4 +1,7 @@
+#include "config.h"
+#include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "gen_thread.h"
 
@@ -38,6 +41,9 @@ gen_thread_info_t *gen_thread_info = NULL;
  *  environment variables are passed to any subprocess we fork and we those
  *  subprocs should do their own initialization.    - GSE 10/26/99
  */
+#ifndef SPRINTF_DEFINED
+extern int sprintf ARGS((char *, const char *,...));
+#endif
 int
 libgenthreads_init()
 {
@@ -68,11 +74,11 @@ libgenthreads_init()
 	gen_thread_info->null_thread_init = 0;
 	gen_thread_info->is_kernel = 0;
 
-	sprintf(addr_tmp, "%s=%lx", var_str, gen_thread_info);
+	sprintf(addr_tmp, "%s=%lx", var_str, (long)gen_thread_info);
 	addr_str = strdup(addr_tmp);
 	putenv(addr_str);
     } else {
-	sscanf(addr_str, "%lx", &gen_thread_info);
+	sscanf(addr_str, "%lx", (long*)&gen_thread_info);
 	
     }
     return 1;
