@@ -6,7 +6,7 @@ lib_LTLIBRARIES = libatl.la
 
 noinst_HEADERS = atom_formats.h tclHash.h unix_defs.h
 
-libatl_la_SOURCES = atom.c atom_formats.c attr.c tclHash.c gen_info.c
+libatl_la_SOURCES = atom.c atom_formats.c attr.c tclHash.c
 libatl_la_LIBADD =  
 libatl_la_LDFLAGS = -no-undefined
 include_HEADERS = atl.h

@@ -20,8 +20,12 @@ LIB_POST=.a
 
 dnl Checks for libraries.
 AC_REQUIRE_HPPCEL_PACKAGE(pbio, io.h, ${LIB_PRE}IO${LIB_POST})
-AC_REQUIRE_HPPCEL_PACKAGE(gen_thread, gen_thread.h,${LIB_PRE}genthreads${LIB_POST})
-dnl Replace `main' with a function in -lgenthreads:
+AC_REQUIRE_HPPCEL_PACKAGE(gen_thread, gen_thread.h,libgen_thread.la)
+
+if test -n "$ac_cv_gen_thread_link_arg"; then
+LIBS="$LIBS -lgen_thread"
+fi
+
 checkBoth=0
 AC_CHECK_FUNC(connect, checkSocket=0, checkSocket=1)
 if test "$checkSocket" = 1; then
