@@ -437,7 +437,7 @@ atom_cache_type cache_style;
 
 #ifndef MODULE
     if ((as->he = gethostbyname(atom_server_host)) == NULL) {
-	perror("gethostbyname");
+	perror("gethostbyname (ATOM_SERVER_HOST)");
 	exit(1);
     }
     if ((as->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
