@@ -49,14 +49,11 @@ atom_server *asp;
     if ((addr_str = getenv(var_str)) == NULL) {
 	char addr_tmp[64];
 	*asp = init_atom_server(prefill_atom_cache);
-	printf("New global AS = %lx addr = %lx\n", (long)*asp, (long)asp);
 	sprintf(addr_tmp, "%s=%lx", var_str, (long)*asp);
 	addr_str = strdup(addr_tmp);
 	putenv(addr_str);
-	printf("after putenv, value is %s\n", getenv(var_str));
     } else {
 	sscanf(addr_str, "%lx", (long*)asp);
-	printf("Set global AS = %lx addr = %lx\n", (long)*asp, (long)asp);
     }
 }
 /* operations on attr_lists */
