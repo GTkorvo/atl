@@ -1,4 +1,3 @@
-#include <sys/filio.h>
 #include "config.h"
 #include "io.h"
 #include "atl.h"
