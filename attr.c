@@ -1,3 +1,7 @@
+#include "config.h"
+#include "atl.h"
+
+#ifndef MODULE
 #include <config.h>
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
@@ -8,10 +12,20 @@
 #include <string.h>
 #include <malloc.h>
 #endif
-#include <assert.h>
-#include <atl.h>
-#include <tclHash.h>
 #include <unix_defs.h>
+#else
+#ifndef __KERNEL__
+#define __KERNEL__
+#endif
+
+#include "kernel/katl.h"
+#include "kernel/library.h"
+#include <linux/ctype.h>
+#include "kernel/kernel_defs.h"
+
+#endif
+#include "tclHash.h"
+#include "assert.h"
 
 typedef struct _attr_sublist_struct {
     Tcl_HashTable attr_hash_table;
@@ -68,20 +82,28 @@ atom_server *asp;
 #endif
     if (addr_str == NULL) {
 	char addr_tmp[64];
+#ifndef MODULE
 	int value;
+#endif
 	*asp = init_atom_server(prefill_atom_cache);
 #ifndef HAVE_WINDOWS_H
+#ifdef MODULE
+	sprintf(addr_tmp, "%lx", (long)*asp);
+	addr_str = strdup(addr_tmp);
+	setenv(var_str, addr_str, 1);
+#else
 	sprintf(addr_tmp, "%s=%lx", var_str, (long)*asp);
 	addr_str = strdup(addr_tmp);
 	value = putenv(addr_str);
 	if (value != 0) perror("putenv failed\n");
+#endif
 #else
 	sprintf(addr_tmp, "%lx", (long)*asp);
 	addr_str = strdup(addr_tmp);
 	value = SetEnvironmentVariable(var_str, addr_str);
 #endif
     } else {
-	sscanf(addr_str, "%lx", (long*)asp);
+        (long)*asp = strtol((char *)addr_str, NULL, 16); 
     }
 }
 /* operations on attr_lists */
@@ -547,28 +569,28 @@ attr_list list;
 	    break;
 	case '4':
 	    val_type = Attr_Int4;
-	    if (sscanf(value, ",%d", &int_value) != 1) return 0;
+            (int *) int_value = atoi(value+1);
 	    val = (attr_value)int_value;
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
 	case '8':
 	    val_type = Attr_Int8;
-	    if (sscanf(value, ",%ld", &long_value) != 1) return 0;
+            (int *) long_value = atoi(value+1);
 	    val = (attr_value)long_value;
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
 	case 'A':
 	    val_type = Attr_Atom;
-	    if (sscanf(value, ",%d", &int_value) != 1) return 0;
+            (int *) int_value = atoi(value+1);
 	    val = (attr_value)int_value;
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
 	case 'S':
 	    val_type = Attr_String;
-	    sscanf(first_comma+2, "%d", &length);
+            length = atoi(first_comma+2);
 	    end = value+1+length;
 	    val = malloc(length+1);
 	    strncpy(val, value+1, length);
@@ -577,7 +599,7 @@ attr_list list;
 	    break;
 	case 'O': {
 	    int len;
-	    if (sscanf(first_comma + 2, "%d", &len) != 1) return 0;
+            len = atoi(first_comma+2);
 	    while (*value != ',') value++; /* skip to start of buffer */
 	    value++;
 	    val_type = Attr_Opaque;

@@ -1,5 +1,8 @@
 #ifndef ATL_H
 #define ATL_H
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
 #if defined(FUNCPROTO) || defined(__STDC__) || defined(__cplusplus) || defined(c_plusplus)
 #ifndef ARGS
 #define ARGS(args) args
@@ -14,10 +17,6 @@
 #ifndef	NULL
 #define NULL	0
 #endif
-#endif
-
-#ifdef	__cplusplus
-extern "C" {
 #endif
 
 typedef int atom_t;

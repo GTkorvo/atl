@@ -1,15 +1,25 @@
 #include "config.h"
+#include "io.h"
+#include "atl.h"
+#ifndef MODULE
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <malloc.h>
+#include <stdio.h>
 
-#include <io.h>
-#include <atl.h>
-#include <atom_formats.h>
-#include <tclHash.h>
-#include <unix_defs.h>
+#include "unix_defs.h"
 #include <gen_thread.h>
+#else
+
+#include "kernel/katl.h"
+#include "kernel/library.h"
+#include "kernel/kernel_defs.h"
+#include "assert.h"
+#endif
+
+#include "atom_formats.h"
+#include "tclHash.h"
 
 /* ### IT SHOULD BE FINE WITH CONFIG.H DEFINITIONS BUT ... */
 /* Define to be the hostname to use as ATOM_SERVER_HOST */

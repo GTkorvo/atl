@@ -11,6 +11,11 @@
 #define assert(ignore) ((void) 0)
 #else
 
+#ifdef MODULE
+#define printf	printk
+#define abort()	sys_exit(-1)
+#endif
+
 #define assert(expression)  \
   ((void) ((expression) ? 0 : __assert (expression, __FILE__, __LINE__)))
 

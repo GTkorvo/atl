@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4-p4 from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -59,18 +59,14 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
-AMDEP = @AMDEP@
-AMTAR = @AMTAR@
 AS = @AS@
-AWK = @AWK@
 CC = @CC@
-CPP = @CPP@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 ECHO = @ECHO@
 EXEEXT = @EXEEXT@
+KERNEL_OBJS = @KERNEL_OBJS@
+KERNEL_TARGET_MOD = @KERNEL_TARGET_MOD@
+KERNEL_VERSION = @KERNEL_VERSION@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
@@ -82,20 +78,21 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 STRIP = @STRIP@
 VERSION = @VERSION@
-install_sh = @install_sh@
 
 AUTOMAKE_OPTIONS = no-dependencies foreign
-
-lib_LTLIBRARIES = libatl.la
 
 noinst_HEADERS = atom_formats.h tclHash.h unix_defs.h
 
 libatl_la_SOURCES = atom.c atom_formats.c attr.c tclHash.c
-libatl_la_LIBADD = 
+libatl_la_DEPENDENCIES = @KERNEL_OBJS@
+libatl_la_LIBADD = @KERNEL_OBJS@
 libatl_la_LDFLAGS = -no-undefined
-include_HEADERS = atl.h
-
-bin_PROGRAMS = attr_test atom_test
+@KERNEL_TRUE@bin_PROGRAMS = 
+@KERNEL_FALSE@bin_PROGRAMS = attr_test atom_test
+@KERNEL_TRUE@BUILT_SOURCES = strtol.c env.c katl.c
+@KERNEL_TRUE@MOSTLYCLEANFILES = atl_module.o
+@KERNEL_FALSE@lib_LTLIBRARIES = libatl.la
+@KERNEL_FALSE@include_HEADERS = atl.h
 
 LIBS = @LIBS@
 
@@ -118,9 +115,8 @@ LTLIBRARIES =  $(lib_LTLIBRARIES)
 DEFS = @DEFS@ -I. -I$(srcdir) -I.
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
-libatl_la_DEPENDENCIES = 
 libatl_la_OBJECTS =  atom.lo atom_formats.lo attr.lo tclHash.lo
-bin_PROGRAMS =  attr_test$(EXEEXT) atom_test$(EXEEXT)
+@KERNEL_FALSE@bin_PROGRAMS =  attr_test$(EXEEXT) atom_test$(EXEEXT)
 PROGRAMS =  $(bin_PROGRAMS)
 
 attr_test_OBJECTS =  attr_test.$(OBJEXT)
@@ -156,7 +152,7 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.in 
 	cd $(srcdir) && $(ACLOCAL)
 
-config.status: $(srcdir)/configure.in $(CONFIG_STATUS_DEPENDENCIES)
+config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
 $(srcdir)/configure: @MAINTAINER_MODE_TRUE@$(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
@@ -397,7 +393,8 @@ installcheck: installcheck-am
 all-recursive-am: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
-install-exec-am: install-libLTLIBRARIES install-binPROGRAMS
+install-exec-am: install-libLTLIBRARIES install-binPROGRAMS \
+		install-exec-local
 install-exec: install-exec-am
 
 install-data-am: install-includeHEADERS
@@ -409,7 +406,8 @@ install: install-am
 uninstall-am: uninstall-libLTLIBRARIES uninstall-binPROGRAMS \
 		uninstall-includeHEADERS
 uninstall: uninstall-am
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS) config.h
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS) config.h \
+		all-local
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
@@ -419,6 +417,7 @@ installdirs:
 
 
 mostlyclean-generic:
+	-test -z "$(MOSTLYCLEANFILES)" || rm -f $(MOSTLYCLEANFILES)
 
 clean-generic:
 
@@ -427,6 +426,7 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 mostlyclean-am:  mostlyclean-hdr mostlyclean-libLTLIBRARIES \
 		mostlyclean-compile mostlyclean-libtool \
 		mostlyclean-binPROGRAMS mostlyclean-tags \
@@ -470,12 +470,43 @@ clean-binPROGRAMS maintainer-clean-binPROGRAMS uninstall-binPROGRAMS \
 install-binPROGRAMS uninstall-includeHEADERS install-includeHEADERS \
 tags mostlyclean-tags distclean-tags clean-tags maintainer-clean-tags \
 distdir info-am info dvi-am dvi check check-am installcheck-am \
-installcheck all-recursive-am install-exec-am install-exec \
-install-data-am install-data install-am install uninstall-am uninstall \
-all-redirect all-am all installdirs mostlyclean-generic \
-distclean-generic clean-generic maintainer-clean-generic clean \
-mostlyclean distclean maintainer-clean
+installcheck all-recursive-am install-exec-local install-exec-am \
+install-exec install-data-am install-data install-am install \
+uninstall-am uninstall all-local all-redirect all-am all installdirs \
+mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
+@KERNEL_TRUE@install-exec-local: atl_module.o
+@KERNEL_TRUE@		install -d /lib/modules/@KERNEL_VERSION@/misc /lib/modules/misc
+@KERNEL_TRUE@		install -c atl_module.o /lib/modules/@KERNEL_VERSION@/misc
+@KERNEL_TRUE@		install -c atl_module.o /lib/modules/misc
+@KERNEL_TRUE@all-local: atl_module.o
+
+atl_module.o:	libatl.la
+	rm -fr /tmp/atl_build
+	mkdir /tmp/atl_build
+	cp .libs/libatl.a /tmp/atl_build
+	cd /tmp/atl_build ; ar x libatl.a
+	cd /tmp/atl_build ; rm libatl.a
+	cd /tmp/atl_build ; ld -r *.o -o $@
+	cp /tmp/atl_build/atl_module.o .
+	rm -fr /tmp/atl_build 
+
+strtol.c:
+	rm -f strtol.c
+	$(LN_S) kernel/strtol.c strtol.c
+
+env.c: katl.h
+	rm -f env.c
+	$(LN_S) kernel/env.c env.c
+
+katl.c: katl.h
+	rm -f katl.c
+	$(LN_S) kernel/katl.c katl.c
+
+katl.h:
+	rm -f katl.h
+	$(LN_S) kernel/katl.h katl.h
 
 #atom_server_SOURCES = atom_server.c
 #atom_server_LDADD =  libatl.la

@@ -19,9 +19,6 @@
 #ifndef _TCL_HASN
 #define _TCL_HASH
 
-#ifndef BUFSIZ
-#include <stdio.h>
-#endif
 
 #define TCL_VERSION "7.4"
 #define TCL_MAJOR_VERSION 7

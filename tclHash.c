@@ -11,15 +11,23 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-
+#ifndef MODULE
 #include <stdlib.h>
 #include <malloc.h>
-
-#include <tclHash.h>
-
+#include <stdio.h>
+#include <string.h>
 #ifndef FPRINTF_DEFINED
-extern int fprintf _ANSI_ARGS_((FILE *, const char *,...));
+extern int fprintf (FILE *, const char *,...);
 #endif
+#else
+#ifndef __KERNEL__
+#define __KERNEL__
+#endif
+#include "kernel/katl.h"
+#include "kernel/library.h"
+#include "kernel/kernel_defs.h"
+#endif
+#include "tclHash.h"
 
 /* 
  * When there are this many entries per bucket, on average, rebuild
@@ -62,7 +70,7 @@ static Tcl_HashEntry *OneWordFind _ANSI_ARGS_((Tcl_HashTable * tablePtr,
 					       char *key));
 static Tcl_HashEntry *OneWordCreate _ANSI_ARGS_((Tcl_HashTable * tablePtr,
 						 char *key, int *newPtr));
-static void panic _ANSI_ARGS_((char *str));
+static void tcl_panic _ANSI_ARGS_((char *str));
 
 /* 
  *----------------------------------------------------------------------
@@ -141,7 +149,7 @@ Tcl_HashEntry *entryPtr;
     } else {
 	for (prevPtr = *entryPtr->bucketPtr;; prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
-		panic("malformed bucket chain in Tcl_DeleteHashEntry");
+		tcl_panic("malformed bucket chain in Tcl_DeleteHashEntry");
 	    }
 	    if (prevPtr->nextPtr == entryPtr) {
 		prevPtr->nextPtr = entryPtr->nextPtr;
@@ -794,7 +802,7 @@ int *newPtr;			/* Store info here telling whether a new *
  *      on a table that has been deleted.
  *
  * Results:
- *      If panic returns (which it shouldn't) this procedure returns
+ *      If tcl_panic returns (which it shouldn't) this procedure returns
  *      NULL.
  *
  * Side effects:
@@ -809,7 +817,7 @@ BogusFind(tablePtr, key)
 Tcl_HashTable *tablePtr;	/* Table in which to lookup entry. */
 char *key;			/* Key to use to find matching entry. */
 {
-    panic("called Tcl_FindHashEntry on deleted table");
+    tcl_panic("called Tcl_FindHashEntry on deleted table");
     return NULL;
 }
 
@@ -822,7 +830,7 @@ char *key;			/* Key to use to find matching entry. */
  *      on a table that has been deleted.
  *
  * Results:
- *      If panic returns (which it shouldn't) this procedure returns
+ *      If tcl_panic returns (which it shouldn't) this procedure returns
  *      NULL.
  *
  * Side effects:
@@ -840,7 +848,7 @@ char *key;			/* Key to use to find or create matching *
 int *newPtr;			/* Store info here telling whether a new * 
 				 * entry was created. */
 {
-    panic("called Tcl_CreateHashEntry on deleted table");
+    tcl_panic("called Tcl_CreateHashEntry on deleted table");
     return NULL;
 }
 
@@ -929,7 +937,7 @@ register Tcl_HashTable *tablePtr;	/* Table to enlarge. */
 }
 
 static void
-panic(str)
+tcl_panic(str)
 char *str;
 {
     fprintf(stderr, "Hash panic: %s\n", str);

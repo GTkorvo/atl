@@ -1,8 +1,15 @@
-#include <config.h>
 
-#include <io.h>
-#include <atl.h>
-#include <atom_formats.h>
+#include "config.h"
+#ifdef MODULE
+#ifndef __KERNEL__
+#define __KERNEL__
+#endif
+#include "kernel/katl.h"
+#include "kernel/library.h"
+#endif
+#include "io.h"
+#include "atl.h"
+#include "atom_formats.h"
 
 IOField Atom_send_get_msg_flds[] =
 {
