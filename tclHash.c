@@ -13,7 +13,9 @@
 
 #ifndef MODULE
 #include <stdlib.h>
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #ifndef FPRINTF_DEFINED

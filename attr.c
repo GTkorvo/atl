@@ -10,7 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 #include <unix_defs.h>
 #endif
 #else
