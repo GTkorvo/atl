@@ -301,30 +301,53 @@ atom_t attr_id;
 attr_value_type val_type;
 attr_value value;
 {
-    if (val_type == Attr_Int4) {
-	int count = list->l.list.iattrs->int_attr_count;
-	if (count > 0) {
-	    int size = sizeof(struct int_attr_struct) + 
-			    (count+1)* sizeof(int_attr);
-	    list->l.list.iattrs = realloc(list->l.list.iattrs, size);
-	}
-	list->l.list.iattrs->iattr[count].attr_id = attr_id;
-	list->l.list.iattrs->iattr[count].value = (int4) (long) value;
-	list->l.list.iattrs->int_attr_count++;
-    } else {
-	int count = list->l.list.iattrs->other_attr_count;
-	if (count == 0) {
-	    list->l.list.attributes = (attr_p) malloc(sizeof(attr));
-	} else {	    
-	    list->l.list.attributes = (attr_p) realloc(list->l.list.attributes,
-						       sizeof(attr)*(count+1));
-	}
-	list->l.list.attributes[count].attr_id = attr_id;
-	list->l.list.attributes[count].val_type = val_type;
-	list->l.list.attributes[count].value = value;
-	list->l.list.iattrs->other_attr_count++;
+  int i;
+
+  if (val_type == Attr_Int4) {
+    int count = list->l.list.iattrs->int_attr_count;
+    if (count > 0) {
+      int size = sizeof(struct int_attr_struct) + 
+	(count+1)* sizeof(int_attr);
+      list->l.list.iattrs = realloc(list->l.list.iattrs, size);
     }
-    return 1;
+
+    for (i = count - 1; i >= 0; i--) {
+      if (list->l.list.iattrs->iattr[i].attr_id > attr_id) {
+	list->l.list.iattrs->iattr[i+1].attr_id = list->l.list.iattrs->iattr[i].attr_id;
+	list->l.list.iattrs->iattr[i+1].value = list->l.list.iattrs->iattr[i].value;
+      } else {
+	break;
+      }
+    }
+
+    list->l.list.iattrs->iattr[i+1].attr_id = attr_id;
+    list->l.list.iattrs->iattr[i+1].value = (int4) (long) value;
+    list->l.list.iattrs->int_attr_count++;
+  } else {
+    int count = list->l.list.iattrs->other_attr_count;
+    if (count == 0) {
+      list->l.list.attributes = (attr_p) malloc(sizeof(attr));
+    } else {	    
+      list->l.list.attributes = (attr_p) realloc(list->l.list.attributes,
+						 sizeof(attr)*(count+1));
+    }
+
+    for (i = count - 1; i >= 0; i--) {
+      if (list->l.list.attributes[i].attr_id > attr_id) {
+	list->l.list.attributes[i+1].attr_id = list->l.list.attributes[i].attr_id;
+	list->l.list.attributes[i+1].val_type = list->l.list.attributes[i].val_type;
+	list->l.list.attributes[i+1].value = list->l.list.attributes[i].value;
+      } else {
+	break;
+      }
+    }
+
+    list->l.list.attributes[i+1].attr_id = attr_id;
+    list->l.list.attributes[i+1].val_type = val_type;
+    list->l.list.attributes[i+1].value = value;
+    list->l.list.iattrs->other_attr_count++;
+  }
+  return 1;
 }
 
 extern int 
