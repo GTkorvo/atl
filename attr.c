@@ -206,17 +206,12 @@ attr_value *value_p;
 	      *val_type_p = list->l.list.attributes[index].val_type;
 	    }
 	    if (value_p != NULL) {
-		printf("In query\n");
 		if ((sizeof(long) != 4) && 
 		    (list->l.list.attributes[index].val_type == Attr_Int4)){
 		    
-		    printf("Doing thing\n");
 		    *((int*)value_p) = (int)list->l.list.attributes[index].value;
 		} else {
 		    *value_p = list->l.list.attributes[index].value;
-		    if (list->l.list.attributes[index].val_type == Attr_String){
-			printf("String val is %s\n", (char*)*value_p);
-		    }
 		}
 	    }
 	    return 1;
