@@ -209,7 +209,7 @@ attr_value *value_p;
 		if ((sizeof(long) != 4) && 
 		    (list->l.list.attributes[index].val_type == Attr_Int4)){
 		    
-		    *((int*)value_p) = (int)list->l.list.attributes[index].value;
+		    *((int*)value_p) = (int)(long)list->l.list.attributes[index].value;
 		} else {
 		    *value_p = list->l.list.attributes[index].value;
 		}
