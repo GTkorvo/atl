@@ -64,7 +64,7 @@ fi
 
 checkBoth=0
 AC_CHECK_FUNC(connect, checkSocket=0, checkSocket=1)
-save_libs = $LIBS;
+save_libs=$LIBS;
 if test "$checkSocket" = 1; then
     AC_CHECK_LIB(socket, connect, LIBS="$LIBS -lsocket", checkBoth=1)
     if test "$checkBoth" = 1; then

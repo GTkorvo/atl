@@ -2,12 +2,12 @@
 
 AUTOMAKE_OPTIONS = no-dependencies foreign
 
-noinst_HEADERS = atom_formats.h tclHash.h unix_defs.h
+noinst_HEADERS = tclHash.h unix_defs.h
 
 libatl_la_SOURCES = atom.c attr.c tclHash.c
 libatl_la_DEPENDENCIES = @KERNEL_OBJS@
 libatl_la_LIBADD = @KERNEL_OBJS@
-libatl_la_LDFLAGS = -no-undefined $SOCKET_LIBS
+libatl_la_LDFLAGS = -no-undefined $(SOCKET_LIBS) $(THREAD_LIBS)
 
 
 if KERNEL

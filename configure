@@ -7552,7 +7552,7 @@ else
   checkSocket=1
 fi
 
-save_libs = $LIBS;
+save_libs=$LIBS;
 if test "$checkSocket" = 1; then
     echo "$as_me:7557: checking for connect in -lsocket" >&5
 echo $ECHO_N "checking for connect in -lsocket... $ECHO_C" >&6
