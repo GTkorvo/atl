@@ -8109,7 +8109,7 @@ fi
 if test -n "$cercs_cv_cercs_env_link_dir"; then
 LDFLAGS="$LDFLAGS -L$cercs_cv_cercs_env_link_dir"
 fi
-if test -n "$cercs_gen_thread_link_arg"; then
+if test -n "$cercs_cv_gen_thread_link_arg"; then
 THREAD_LIBS="-lgen_thread"
 fi
 
