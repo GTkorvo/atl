@@ -412,7 +412,7 @@ int indent;
         for (j = 0; j < indent; j++) {
             printf("    ");
         }
-	printf("    { %s ('%c%c%c%c'), Attr_Int4, %ld }\n", attr_name,
+	printf("    { %s ('%c%c%c%c'), Attr_Int4, %ld }\n", print_name,
 	       c[0], c[1], c[2], c[3],
 	       (long) list->l.list.iattrs->iattr[i].value);
 	if (attr_name) free(attr_name);
@@ -433,24 +433,24 @@ int indent;
         switch (list->l.list.attributes[i].val_type) {
         case Attr_Undefined:
             printf("    { %s ('%c%c%c%c'), Undefined, Undefined }\n", 
-		   attr_name, c[0], c[1], c[2], c[3]);
+		   print_name, c[0], c[1], c[2], c[3]);
             break;
         case Attr_Int4:
 	    assert(0);
             break;
         case Attr_Int8:
-            printf("    { %s ('%c%c%c%c'), Attr_Int8, %ld }\n", attr_name,
+            printf("    { %s ('%c%c%c%c'), Attr_Int8, %ld }\n", print_name,
 		   c[0], c[1], c[2], c[3],
                    (long) list->l.list.attributes[i].value);
             break;
         case Attr_String:
             if (((char*)list->l.list.attributes[i].value) != NULL) {
                 printf("    { %s ('%c%c%c%c'), Attr_String, %s }\n", 
-		       attr_name, c[0], c[1], c[2], c[3],
+		       print_name, c[0], c[1], c[2], c[3],
                        (char *) list->l.list.attributes[i].value);
             } else {
                 printf("    { %s ('%c%c%c%c'), Attr_String, NULL }\n", 
-		       attr_name, c[0], c[1], c[2], c[3]);
+		       print_name, c[0], c[1], c[2], c[3]);
             }
             break;          
         case Attr_Opaque:
@@ -459,7 +459,7 @@ int indent;
                 attr_opaque_p o =
                     (attr_opaque_p) list->l.list.attributes[i].value;
                 printf("    { %s ('%c%c%c%c'), Attr_Opaque, \"", 
-		       attr_name, c[0], c[1], c[2], c[3]);
+		       print_name, c[0], c[1], c[2], c[3]);
                 for (j=0; j< o->length; j++) {
                     printf("%c", ((char*)o->buffer)[j]);
                 }
@@ -470,7 +470,7 @@ int indent;
                 printf(">}\n");
             } else {
                 printf("    { %s ('%c%c%c%c'), Attr_Opaque, NULL }\n", 
-		       attr_name, c[0], c[1], c[2], c[3]);
+		       print_name, c[0], c[1], c[2], c[3]);
             }
             break;
         case Attr_Atom: {
@@ -481,13 +481,13 @@ int indent;
 	    if (atom_str == NULL)
 		print_str = "<null attr name>";
             printf("    { %s ('%c%c%c%c'), Attr_Atom, %s ('%c%c%c%c') }\n", 
-		   attr_name, c[0], c[1], c[2], c[3],
+		   print_name, c[0], c[1], c[2], c[3],
                    (char *) atom_str, cv[0], cv[1], cv[2], cv[3]);
 	    if (atom_str) free(atom_str);
             break;
 	}
         case Attr_List:
-            printf("    { %s ('%c%c%c%c'), Attr_List, ->\n", attr_name,
+            printf("    { %s ('%c%c%c%c'), Attr_List, ->\n", print_name,
 		   c[0], c[1], c[2], c[3]);
             internal_dump_attr_list((attr_list) list->l.list.attributes[i].value,
                                     indent+1);
