@@ -60,7 +60,7 @@ dnl      AC_COMPILE_CHECK_SIZEOF(ptrdiff_t, $headers)
 dnl      AC_COMPILE_CHECK_SIZEOF(off_t, $headers)
 dnl
 dnl @author Kaveh Ghazi <ghazi@caip.rutgers.edu>
-dnl @version $Id: aclocal.m4,v 1.23 2003-03-25 20:36:36 eisen Exp $
+dnl @version $Id: aclocal.m4,v 1.24 2003-04-03 21:10:41 eisen Exp $
 dnl
 AC_DEFUN(AC_COMPILE_CHECK_SIZEOF,
 [changequote(<<, >>)dnl

@@ -133,7 +133,7 @@ if test "x$ATOM_SERVER_HOST" = "x"; then
 ./g' | tail -2 `
     highdomain=`echo $highdomain | sed 's/ //g'`
    if test "x$highdomain" = "x.gatech.edu"; then
-      ATOM_SERVER_HOST="marquesas.cc.gatech.edu";
+      ATOM_SERVER_HOST="atomhost.cercs.gatech.edu";
       ATOM_SERVICE_DOMAIN="gt.atl.ga.us:gatech.edu";
    else
       if test "x$domainname" != "x"; then
