@@ -76,7 +76,7 @@ static char * base64_encode ARGS((char *binStr, unsigned int len));
 static int base64_decode ARGS((unsigned char *input, unsigned char *output));
 
 atom_server global_as = NULL;
-static int use_base64_string_encoding = 0;
+static int use_base64_string_encoding = 1;
 
 #ifdef MODULE
 #define cercs_getenv(x) getenv(x)
