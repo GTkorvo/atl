@@ -412,9 +412,19 @@ int indent;
         for (j = 0; j < indent; j++) {
             printf("    ");
         }
-	printf("    { %s ('%c%c%c%c'), Attr_Int4, %ld }\n", print_name,
-	       c[0], c[1], c[2], c[3],
-	       (long) list->l.list.iattrs->iattr[i].value);
+	if ((attr_id == ATL_CHAR_CONS('C','P','I','P')) || 
+	    (attr_id == ATL_CHAR_CONS('C','I','P','A'))) {
+	    /* builts we want to format differently */
+	    unsigned int ip = list->l.list.iattrs->iattr[i].value;
+	    printf("    { %s ('%c%c%c%c'), Attr_Int4, %d.%d.%d.%d }\n", print_name,
+		   c[0], c[1], c[2], c[3],
+		   ((ip & 0xff000000) >> 24), ((ip & 0x00ff0000) >> 16), 
+		   ((ip & 0x0000ff00) >> 8), (ip & 0x000000ff));
+	} else {
+	    printf("    { %s ('%c%c%c%c'), Attr_Int4, %ld }\n", print_name,
+		   c[0], c[1], c[2], c[3],
+		   (long) list->l.list.iattrs->iattr[i].value);
+	}
 	if (attr_name) free(attr_name);
     }
 	
