@@ -6800,7 +6800,7 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 
 # Prevent multiple expansion
 
-test "$CC" = "gcc" && CFLAGS="$CFLAGS -Wall"
+test "$CC" = "gcc" && CFLAGS="$CFLAGS -Wall -DUSE_UDP"
 
 CPPFLAGS="$CPPFLAGS -DATL_SOURCE"
 LIB_PRE=lib

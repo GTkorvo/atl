@@ -21,6 +21,8 @@ extern "C" {
 
 typedef int atom_t;
 
+#include <tclHash.h>
+
 /* opaque type for atom server handle */
 typedef struct _atom_server *atom_server;
 
@@ -45,10 +47,7 @@ char *
 get_server_id ARGS((atom_server as));
 
 typedef enum _attr_value_type { Attr_Undefined, Attr_Int4, Attr_Int8, 
-				Attr_String, Attr_Opaque, Attr_Atom, Attr_List } attr_value_type;
-
-/* opaque type for attr_lists */
-typedef struct _attr_list_struct *attr_list;
+				Attr_String, Attr_Opaque, Attr_Atom } attr_value_type;
 
 typedef void *attr_value;
 
@@ -57,15 +56,22 @@ typedef struct attr_opaque {
     void *buffer;
 } attr_opaque, *attr_opaque_p;
 
+#define MAXATTR 100
+
 typedef struct attr {
 #ifdef STRING_ATOMS
-    char *attr_id;
+    char attr_id[MAXSTRLEN];
 #else
     atom_t attr_id;
 #endif
     attr_value_type val_type;
     attr_value value;
 } attr, *attr_p;
+
+typedef struct int_attr{
+ atom_t attr_id;
+ int value;
+}int_attr, *int_attr_p;
 
 typedef struct xmit_attr_s {
     atom_t	attr_name;
@@ -78,6 +84,21 @@ typedef struct xmit_object_s {
     int		attr_count;
     xmit_attr	*attrs;
 } xmit_object, *xmit_object_ref;
+
+struct _attr_rep_struct{
+    int ref_count;
+    int_attr *attribute;
+};
+
+struct _attr_sublist_struct{
+    Tcl_HashTable attr_hash_table;
+    int ref_count;
+    struct attr attribute[MAXATTR];
+};
+
+/* opaque type for attr_lists */
+typedef struct _attr_sublist_struct *attr_list;
+typedef struct _attr_rep_struct *attr_rep; 
 
 /* equality between two Attr_String attr_p's */
 #define ATTR_STRING_EQ(ap1,ap2) \
@@ -124,7 +145,7 @@ typedef struct xmit_object_s {
 
 
 /* operations on attr_lists */
-extern attr_list create_attr_list();
+extern attr_list create_attr_list ARGS((void));
 
 extern void free_attr_list ARGS((attr_list list));
 
@@ -150,7 +171,7 @@ extern int replace_attr ARGS((attr_list attrs, atom_t attr_id,
 extern int query_attr ARGS(( attr_list attrs, atom_t attr_id, 
 			    attr_value_type *val_type_p, attr_value *value_p));
 
-extern void dump_attr_list ARGS(( attr_list attrs ));
+extern void dump_attr ARGS(( attr_list attrs ));
 
 extern
 atom_t
@@ -159,6 +180,10 @@ attr_atom_from_string ARGS((const char *str));
 extern
 char *
 attr_string_from_atom ARGS((atom_t atom));
+
+extern
+atom_t
+set_attr_atom_and_string ARGS((const char *str, int atom));
 
 extern int attr_count ARGS((attr_list attrs));
 

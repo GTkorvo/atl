@@ -37,7 +37,7 @@ dnl Configure libtool
 AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
-test "$CC" = "gcc" && CFLAGS="$CFLAGS -Wall"
+test "$CC" = "gcc" && CFLAGS="$CFLAGS -Wall -DUSE_UDP"
 
 CPPFLAGS="$CPPFLAGS -DATL_SOURCE"
 LIB_PRE=lib
