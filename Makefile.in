@@ -178,10 +178,10 @@ atom_test_DEPENDENCIES = libatl.la
 attr_dump_LDADD = libatl.la
 attr_dump_DEPENDENCIES = libatl.la
 
-atom_server_SOURCES = atom_server.c tclHash.c
-atom_server_LDADD = $(SOCKET_LIBS)
+atom_server_SOURCES = atom_server.c 
+atom_server_LDADD = $(SOCKET_LIBS) tclHash.$(OBJEXT)
 atom_server_LDFLAGS = -static
-atom_server_DEPENDENCIES = 
+atom_server_DEPENDENCIES = tclHash.$(OBJEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
@@ -196,7 +196,7 @@ libatl_la_OBJECTS = $(am_libatl_la_OBJECTS)
 @KERNEL_FALSE@	atom_server$(EXEEXT) attr_dump$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
-am_atom_server_OBJECTS = atom_server.$(OBJEXT) tclHash.$(OBJEXT)
+am_atom_server_OBJECTS = atom_server.$(OBJEXT)
 atom_server_OBJECTS = $(am_atom_server_OBJECTS)
 am_atom_test_OBJECTS = atom_test.$(OBJEXT)
 atom_test_OBJECTS = $(am_atom_test_OBJECTS)

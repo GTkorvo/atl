@@ -75,10 +75,10 @@ atom_test_DEPENDENCIES = libatl.la
 attr_dump_LDADD =  libatl.la
 attr_dump_DEPENDENCIES =  libatl.la
 
-atom_server_SOURCES = atom_server.c tclHash.c
-atom_server_LDADD =  $(SOCKET_LIBS)
+atom_server_SOURCES = atom_server.c 
+atom_server_LDADD =  $(SOCKET_LIBS) tclHash.$(OBJEXT)
 atom_server_LDFLAGS = -static
-atom_server_DEPENDENCIES =
+atom_server_DEPENDENCIES = tclHash.$(OBJEXT)
 
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
