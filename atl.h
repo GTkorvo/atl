@@ -15,6 +15,11 @@
 #define NULL	0
 #endif
 #endif
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 typedef int atom_t;
 
 /* opaque type for atom server handle */
@@ -205,5 +210,9 @@ attr_list_subset (attr_list l1, attr_list l2);
 extern
 int
 attr_list_subset_xmit_object (xmit_object xo, attr_list l1);
+
+#ifdef	__cplusplus
+	   }
+#endif
 
 #endif
