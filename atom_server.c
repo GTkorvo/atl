@@ -152,7 +152,7 @@ establish_server_connection()
     }
 	
     sock_addr.sin_family = AF_INET;
-		
+    sock_addr.sin_port = htons(TCP_PORT);
     sock_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     
     if (connect(sock, (struct sockaddr *) &sock_addr, sizeof sock_addr) < 0) {
