@@ -955,6 +955,7 @@ if test -n "$tmp_search_results"; then
     exec_prefix=`echo $tmp_search_results|sed 's%lib/$2%%g;s%/[^/][^/]*//*[^/][^/]*$%%'`
 fi
 fi
+])dnl
 
 AC_DEFUN(AC_FPRINTF_DEFINED,
 [AC_MSG_CHECKING(whether stdio.h declares fprintf)
