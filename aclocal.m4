@@ -790,3 +790,744 @@ AC_DEFUN(AM_PROG_NM, [indir([AC_PROG_NM])])dnl
 dnl This is just to silence aclocal about the macro not being used
 ifelse([AC_DISABLE_FAST_INSTALL])dnl
 
+dnl
+dnl ac_require_hppcel_package(package, include_file, library_file)
+dnl   either include file or library_file may be left off if not needed
+dnl   this macro searches for the files using find_hppcel_package().  If
+dnl   found, it adds directory in which the found file resides to either 
+dnl   CPPFLAGS (with a -I prefix)  or LDFLAGS (with a -L prefix)
+dnl
+AC_DEFUN(AC_REQUIRE_HPPCEL_PACKAGE,
+[
+AC_REQUIRE([AC_HPPCEL_SET_ARCHIVE])
+AC_ARG_WITH(translit($1, `/',`_'), translit([  --with-$1=DIR	Where to find $1 package], `/',`_'))
+define([with_translit], translit(with_$1, `/',`_'))
+if test -n "$with_translit"; then
+dnl
+dnl if they did a with, kill the cache variables
+dnl
+translit(unset ac_cv_$1_include_arg,  `/',`_')
+translit(unset ac_cv_$1_link_arg,  `/',`_')
+if test `echo $with_translit | sed 's/\(.\).*/\1/g'` != "/"; then
+with_translit=`pwd`/$with_translit
+fi
+fi
+ifelse([$2], , ,
+dnl
+dnl  if arg2 (include_file) is specified
+dnl
+AC_MSG_CHECKING(needed include args for $1 package)
+AC_CACHE_VAL(translit(ac_cv_$1_include_arg, `/',`_'), 
+[AC_FIND_HPPCEL_PACKAGE($1, $2, hppcel_tmp, $with_translit)
+if test -n "$hppcel_tmp"; then
+translit(ac_cv_$1_include_arg, `/',`_')=-I`echo $hppcel_tmp | sed "s/.$2//g"`
+fi
+])
+AC_MSG_RESULT(translit($ac_cv_$1_include_arg, `/',`_'))
+dnl
+dnl  add the result to CPPFLAGS if it is absent
+dnl
+translit(if test -n "$ac_cv_$1_include_arg"; then, `/',`_')
+quoted_arg=`echo translit($ac_cv_$1_include_arg, `/',`_') | sed 's/\//\\\\\\//g'`
+[if test -z ""`echo $quoted_arg | grep $1`; then
+CPPFLAGS=`echo $CPPFLAGS | sed "/$quoted_arg$/q;/$quoted_arg /q;s/$/ $quoted_arg/g"`
+else
+CPPFLAGS=`echo $CPPFLAGS | sed "/$quoted_arg$/q;/$quoted_arg /q;s/^/ $quoted_arg /g"`
+fi]
+fi
+)
+ifelse([$3], , ,
+dnl
+dnl  if arg3 (library_file) is specified
+dnl
+AC_MSG_CHECKING(needed link args for $1 package)
+AC_CACHE_VAL(translit(ac_cv_$1_link_dir,  `/',`_'), 
+[AC_FIND_HPPCEL_PACKAGE($1, $3, hppcel_tmp, $with_translit)
+if test -n "$hppcel_tmp" -a "$hppcel_tmp" != "$3"; then
+translit(ac_cv_$1_link_dir, `/',`_')=`echo $hppcel_tmp | sed "s/.$3//g"`
+else
+translit(ac_cv_$1_link_dir="",  `/',`_')
+fi
+])
+AC_MSG_RESULT(translit($ac_cv_$1_link_dir, `/',`_'))
+translit(ac_cv_$1_link_arg=`echo $ac_cv_$1_link_dir, `/',`_') | sed '/./ s/^/-L/1'`
+dnl
+dnl  add the result to LDFLAGS if it is absent
+dnl
+translit(if test -n "$ac_cv_$1_link_arg"; then, `/',`_')
+quoted_arg=`echo translit($ac_cv_$1_link_arg, `/',`_') | sed 's/\//\\\\\\//g'`
+[if test -z ""`echo $quoted_arg | grep $1`; then
+LDFLAGS=`echo $LDFLAGS | sed "/$quoted_arg$/q;/$quoted_arg /q;s/$/ $quoted_arg/g"`
+else
+LDFLAGS=`echo $LDFLAGS | sed "/$quoted_arg$/q;/$quoted_arg /q;s/^/$quoted_arg /g"`
+fi]
+fi
+)
+])dnl
+dnl
+dnl ac_find_hppcel_package(package, file_to_find, variable_to_set, suggestion)
+dnl    search a set of standard directories to find file_to_find.  When found,
+dnl    set $variable_to_set to the path of the file.  Use package and
+dnl    suggestions to help search.  Mostly this searches ~chaos (if it exists)
+dnl    ~parallel (if it exists) and the usual suspects like:
+dnl    /usr/{include,lib} /usr/local/{include,lib} /opt/<package>/{include,lib}
+dnl    /opt/misc/{include,lib}.
+dnl
+AC_DEFUN(AC_FIND_HPPCEL_PACKAGE,
+[
+AC_REQUIRE([AC_HPPCEL_SET_ARCHIVE])
+$3=""
+search_list="$2"
+CHAOS_HOMEDIR=`echo "echo ~chaos" | csh -sf  2>/dev/null` || CHAOS_HOMEDIR=""
+PARALLEL_HOMEDIR=`echo "echo ~parallel" | csh -sf  2>/dev/null` || PARALLEL_HOMEDIR=""
+if test -n "$4"; then
+if test `echo $4 | cut -c1` = "~"; then
+EXPANDED=`echo "echo $4" | csh -sf 2>/dev/null` || EXPANDED=""
+else
+EXPANDED=$4
+fi
+
+search_list="$search_list $EXPANDED/$2 $EXPANDED/include/$2 $EXPANDED/share/$2 $EXPANDED/include/$hppcel_cv_archive/$2 $EXPANDED/lib/$hppcel_cv_archive/$2 $EXPANDED/lib/$2 $EXPANDED/$1/$2 $EXPANDED/$1/$hppcel_cv_archive/$2 $EXPANDED/$1/include/$2 $EXPANDED/$1/lib/$hppcel_cv_archive/$2"
+fi
+AC_ARG_WITH(installed, [ --with-installed    Don't use local copies of HPPCEL packages],,
+search_list="$search_list `pwd`/../$1/$2 `pwd`/../lib/$2 `pwd`/../include/$2 `pwd`/../share/$2 $HOME/$1/$2 $HOME/lib/$hppcel_cv_archive/$2 $HOME/include/$hppcel_cv_archive/$2 $HOME/include/$2 $HOME/share/$2"
+)
+if test -n "$CHAOS_HOMEDIR" -a -n "$hppcel_cv_archive"; then
+search_list="$search_list $CHAOS_HOMEDIR/include/$2 $CHAOS_HOMEDIR/share/$2 $CHAOS_HOMEDIR/include/$hppcel_cv_archive/$2 $CHAOS_HOMEDIR/lib/$hppcel_cv_archive/$2 $CHAOS_HOMEDIR/lib/$2"
+fi
+if test -n "$PARALLEL_HOMEDIR" -n "$hppcel_cv_archive"; then
+search_list="$search_list $PARALLEL_HOMEDIR/include/$2 $PARALLEL_HOMEDIR/share/$2 $PARALLEL_HOMEDIR/include/$hppcel_cv_archive/$2 $PARALLEL_HOMEDIR/lib/$hppcel_cv_archive/$2 $PARALLEL_HOMEDIR/lib/$2"
+fi
+search_list="$search_list /usr/lib/$2 /usr/local/lib/$2 /usr/include/$2 /usr/share/$2 /opt/$1/lib/$2 /opt/$1/include/$2 /opt/misc/lib/$2 /opt/misc/include/$2 /opt/misc/share/$2"
+AC_SEARCH($search_list)
+if test -n "$tmp_search_results"; then
+$3=$tmp_search_results
+fi
+])dnl
+dnl
+dnl AC_HPPCEL_SET_ARCHIVE()
+dnl   set the $hppcel_cv_machine_target variable to a standard archive name
+dnl
+AC_DEFUN(AC_HPPCEL_SET_ARCHIVE,[
+CHAOS_HOMEDIR=`echo "echo ~chaos" | csh -sf  2>/dev/null` || CHAOS_HOMEDIR=""
+PARALLEL_HOMEDIR=`echo "echo ~parallel" | csh -sf  2>/dev/null` || PARALLEL_HOMEDIR=""
+if test -x $CHAOS_HOMEDIR/bin/hppcel_arch; then
+hppcel_cv_archive=`$CHAOS_HOMEDIR/bin/hppcel_arch`
+elif test -x $PARALLEL_HOMEDIR/bin/hppcel_arch; then
+hppcel_cv_archive=`$PARALLEL_HOMEDIR/bin/hppcel_arch`
+else
+hppcel_cv_archive=""
+fi
+])dnl
+dnl
+dnl  AC_SEARCH(variable to define, options to try)
+define(AC_SEARCH,
+[tmp_search_results=""
+for tmp_search_value in $1; do 
+   if test -r $tmp_search_value; then 
+	tmp_search_results=$tmp_search_value
+	break
+   fi 
+done
+])dnl
+dnl
+dnl
+dnl AC_HPPCEL_LIB_PREFIX
+dnl  this macro tries to set a reasonable default for the prefix value
+dnl  call with two arguments, project name and library name
+dnl
+AC_DEFUN(AC_HPPCEL_LIB_PREFIX,
+[if test "x$prefix" = xNONE; then
+AC_REQUIRE([AC_HPPCEL_SET_ARCHIVE])
+search_list=""
+CHAOS_HOMEDIR=`echo "echo ~chaos" | csh -sf  2>/dev/null` || CHAOS_HOMEDIR=""
+PARALLEL_HOMEDIR=`echo "echo ~parallel" | csh -sf  2>/dev/null` || PARALLEL_HOMEDIR=""
+if test -n "$CHAOS_HOMEDIR"; then
+search_list="$search_list $CHAOS_HOMEDIR/$hppcel_cv_archive/lib/$2 $CHAOS_HOMEDIR/lib/$2"
+fi
+if test -n "$PARALLEL_HOMEDIR"; then
+search_list="$search_list $PARALLEL_HOMEDIR/$hppcel_cv_archive/lib/$2 $PARALLEL_HOMEDIR/lib/$2"
+fi
+search_list="$search_list /usr/lib/$2 /usr/local/lib/$2 /opt/$1/lib/$2 /opt/misc/lib/$2"
+AC_SEARCH($search_list)
+if test -n "$tmp_search_results"; then
+    prefix=`echo $tmp_search_results|sed "s%$hppcel_cv_archive/lib/$2%%g;s%lib/$2%%g;s%/[^/][^/]*//*[^/][^/]*$%%"`
+    exec_prefix=`echo $tmp_search_results|sed 's%lib/$2%%g;s%/[^/][^/]*//*[^/][^/]*$%%'`
+fi
+fi
+
+AC_DEFUN(AC_FPRINTF_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares fprintf)
+AC_CACHE_VAL(ac_cv_fprintf_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]fprintf[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_fprintf_found=yes, ac_cv_fprintf_found=no)
+])
+AC_MSG_RESULT($ac_cv_fprintf_found)
+if test $ac_cv_fprintf_found = yes; then
+   AC_DEFINE(FPRINTF_DEFINED,1, [define if stdio.h declares fprintf])
+fi
+])dnl
+AC_DEFUN(AC_ALARM_DEFINED,
+[AC_MSG_CHECKING(whether unistd.h declares alarm)
+AC_CACHE_VAL(ac_cv_alarm_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]alarm[^a-zA-Z_]>>changequote([, ])dnl
+, unistd.h, ac_cv_alarm_found=yes, ac_cv_alarm_found=no)
+])
+AC_MSG_RESULT($ac_cv_alarm_found)
+if test $ac_cv_alarm_found = yes; then
+   AC_DEFINE(ALARM_DEFINED,1,[define if unistd.h declares alarm])
+fi
+])dnl
+AC_DEFUN(AC_PUTENV_DEFINED,
+[AC_MSG_CHECKING(whether unistd.h or stdlib.h declares putenv)
+AC_CACHE_VAL(ac_cv_putenv_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]putenv[^a-zA-Z_]>>changequote([, ])dnl
+, stdlib.h, ac_cv_putenv_found=yes, ac_cv_putenv_found=no)
+if test $ac_cv_putenv_found != yes; then
+AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]putenv[^a-zA-Z_]>>changequote([, ])dnl
+, unistd.h, ac_cv_putenv_found=yes, ac_cv_putenv_found=no)
+fi
+])
+AC_MSG_RESULT($ac_cv_putenv_found)
+if test $ac_cv_putenv_found = yes; then
+   AC_DEFINE(PUTENV_DEFINED,1,[define if unistd.h or stdlib.h declares putenv])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_FSCANF_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares fscanf)
+AC_CACHE_VAL(ac_cv_fscanf_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]fscanf[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_fscanf_found=yes, ac_cv_fscanf_found=no)
+])
+AC_MSG_RESULT($ac_cv_fscanf_found)
+if test $ac_cv_fscanf_found = yes; then
+   AC_DEFINE(FSCANF_DEFINED,1, [define if stdio.h declares fprintf])
+fi
+])dnl
+AC_DEFUN(AC_PRINTF_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares printf)
+AC_CACHE_VAL(ac_cv_printf_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]printf[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_printf_found=yes, ac_cv_printf_found=no)
+])
+AC_MSG_RESULT($ac_cv_printf_found)
+if test $ac_cv_printf_found = yes; then
+   AC_DEFINE(PRINTF_DEFINED,1,[define if stdio.h declares printf])
+fi
+])dnl
+AC_DEFUN(AC_WRITE_DEFINED,
+[AC_MSG_CHECKING(whether unistd.h declares write)
+AC_CACHE_VAL(ac_cv_write_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]write[^a-zA-Z_]>>changequote([, ])dnl
+, unistd.h, ac_cv_write_found=yes, ac_cv_write_found=no)
+])
+AC_MSG_RESULT($ac_cv_write_found)
+if test $ac_cv_write_found = yes; then
+   AC_DEFINE(WRITE_DEFINED,1,[define if unistd.h declares write])
+fi
+])dnl
+AC_DEFUN(AC_WRITEV_DEFINED,
+[AC_MSG_CHECKING(whether unistd.h or sys/uio.h declares writev)
+AC_CACHE_VAL(ac_cv_writev_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]writev[^a-zA-Z_]>>changequote([, ])dnl
+, sys/uio.h, ac_cv_writev_found=yes, ac_cv_writev_found=no)
+if test $ac_cv_writev_found != yes; then
+AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]writev[^a-zA-Z_]>>changequote([, ])dnl
+, unistd.h, ac_cv_writev_found=yes, ac_cv_writev_found=no)
+fi
+])
+AC_MSG_RESULT($ac_cv_writev_found)
+if test $ac_cv_writev_found = yes; then
+   AC_DEFINE(WRITEV_DEFINED,1,[define if unistd.h or sys/uio.h declares writev])
+fi
+])dnl
+AC_DEFUN(AC_READ_DEFINED,
+[AC_MSG_CHECKING(whether unistd.h declares read)
+AC_CACHE_VAL(ac_cv_read_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]read[^a-zA-Z_]>>changequote([, ])dnl
+, unistd.h, ac_cv_read_found=yes, ac_cv_read_found=no)
+])
+AC_MSG_RESULT($ac_cv_read_found)
+if test $ac_cv_read_found = yes; then
+   AC_DEFINE(READ_DEFINED,1,[define if unistd.h declares read])
+fi
+])dnl
+AC_DEFUN(AC_READV_DEFINED,
+[AC_MSG_CHECKING(whether unistd.h or sys/uio.h declares readv)
+AC_CACHE_VAL(ac_cv_readv_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]readv[^a-zA-Z_]>>changequote([, ])dnl
+, sys/uio.h, ac_cv_readv_found=yes, ac_cv_readv_found=no)
+if test $ac_cv_readv_found != yes; then
+AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]readv[^a-zA-Z_]>>changequote([, ])dnl
+, unistd.h, ac_cv_readv_found=yes, ac_cv_readv_found=no)
+fi
+])
+AC_MSG_RESULT($ac_cv_readv_found)
+if test $ac_cv_readv_found = yes; then
+   AC_DEFINE(READV_DEFINED,1,[define if unistd.h or sys/uio.h declares readv])
+fi
+])dnl
+dnl
+])dnl
+AC_DEFUN(AC_SSCANF_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares sscanf)
+AC_CACHE_VAL(ac_cv_sscanf_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]sscanf[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_sscanf_found=yes, ac_cv_sscanf_found=no)
+])
+AC_MSG_RESULT($ac_cv_sscanf_found)
+if test $ac_cv_sscanf_found = yes; then
+   AC_DEFINE(SSCANF_DEFINED,1,[define if stdio.h declares sscanf])
+fi
+])dnl
+AC_DEFUN(AC_SPRINTF_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares sprintf)
+AC_CACHE_VAL(ac_cv_sprintf_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]sprintf[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_sprintf_found=yes, ac_cv_sprintf_found=no)
+])
+AC_MSG_RESULT($ac_cv_sprintf_found)
+if test $ac_cv_sprintf_found = yes; then
+   AC_DEFINE(SPRINTF_DEFINED,1,[define if sprintf is declared in stdio.h])
+fi
+])dnl
+AC_DEFUN(AC_STRDUP_DEFINED,
+[AC_MSG_CHECKING(whether string.h declares strdup)
+AC_CACHE_VAL(ac_cv_strdup_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]strdup[^a-zA-Z_]>>changequote([, ])dnl
+, string.h, ac_cv_strdup_found=yes, ac_cv_strdup_found=no)
+])
+AC_MSG_RESULT($ac_cv_strdup_found)
+if test $ac_cv_strdup_found = yes; then
+   AC_DEFINE(STRDUP_DEFINED,1,[define if string.h declares strdup])
+fi
+])dnl
+AC_DEFUN(AC_BZERO_DEFINED,
+[AC_MSG_CHECKING(whether string.h declares bzero)
+AC_CACHE_VAL(ac_cv_bzero_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]bzero[^a-zA-Z_]>>changequote([, ])dnl
+, string.h, ac_cv_bzero_found=yes, ac_cv_bzero_found=no)
+])
+AC_MSG_RESULT($ac_cv_bzero_found)
+if test $ac_cv_bzero_found = yes; then
+   AC_DEFINE(BZERO_DEFINED,1,[define if string.h declares bzero])
+fi
+])dnl
+AC_DEFUN(AC_BCOPY_DEFINED,
+[AC_MSG_CHECKING(whether string.h declares bcopy)
+AC_CACHE_VAL(ac_cv_bcopy_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]bcopy[^a-zA-Z_]>>changequote([, ])dnl
+, string.h, ac_cv_bcopy_found=yes, ac_cv_bcopy_found=no)
+])
+AC_MSG_RESULT($ac_cv_bcopy_found)
+if test $ac_cv_bcopy_found = yes; then
+   AC_DEFINE(BCOPY_DEFINED,1,[define if string.h declares bcopy])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_GETDOMAINNAME_DEFINED,
+[AC_MSG_CHECKING(whether unistd.h declares getdomainname)
+AC_CACHE_VAL(ac_cv_getdomainname_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]getdomainname[^a-zA-Z_]>>changequote([, ])dnl
+, unistd.h, ac_cv_getdomainname_found=yes, ac_cv_getdomainname_found=no)
+])
+AC_MSG_RESULT($ac_cv_getdomainname_found)
+if test $ac_cv_getdomainname_found = yes; then
+   AC_DEFINE(GETDOMAINNAME_DEFINED,1,[define if unistd.h declares getdomainname])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_GETHOSTNAME_DEFINED,
+[AC_MSG_CHECKING(whether unistd.h declares gethostname)
+AC_CACHE_VAL(ac_cv_gethostname_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]gethostname[^a-zA-Z_]>>changequote([, ])dnl
+, unistd.h, ac_cv_gethostname_found=yes, ac_cv_gethostname_found=no)
+])
+AC_MSG_RESULT($ac_cv_gethostname_found)
+if test $ac_cv_gethostname_found = yes; then
+   AC_DEFINE(GETHOSTNAME_DEFINED,1,[define if unistd.h declares gethostname])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_GETPEERNAME_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares getpeername)
+AC_CACHE_VAL(ac_cv_getpeername_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]getpeername[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_getpeername_found=yes, ac_cv_getpeername_found=no)
+])
+AC_MSG_RESULT($ac_cv_getpeername_found)
+if test $ac_cv_getpeername_found = yes; then
+   AC_DEFINE(GETPEERNAME_DEFINED,1,[define if sys/socket.h declares getpeername])
+fi
+])dnl
+AC_DEFUN(AC_GETTIMEOFDAY_DEFINED,
+[AC_MSG_CHECKING(whether sys/time.h declares gettimeofday)
+AC_CACHE_VAL(ac_cv_gettimeofday_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]gettimeofday[^a-zA-Z_]>>changequote([, ])dnl
+, sys/time.h, ac_cv_gettimeofday_found=yes, ac_cv_gettimeofday_found=no)
+])
+AC_MSG_RESULT($ac_cv_gettimeofday_found)
+if test $ac_cv_gettimeofday_found = yes; then
+   AC_DEFINE(GETTIMEOFDAY_DEFINED,1,[define if sys/time.h declares gettimeofday])
+fi
+])dnl
+AC_DEFUN(AC_ON_EXIT_DEFINED,
+[AC_MSG_CHECKING(whether stdlib.h declares on_exit)
+AC_CACHE_VAL(ac_cv_on_exit_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]on_exit[^a-zA-Z_]>>changequote([, ])dnl
+, stdlib.h, ac_cv_on_exit_found=yes, ac_cv_on_exit_found=no)
+])
+AC_MSG_RESULT($ac_cv_on_exit_found)
+if test $ac_cv_on_exit_found = yes; then
+   AC_DEFINE(ON_EXIT_DEFINED,1,[define if stdlib.h declares on_exit])
+fi
+])
+dnl
+dnl
+AC_DEFUN(AC_RECV_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares recv)
+AC_CACHE_VAL(ac_cv_recv_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]recv[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_recv_found=yes, ac_cv_recv_found=no)
+])
+AC_MSG_RESULT($ac_cv_recv_found)
+if test $ac_cv_recv_found = yes; then
+   AC_DEFINE(RECV_DEFINED,1,[define if sys/socket.h declares recv])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_RECVFROM_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares recvfrom)
+AC_CACHE_VAL(ac_cv_recvfrom_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]recvfrom[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_recvfrom_found=yes, ac_cv_recvfrom_found=no)
+])
+AC_MSG_RESULT($ac_cv_recvfrom_found)
+if test $ac_cv_recvfrom_found = yes; then
+   AC_DEFINE(RECVFROM_DEFINED,1,[define if sys/socket.h declares recvfrom])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_SELECT_DEFINED,
+[AC_MSG_CHECKING(whether unistd.h or sys/select.h declares select)
+AC_CACHE_VAL(ac_cv_select_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]select[^a-zA-Z_]>>changequote([, ])dnl
+, sys/select.h, ac_cv_select_found=yes, ac_cv_select_found=no)
+if test $ac_cv_select_found != yes; then
+AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]select[^a-zA-Z_]>>changequote([, ])dnl
+, unistd.h, ac_cv_select_found=yes, ac_cv_select_found=no)
+fi
+])
+AC_MSG_RESULT($ac_cv_select_found)
+if test $ac_cv_select_found = yes; then
+   AC_DEFINE(SELECT_DEFINED,1,[define if unistd.h or sys/select.h declares select])
+fi
+])dnl
+dnl
+dnl
+AC_DEFUN(AC_SEND_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares send)
+AC_CACHE_VAL(ac_cv_send_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]send[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_send_found=yes, ac_cv_send_found=no)
+])
+AC_MSG_RESULT($ac_cv_send_found)
+if test $ac_cv_send_found = yes; then
+   AC_DEFINE(SEND_DEFINED,1,[define if sys/socket.h declares send])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_SENDTO_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares sendto)
+AC_CACHE_VAL(ac_cv_sendto_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]sendto[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_sendto_found=yes, ac_cv_sendto_found=no)
+])
+AC_MSG_RESULT($ac_cv_sendto_found)
+if test $ac_cv_sendto_found = yes; then
+   AC_DEFINE(SENDTO_DEFINED,1,[define if sys/socket.h declares sendto])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_ACCEPT_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares accept)
+AC_CACHE_VAL(ac_cv_accept_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]accept[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_accept_found=yes, ac_cv_accept_found=no)
+])
+AC_MSG_RESULT($ac_cv_accept_found)
+if test $ac_cv_accept_found = yes; then
+   AC_DEFINE(ACCEPT_DEFINED,1,[define if sys/socket.h declares accept])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_CONNECT_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares connect)
+AC_CACHE_VAL(ac_cv_connect_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]connect[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_connect_found=yes, ac_cv_connect_found=no)
+])
+AC_MSG_RESULT($ac_cv_connect_found)
+if test $ac_cv_connect_found = yes; then
+   AC_DEFINE(CONNECT_DEFINED,1,[define if sys/socket.h declares connect])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_SOCKET_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares socket)
+AC_CACHE_VAL(ac_cv_socket_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]socket[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_socket_found=yes, ac_cv_socket_found=no)
+])
+AC_MSG_RESULT($ac_cv_socket_found)
+if test $ac_cv_socket_found = yes; then
+   AC_DEFINE(SOCKET_DEFINED,1,[define if sys/socket.h declares socket])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_SETSOCKOPT_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares setsockopt)
+AC_CACHE_VAL(ac_cv_setsockopt_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]setsockopt[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_setsockopt_found=yes, ac_cv_setsockopt_found=no)
+])
+AC_MSG_RESULT($ac_cv_setsockopt_found)
+if test $ac_cv_setsockopt_found = yes; then
+   AC_DEFINE(SETSOCKOPT_DEFINED,1,[define if sys/socket.h declares setsockopt])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_GETSOCKNAME_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares getsockname)
+AC_CACHE_VAL(ac_cv_getsockname_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]getsockname[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_getsockname_found=yes, ac_cv_getsockname_found=no)
+])
+AC_MSG_RESULT($ac_cv_getsockname_found)
+if test $ac_cv_getsockname_found = yes; then
+   AC_DEFINE(GETSOCKNAME_DEFINED,1,[define if sys/socket.h declares getsockname])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_BIND_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares bind)
+AC_CACHE_VAL(ac_cv_bind_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]bind[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_bind_found=yes, ac_cv_bind_found=no)
+])
+AC_MSG_RESULT($ac_cv_bind_found)
+if test $ac_cv_bind_found = yes; then
+   AC_DEFINE(BIND_DEFINED,1,[define if sys/socket.h declares bind])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_FFLUSH_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares fflush)
+AC_CACHE_VAL(ac_cv_fflush_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]fflush[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_fflush_found=yes, ac_cv_fflush_found=no)
+])
+AC_MSG_RESULT($ac_cv_fflush_found)
+if test $ac_cv_fflush_found = yes; then
+   AC_DEFINE(FFLUSH_DEFINED,1,[define if stdio.h declares fflush])
+fi
+])dnl
+AC_DEFUN(AC_SCANF_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares scanf)
+AC_CACHE_VAL(ac_cv_scanf_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]scanf[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_scanf_found=yes, ac_cv_scanf_found=no)
+])
+AC_MSG_RESULT($ac_cv_scanf_found)
+if test $ac_cv_scanf_found = yes; then
+   AC_DEFINE(SCANF_DEFINED,1,[define if stdio.h declares scanf])
+fi
+])dnl
+AC_DEFUN(AC_FCLOSE_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares fclose)
+AC_CACHE_VAL(ac_cv_fclose_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]fclose[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_fclose_found=yes, ac_cv_fclose_found=no)
+])
+AC_MSG_RESULT($ac_cv_fclose_found)
+if test $ac_cv_fclose_found = yes; then
+   AC_DEFINE(FCLOSE_DEFINED,1, [define if stdio.h declares fclose])
+fi
+])dnl
+AC_DEFUN(AC_REWIND_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares rewind)
+AC_CACHE_VAL(ac_cv_rewind_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]rewind[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_rewind_found=yes, ac_cv_rewind_found=no)
+])
+AC_MSG_RESULT($ac_cv_rewind_found)
+if test $ac_cv_rewind_found = yes; then
+   AC_DEFINE(REWIND_DEFINED,1, [define if stdio.h declares rewind])
+fi
+])dnl
+AC_DEFUN(AC_PUTS_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares puts)
+AC_CACHE_VAL(ac_cv_puts_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]puts[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_puts_found=yes, ac_cv_puts_found=no)
+])
+AC_MSG_RESULT($ac_cv_puts_found)
+if test $ac_cv_puts_found = yes; then
+   AC_DEFINE(PUTS_DEFINED,1,[define if stdio.h declares puts])
+fi
+])dnl
+AC_DEFUN(AC_FPUTS_DEFINED,
+[AC_MSG_CHECKING(whether stdio.h declares fputs)
+AC_CACHE_VAL(ac_cv_fputs_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]fputs[^a-zA-Z_]>>changequote([, ])dnl
+, stdio.h, ac_cv_fputs_found=yes, ac_cv_fputs_found=no)
+])
+AC_MSG_RESULT($ac_cv_fputs_found)
+if test $ac_cv_fputs_found = yes; then
+   AC_DEFINE(FPUTS_DEFINED,1,[define if stdio.h declares fputs])
+fi
+])dnl
+AC_DEFUN(AC_TIME_DEFINED,
+[AC_MSG_CHECKING(whether time.h declares time)
+AC_CACHE_VAL(ac_cv_time_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]time[^a-zA-Z_]>>changequote([, ])dnl
+, time.h, ac_cv_time_found=yes, ac_cv_time_found=no)
+])
+AC_MSG_RESULT($ac_cv_time_found)
+if test $ac_cv_time_found = yes; then
+   AC_DEFINE(TIME_DEFINED,1,[define if time.h declares time])
+fi
+])dnl
+AC_DEFUN(AC_SETRLIMIT_DEFINED,
+[AC_MSG_CHECKING(whether sys/resource.h declares setrlimit)
+AC_CACHE_VAL(ac_cv_setrlimit_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]setrlimit[^a-zA-Z_]>>changequote([, ])dnl
+, sys/resource.h, ac_cv_setrlimit_found=yes, ac_cv_setrlimit_found=no)
+])
+AC_MSG_RESULT($ac_cv_setrlimit_found)
+if test $ac_cv_setrlimit_found = yes; then
+   AC_DEFINE(SETRLIMIT_DEFINED,1, [define if setrlimit is declared in sys/resource.h])
+fi
+])dnl
+AC_DEFUN(AC_LISTEN_DEFINED,
+[AC_MSG_CHECKING(whether sys/socket.h declares listen)
+AC_CACHE_VAL(ac_cv_listen_found,
+[AC_EGREP_HEADER(
+changequote(<<, >>)dnl
+<<[^a-zA-Z_]listen[^a-zA-Z_]>>changequote([, ])dnl
+, sys/socket.h, ac_cv_listen_found=yes, ac_cv_listen_found=no)
+])
+AC_MSG_RESULT($ac_cv_listen_found)
+if test $ac_cv_listen_found = yes; then
+   AC_DEFINE(LISTEN_DEFINED,1, [define if listen is declared in sys/socket.h])
+fi
+])dnl
+dnl
+AC_DEFUN(AC_HAS_STRUCT_HOSTENT,
+[AC_CACHE_CHECK([whether struct hostent is in netdb.h or winsock.h],
+  ac_cv_struct_hostent,
+[AC_TRY_COMPILE([#include <netdb.h>],
+[struct hostent vec;],
+  ac_cv_struct_hostent=yes, 
+[AC_TRY_COMPILE([#include <winsock.h>],
+[struct hostent vec;],
+  ac_cv_struct_hostent=yes, ac_cv_struct_hostent=no)])
+])]
+if test $ac_cv_struct_hostent = yes; then
+  AC_DEFINE(HAS_STRUCT_HOSTENT, 1,[define if struct hostent is declared in netdb.h or winsock.h])
+fi)
+])
+AC_DEFUN(AC_STRUCT_FDS_BITS,
+[AC_CACHE_CHECK([for fds_bits in fd_set], ac_cv_struct_fds_bits,
+[AC_TRY_COMPILE([#include <sys/select.h>], [fd_set s; s.fds_bits[0];],
+ac_cv_struct_fds_bits=yes, ac_cv_struct_fds_bits=no)])
+if test $ac_cv_struct_fds_bits = yes; then
+  AC_DEFINE(HAVE_FDS_BITS,1,[Define if fd_set has element fds_bits])
+fi
+])
+
