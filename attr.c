@@ -1189,7 +1189,7 @@ unsigned int size;
     }
     if (size > buf->tmp_buffer_size) {
 	buf->tmp_buffer = realloc(buf->tmp_buffer, size);
-	memset (buf->tmp_buffer + buf->tmp_buffer_size, 0, size - buf->tmp_buffer_size);
+	memset (((char*)buf->tmp_buffer) + buf->tmp_buffer_size, 0, size - buf->tmp_buffer_size);
 	buf->tmp_buffer_size = size;
     }
     if (!buf->tmp_buffer) {
