@@ -202,10 +202,23 @@ attr_value *value_p;
 				  (char *) attr_id);
 	if (entry) {
 	    long index = (long) Tcl_GetHashValue(entry);
-	    if (val_type_p != NULL)
+	    if (val_type_p != NULL) {
 	      *val_type_p = list->l.list.attributes[index].val_type;
-	    if (value_p != NULL)
-	      *value_p = list->l.list.attributes[index].value;
+	    }
+	    if (value_p != NULL) {
+		printf("In query\n");
+		if ((sizeof(long) != 4) && 
+		    (list->l.list.attributes[index].val_type == Attr_Int4)){
+		    
+		    printf("Doing thing\n");
+		    *((int*)value_p) = (int)list->l.list.attributes[index].value;
+		} else {
+		    *value_p = list->l.list.attributes[index].value;
+		    if (list->l.list.attributes[index].val_type == Attr_String){
+			printf("String val is %s\n", (char*)*value_p);
+		    }
+		}
+	    }
 	    return 1;
 	}
 	return 0;
@@ -455,7 +468,10 @@ attr_list list;
 	int attr_id, length;
 	attr_value_type val_type = Attr_Undefined;
 	attr_value val;
-	
+	int int_value;
+	long long_value;
+	void *addr_value;
+
 	if (*str == 0) return 1;   /* success */
 	if (value == NULL) return 0;
 #ifdef SHARED_ATTR_NUMS
@@ -478,19 +494,22 @@ attr_list list;
 	    break;
 	case '4':
 	    val_type = Attr_Int4;
-	    if (sscanf(value, ",%d", (int*)&val) != 1) return 0;
+	    if (sscanf(value, ",%d", &int_value) != 1) return 0;
+	    val = (attr_value)int_value;
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
 	case '8':
 	    val_type = Attr_Int8;
-	    if (sscanf(value, ",%ld", (long*)&val) != 1) return 0;
+	    if (sscanf(value, ",%ld", &long_value) != 1) return 0;
+	    val = (attr_value)long_value;
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
 	case 'A':
 	    val_type = Attr_Atom;
-	    if (sscanf(value, ",%d", (int*)&val) != 1) return 0;
+	    if (sscanf(value, ",%d", &int_value) != 1) return 0;
+	    val = (attr_value)int_value;
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
