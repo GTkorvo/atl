@@ -57,10 +57,15 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+AMTAR = @AMTAR@
 AS = @AS@
+AWK = @AWK@
 CC = @CC@
+DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 ECHO = @ECHO@
+EXEEXT = @EXEEXT@
+INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 KERNEL_OBJS = @KERNEL_OBJS@
 KERNEL_TARGET_MOD = @KERNEL_TARGET_MOD@
 KERNEL_VERSION = @KERNEL_VERSION@
@@ -74,18 +79,21 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 STRIP = @STRIP@
 VERSION = @VERSION@
+am__include = @am__include@
+am__quote = @am__quote@
+install_sh = @install_sh@
 
 AUTOMAKE_OPTIONS = no-dependencies foreign
 
 noinst_HEADERS = atom_formats.h tclHash.h unix_defs.h
 
-libatl_la_SOURCES = atom.c atom_formats.c attr.c tclHash.c
+libatl_la_SOURCES = atom.c attr.c tclHash.c
 libatl_la_DEPENDENCIES = @KERNEL_OBJS@
 libatl_la_LIBADD = @KERNEL_OBJS@
 libatl_la_LDFLAGS = -no-undefined
 
 @KERNEL_TRUE@bin_PROGRAMS = 
-@KERNEL_FALSE@bin_PROGRAMS = attr_test atom_test
+@KERNEL_FALSE@bin_PROGRAMS = attr_test atom_test atom_server
 @KERNEL_TRUE@BUILT_SOURCES = strtol.c env.c katl.c
 @KERNEL_TRUE@MOSTLYCLEANFILES = atl_module.o
 @KERNEL_FALSE@lib_LTLIBRARIES = libatl.la
@@ -102,6 +110,11 @@ atom_test_SOURCES = atom_test.c
 atom_test_LDADD = libatl.la
 atom_test_LDFLAGS = 
 atom_test_DEPENDENCIES = libatl.la
+
+atom_server_SOURCES = atom_server.c
+atom_server_LDADD = libatl.la
+atom_server_LDFLAGS = 
+atom_server_DEPENDENCIES = libatl.la
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
@@ -109,12 +122,15 @@ CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
-am_libatl_la_OBJECTS = atom.lo atom_formats.lo attr.lo tclHash.lo
+am_libatl_la_OBJECTS = atom.lo attr.lo tclHash.lo
 libatl_la_OBJECTS = $(am_libatl_la_OBJECTS)
 @KERNEL_TRUE@bin_PROGRAMS =
-@KERNEL_FALSE@bin_PROGRAMS = attr_test$(EXEEXT) atom_test$(EXEEXT)
+@KERNEL_FALSE@bin_PROGRAMS = attr_test$(EXEEXT) atom_test$(EXEEXT) \
+@KERNEL_FALSE@	atom_server$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
+am_atom_server_OBJECTS = atom_server.$(OBJEXT)
+atom_server_OBJECTS = $(am_atom_server_OBJECTS)
 am_atom_test_OBJECTS = atom_test.$(OBJEXT)
 atom_test_OBJECTS = $(am_atom_test_OBJECTS)
 am_attr_test_OBJECTS = attr_test.$(OBJEXT)
@@ -133,8 +149,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
-DIST_SOURCES = $(libatl_la_SOURCES) $(atom_test_SOURCES) \
-	$(attr_test_SOURCES)
+DIST_SOURCES = $(libatl_la_SOURCES) $(atom_server_SOURCES) \
+	$(atom_test_SOURCES) $(attr_test_SOURCES)
 HEADERS = $(include_HEADERS) $(noinst_HEADERS)
 
 DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) ./stamp-h.in \
@@ -142,7 +158,7 @@ DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) ./stamp-h.in \
 	config/config.guess config/config.sub config/install-sh \
 	config/ltconfig config/ltmain.sh config/missing \
 	config/mkinstalldirs configure configure.in
-SOURCES = $(libatl_la_SOURCES) $(atom_test_SOURCES) $(attr_test_SOURCES)
+SOURCES = $(libatl_la_SOURCES) $(atom_server_SOURCES) $(atom_test_SOURCES) $(attr_test_SOURCES)
 
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -243,6 +259,9 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+atom_server$(EXEEXT): $(atom_server_OBJECTS) $(atom_server_DEPENDENCIES) 
+	@rm -f atom_server$(EXEEXT)
+	$(LINK) $(atom_server_LDFLAGS) $(atom_server_OBJECTS) $(atom_server_LDADD) $(LIBS)
 atom_test$(EXEEXT): $(atom_test_OBJECTS) $(atom_test_DEPENDENCIES) 
 	@rm -f atom_test$(EXEEXT)
 	$(LINK) $(atom_test_LDFLAGS) $(atom_test_OBJECTS) $(atom_test_LDADD) $(LIBS)
@@ -509,11 +528,6 @@ katl.c: katl.h
 katl.h:
 	rm -f katl.h
 	$(LN_S) kernel/katl.h katl.h
-
-#atom_server_SOURCES = atom_server.c
-#atom_server_LDADD =  libatl.la
-#atom_server_LDFLAGS =
-#atom_server_DEPENDENCIES = libatl.la
 
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck

@@ -95,4 +95,51 @@ AC_TYPE_SIGNAL
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS(gethostname putenv strdup)
 
+AC_ARG_WITH(atom_server, [  --with-atom-server=HOST    Which host will run the atom server.],ATOM_SERVER_HOST=$withval)
+
+if test "x$ATOM_SERVER_HOST" = "x"; then
+   hostname=`hostname`
+   domainname=""
+   host_no_domain=`hostname|sed 's/\..*//g'`
+   if test "$hostname" != "$host_no_domain"; then
+      # A fully qualified hostname?
+      domainname=`hostname|sed "s/$host_no_domain.//"`
+      hostname=$host_no_domain
+   fi
+   if test x"$domainname" = "x"; then
+	if eval dnsdomainname 2>/dev/null 1>/dev/null; then
+	    # dnsdomainname command, try it
+	    domainname=`dnsdomainname`
+	fi
+   fi
+   if test x"$domainname" = "x"; then
+	if eval domainname 2>/dev/null 1>/dev/null; then
+	    domainname=`domainname`
+	fi
+   fi
+   if test x"$hostname" = "x"; then
+	hostname="localhost"
+   fi
+   if test x"$domainname" = "x"; then
+      # domainname is still not set, try this
+      domainname=[`nslookup $hostname 2>/dev/null | grep Name: | sed 's/.*: *[^.]*.//g'`]
+   fi
+
+   highdomain=`echo $domainname | sed 's/\./\\
+./g' | tail -2 `
+    highdomain=`echo $highdomain | sed 's/ //g'`
+   if test "x$highdomain" = "x.gatech.edu"; then
+      ATOM_SERVER_HOST="marquesas.cc.gatech.edu";
+      ATOM_SERVICE_DOMAIN="gt.atl.ga.us:gatech.edu";
+   else
+      if test "x$domainname" != "x"; then
+          ATOM_SERVER_HOST=$hostname.$domainname
+      else
+          ATOM_SERVER_HOST=$hostname
+      fi
+   fi
+fi
+AC_ARG_WITH(service_domain, [  --with-service-domain=DOMAINNAME	What domain the server will serve.],ATOM_SERVER_DOMAIN=$withval)
+AC_DEFINE_UNQUOTED(ATOM_SERVER_HOST, "$ATOM_SERVER_HOST", [Define with the name of the host which will run the atom server])
+AC_DEFINE_UNQUOTED(ATOM_SERVICE_DOMAIN, "$ATOM_SERVICE_DOMAIN", [Define with the name of the domain which the atom server will service])
 AC_OUTPUT(Makefile)
