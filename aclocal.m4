@@ -60,7 +60,7 @@ dnl      AC_COMPILE_CHECK_SIZEOF(ptrdiff_t, $headers)
 dnl      AC_COMPILE_CHECK_SIZEOF(off_t, $headers)
 dnl
 dnl @author Kaveh Ghazi <ghazi@caip.rutgers.edu>
-dnl @version $Id: aclocal.m4,v 1.20 2002-08-06 18:35:15 eisen Exp $
+dnl @version $Id: aclocal.m4,v 1.21 2003-01-15 18:27:30 eisen Exp $
 dnl
 AC_DEFUN(AC_COMPILE_CHECK_SIZEOF,
 [changequote(<<, >>)dnl
@@ -638,7 +638,7 @@ AC_DEFUN([AM_CONFIG_HEADER],
 	 m4_ifndef([_AM_Config_Header_Index], m4_define([_AM_Config_Header_Index], [0]))
 	 dnl prepare to store our destination file list for use in config.status
 	 AC_FOREACH([_AM_File], [$1],
-		    [m4_pushdef([_AM_Dest], m4_patsubst(_AM_File, [:.*]))
+		    [m4_pushdef([_AM_Dest], patsubst(_AM_File, [:.*]))
 		    m4_define([_AM_Config_Header_Index], m4_incr(_AM_Config_Header_Index))
 		    dnl and add it to the list of files AC keeps track of, along
 		    dnl with our hook
@@ -679,13 +679,13 @@ done])
 # -----------------
 # Like AS_DIRNAME, only do it during macro expansion
 AC_DEFUN([_AM_DIRNAME],
-       [m4_if(m4_regexp([$1], [^.*[^/]//*[^/][^/]*/*$]), -1,
-	      m4_if(m4_regexp([$1], [^//\([^/]\|$\)]), -1,
-		    m4_if(m4_regexp([$1], [^/.*]), -1,
+       [m4_if(regexp([$1], [^.*[^/]//*[^/][^/]*/*$]), -1,
+	      m4_if(regexp([$1], [^//\([^/]\|$\)]), -1,
+		    m4_if(regexp([$1], [^/.*]), -1,
 			  [.],
-			  m4_patsubst([$1], [^\(/\).*], [\1])),
-		    m4_patsubst([$1], [^\(//\)\([^/].*\|$\)], [\1])),
-	      m4_patsubst([$1], [^\(.*[^/]\)//*[^/][^/]*/*$], [\1]))[]dnl
+			  patsubst([$1], [^\(/\).*], [\1])),
+		    patsubst([$1], [^\(//\)\([^/].*\|$\)], [\1])),
+	      patsubst([$1], [^\(.*[^/]\)//*[^/][^/]*/*$], [\1]))[]dnl
 ]) # _AM_DIRNAME
 
 # libtool.m4 - Configure libtool for the host system. -*-Shell-script-*-
@@ -4188,325 +4188,6 @@ AC_DEFUN([AM_PROG_NM],        [AC_PROG_NM])
 
 # This is just to silence aclocal about the macro not being used
 ifelse([AC_DISABLE_FAST_INSTALL])
-
-dnl
-dnl ac_require_hppcel_package(package, include_file, library_file)
-dnl   either include file or library_file may be left off if not needed
-dnl   this macro searches for the files using find_hppcel_package().  If
-dnl   found, it adds directory in which the found file resides to either 
-dnl   CPPFLAGS (with a -I prefix)  or LDFLAGS (with a -L prefix)
-dnl
-AC_DEFUN(AC_REQUIRE_HPPCEL_PACKAGE,
-[
-AC_REQUIRE([AC_HPPCEL_SET_ARCHIVE])
-AC_REQUIRE([AC_LD_SUPPORTS_LIBPATH])
-AC_ARG_WITH(translit($1, `/',`_'), translit([  --with-$1=DIR	Where to find $1 package], `/',`_'))
-define([with_translit], translit(with_$1, `/',`_'))
-if test -n "$with_translit"; then
-dnl
-dnl if they did a with, kill the cache variables
-dnl
-translit(unset ac_cv_$1_include_arg,  `/',`_')
-translit(unset ac_cv_$1_link_arg,  `/',`_')
-if test `echo $with_translit | sed 's/\(.\).*/\1/g'` != "/"; then
-with_translit=`pwd`/$with_translit
-fi
-fi
-ifelse([$2], , ,
-dnl
-dnl  if arg2 (include_file) is specified
-dnl
-AC_MSG_CHECKING(needed include args for $1 package)
-AC_CACHE_VAL(translit(ac_cv_$1_include_arg, `/',`_'), 
-[AC_FIND_HPPCEL_PACKAGE($1, $2, hppcel_tmp, $with_translit)
-if test -n "$hppcel_tmp"; then
-translit(ac_cv_$1_include_arg, `/',`_')=-I`$PATHPROG $hppcel_tmp | sed 's#\\\\#/#g' | sed "s/.$2//g"`
-fi
-])
-AC_MSG_RESULT(translit($ac_cv_$1_include_arg, `/',`_'))
-dnl
-dnl  add the result to CPPFLAGS if it is absent
-dnl
-translit(if test -n "$ac_cv_$1_include_arg"; then, `/',`_')
-translit(arg="$ac_cv_$1_include_arg", `/',`_')
-no_dash_arg=`echo $arg | sed 's/^-//g'`
-[if test `echo $CPPFLAGS | grep -c "$no_dash_arg"` -eq 0; then
-if test `echo $arg | grep -c "$1"` -eq 0; then
-CPPFLAGS="$CPPFLAGS $arg";
-else
-CPPFLAGS="$arg $CPPFLAGS"
-fi
-fi]
-fi
-)
-ifelse([$3], , ,
-dnl
-dnl  if arg3 (library_file) is specified
-dnl
-AC_MSG_CHECKING(needed link args for $1 package)
-AC_CACHE_VAL(translit(ac_cv_$1_link_dir,  `/',`_'), 
-[AC_FIND_HPPCEL_PACKAGE($1, $3, hppcel_tmp, $with_translit)
-if test -n "$hppcel_tmp" -a "$hppcel_tmp" != "$3"; then
-translit(ac_cv_$1_link_dir, `/',`_')=`$PATHPROG $hppcel_tmp | sed 's#\\\\#/#g' | sed "s/.$3//g"`
-else
-translit(ac_cv_$1_link_dir="",  `/',`_')
-fi
-])
-AC_MSG_RESULT(translit($ac_cv_$1_link_dir, `/',`_'))
-if test "$ac_cv_prog_cc_libpath" = "yes"; then
-ld_arg="-LIBPATH:"
-new_flags=$LIBPOSTARGS
-else
-ld_arg="-L"
-new_flags=$LDFLAGS
-fi
-dnl
-dnl  add the result to LDFLAGS if it is absent
-dnl
-translit(ac_cv_$1_link_arg=`echo $ac_cv_$1_link_dir, `/',`_') | sed "/./ s/^/$ld_arg/1"`
-translit(if test -n "$ac_cv_$1_link_arg"; then, `/',`_')
-translit(arg=$ac_cv_$1_link_arg, `/',`_')
-no_dash_arg=`echo $arg | sed 's/^-//g'`
-[if test `echo $new_flags | grep -c "$no_dash_arg"` -eq 0; then
-if test `echo $arg | grep -c "$1"` -eq 0; then
-dnl if arg does not includes a project spec add it at the end
-new_flags="$new_flags $arg"
-else
-new_flags="$arg $new_flags"
-fi
-fi]
-if test "$ac_cv_prog_cc_libpath" = "yes"; then
-LIBPOSTARGS=$new_flags
-LDPOSTFLAGS="/link $LIBPOSTARGS"
-else
-LDFLAGS=$new_flags
-fi
-fi
-)
-])dnl
-dnl
-dnl ac_find_hppcel_package(package, file_to_find, variable_to_set, suggestion)
-dnl    search a set of standard directories to find file_to_find.  When found,
-dnl    set $variable_to_set to the path of the file.  Use package and
-dnl    suggestions to help search.  Mostly this searches ~chaos (if it exists)
-dnl    ~parallel (if it exists) and the usual suspects like:
-dnl    /usr/{include,lib} /usr/local/{include,lib} /opt/<package>/{include,lib}
-dnl    /opt/misc/{include,lib}.
-dnl
-AC_DEFUN(AC_FIND_HPPCEL_PACKAGE,
-[
-AC_REQUIRE([AC_HAS_CSH])
-AC_REQUIRE([AC_HAS_CYGPATH])
-AC_REQUIRE([AC_HPPCEL_SET_ARCHIVE])
-$3=""
-search_list="./$2"
-CHAOS_HOMEDIR=""
-PARALLEL_HOMEDIR=""
-if test -n "$CSH"; then
-CHAOS_HOMEDIR=`echo "echo ~chaos" | csh -sf  2>/dev/null` || CHAOS_HOMEDIR=""
-PARALLEL_HOMEDIR=`echo "echo ~parallel" | csh -sf  2>/dev/null` || PARALLEL_HOMEDIR=""
-fi
-if test -n "$4"; then
-if test `echo $4 | cut -c1` = "~"; then
-EXPANDED=`echo "echo $4" | csh -sf 2>/dev/null` || EXPANDED=""
-else
-EXPANDED=$4
-fi
-
-search_list="$search_list $EXPANDED/$2 $EXPANDED/include/$2 $EXPANDED/share/$2 $EXPANDED/include/$hppcel_cv_archive/$2 $EXPANDED/$hppcel_cv_archive/include/$2 $EXPANDED/lib/$hppcel_cv_archive/$2 $EXPANDED/$hppcel_cv_archive/lib/$2 $EXPANDED/lib/$2 $EXPANDED/$1/$2 $EXPANDED/$1/$hppcel_cv_archive/$2 $EXPANDED/$1/include/$2 $EXPANDED/$1/lib/$hppcel_cv_archive/$2"
-fi
-if test -z "$with_installed_specified"; then
-search_list="$search_list `pwd`/../$1/$2 `pwd`/../lib/$2 `pwd`/../include/$2 `pwd`/../share/$2 $HOME/$1/$2 $HOME/$hppcel_cv_archive/lib/$2 $HOME/$hppcel_cv_archive/include/$2 $HOME/include/$2 $HOME/share/$2"
-search_list="$search_list `pwd`/../$1/.libs/$2 $HOME/$1/.libs/$2"
-fi
-if test "$libdir" != '${exec_prefix}/lib'; then
-search_list="$search_list $libdir/$2"
-fi
-if test "$exec_prefix" != "NONE"; then
-search_list="$search_list $exec_prefix/lib/$2"
-fi
-if test "$includedir" != '${prefix}/include'; then
-search_list="$search_list $includedir/$2"
-fi
-if test "$prefix" != "NONE"; then
-search_list="$search_list $prefix/lib/$2 $prefix/include/$2"
-fi
-if test -n "$CHAOS_HOMEDIR" -a -n "$hppcel_cv_archive"; then
-search_list="$search_list $CHAOS_HOMEDIR/include/$2 $CHAOS_HOMEDIR/share/$2 $CHAOS_HOMEDIR/include/$hppcel_cv_archive/$2 $CHAOS_HOMEDIR/lib/$hppcel_cv_archive/$2 $CHAOS_HOMEDIR/lib/$2"
-fi
-if test -n "$PARALLEL_HOMEDIR" -a -n "$hppcel_cv_archive"; then
-search_list="$search_list $PARALLEL_HOMEDIR/include/$2 $PARALLEL_HOMEDIR/share/$2 $PARALLEL_HOMEDIR/include/$hppcel_cv_archive/$2 $PARALLEL_HOMEDIR/lib/$hppcel_cv_archive/$2 $PARALLEL_HOMEDIR/lib/$2"
-fi
-search_list="$search_list /usr/lib/$2 /usr/local/lib/$2 /usr/include/$2 /usr/share/$2 /opt/$1/lib/$2 /opt/$1/include/$2 /opt/misc/lib/$2 /opt/misc/include/$2 /opt/misc/share/$2"
-AC_SEARCH($search_list)
-if test -n "$tmp_search_results"; then
-$3=$tmp_search_results
-fi
-])dnl
-AC_DEFUN(SET_HPPCEL_INSTALLED,[AC_ARG_WITH(installed, [  --with-installed        Don't use local copies of HPPCEL packages],with_installed_specified=1)])
-dnl
-dnl AC_HPPCEL_SET_ARCHIVE()
-dnl   set the $hppcel_cv_machine_target variable to a standard archive name
-dnl
-AC_DEFUN(AC_HPPCEL_SET_ARCHIVE,[
-AC_REQUIRE([SET_HPPCEL_INSTALLED])
-AC_REQUIRE([AC_HAS_CSH])
-AC_REQUIRE([AC_HAS_CYGPATH])
-CHAOS_HOMEDIR=""
-PARALLEL_HOMEDIR=""
-if test -n "$CSH"; then
-CHAOS_HOMEDIR=`echo "echo ~chaos" | csh -sf  2>/dev/null` || CHAOS_HOMEDIR=""
-PARALLEL_HOMEDIR=`echo "echo ~parallel" | csh -sf  2>/dev/null` || PARALLEL_HOMEDIR=""
-fi
-if test "$cross_compiling" = yes ; then
-  cpu=$host_cpu
-  vendor=$host_vendot
-  os=$host_os
-else
-  cpu=
-  vendor=
-  os=
-fi
-if test -x $CHAOS_HOMEDIR/bin/hppcel_arch; then
-hppcel_cv_archive=`$CHAOS_HOMEDIR/bin/hppcel_arch "$cpu" "$vendor" "$os"`
-elif test -x $PARALLEL_HOMEDIR/bin/hppcel_arch; then
-hppcel_cv_archive=`$PARALLEL_HOMEDIR/bin/hppcel_arch "$cpu" "$vendor" "$os"`
-else
-hppcel_cv_archive=`hppcel_arch` || hppcel_cv_archive=""
-fi
-])dnl
-dnl
-dnl  AC_SEARCH(variable to define, options to try)
-define(AC_SEARCH,
-[tmp_search_results=""
-echo "configure:__oline__: searching for $1 " >&5
-for tmp_search_value in $1; do 
-   if test -r $tmp_search_value; then 
-	tmp_search_results=$tmp_search_value
-	echo "configure:__oline__: first found $tmp_search_results " >&5
-	break
-   fi 
-done
-])dnl
-dnl
-dnl
-dnl AC_HPPCEL_LIB_PREFIX
-dnl  this macro tries to set a reasonable default for the prefix value
-dnl  call with two arguments, project name and library name
-dnl
-AC_DEFUN(AC_HPPCEL_LIB_PREFIX,
-[if test "x$prefix" = xNONE; then
-AC_REQUIRE([AC_HPPCEL_SET_ARCHIVE])
-search_list=""
-CHAOS_HOMEDIR=""
-PARALLEL_HOMEDIR=""
-if test -n "$CSH"; then
-CHAOS_HOMEDIR=`echo "echo ~chaos" | csh -sf  2>/dev/null` || CHAOS_HOMEDIR=""
-PARALLEL_HOMEDIR=`echo "echo ~parallel" | csh -sf  2>/dev/null` || PARALLEL_HOMEDIR=""
-fi
-if test -n "$CHAOS_HOMEDIR"; then
-search_list="$search_list $CHAOS_HOMEDIR/$hppcel_cv_archive/lib/$2 $CHAOS_HOMEDIR/lib/$2"
-fi
-if test -n "$PARALLEL_HOMEDIR"; then
-search_list="$search_list $PARALLEL_HOMEDIR/$hppcel_cv_archive/lib/$2 $PARALLEL_HOMEDIR/lib/$2"
-fi
-search_list="$search_list /usr/lib/$2 /usr/local/lib/$2 /opt/$1/lib/$2 /opt/misc/lib/$2"
-AC_SEARCH($search_list)
-if test -n "$tmp_search_results"; then
-    prefix=`echo $tmp_search_results|sed "s%$hppcel_cv_archive/lib/$2%%g;s%lib/$2%%g;s%/[^/][^/]*//*[^/][^/]*$%%"`
-    exec_prefix=`echo $tmp_search_results|sed 's%lib/$2%%g;s%/[^/][^/]*//*[^/][^/]*$%%'`
-fi
-fi
-])dnl
-AC_DEFUN(AC_HAS_CSH, [AC_PATH_PROG(CSH,csh)])dnl
-AC_DEFUN(AC_HAS_CYGPATH, [AC_CHECK_PROG(PATHPROG,cygpath,[cygpath -w],[echo])])dnl
-AC_DEFUN(AC_PROG_CC_VCPP,
-[AC_CACHE_CHECK([whether we are using MS Visual C++], ac_cv_prog_vcpp,
-[
-dnl The semicolon is to pacify NeXT's syntax-checking cpp.
-cat > conftest.c <<EOF
-#ifdef _MSC_VER
-  yes;
-#endif
-EOF
-if AC_TRY_COMMAND(${CC-cc} -E conftest.c) | egrep yes >/dev/null 2>&1; then
-  ac_cv_prog_vcpp=yes
-else
-  ac_cv_prog_vcpp=no
-fi])])
-dnl
-AC_DEFUN(AC_LD_SUPPORTS_LIBPATH, 
-[AC_REQUIRE([AC_PROG_CC_VCPP])dnl
-AC_CACHE_CHECK(whether we should use -LIBPATH:paths, ac_cv_prog_cc_libpath,
-[
-echo 'void f(){}' > conftest.c
-if test "$ac_cv_prog_vcpp" = yes -a -z "`${CC-cc} -c conftest.c /link /LIBPATH:/tmp 2>&1 | sed 's/conftest.c//g'`"; then
-  ac_cv_prog_cc_libpath=yes
-else
-  ac_cv_prog_cc_libpath=no
-fi
-if test -n "$LIBTOOL"; then 
-  ac_cv_prog_cc_libpath=no
-fi
-rm -f conftest*
-])])
-
-
-
-dnl CHAOS_CHECK_LIB(LIBRARY, FUNCTION [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND
-dnl              [, OTHER-LIBRARIES]]])
-AC_DEFUN(CHAOS_CHECK_LIB,
-[AC_REQUIRE([AC_PROG_CC_VCPP])
-AC_MSG_CHECKING([for $2 in library $1])
-dnl Use a cache variable name containing both the library and function name,
-dnl because the test really is for library $1 defining function $2, not
-dnl just for library $1.  Separate tests with the same $1 and different $2s
-dnl may have different results.
-ac_lib_var=`echo $1['_']$2 | sed 'y%./+-%__p_%'`
-if test "$ac_cv_prog_vcpp" = "yes"; then
-LIBSPEC="$1.lib"
-INCLUDELIBS=`echo $5| sed 's/-l\([[^ 	]]*\)/\1.lib/g;'`
-else
-LIBSPEC="-l$1"
-INCLUDELIBS="$5"
-fi
-AC_CACHE_VAL(ac_cv_lib_$ac_lib_var,
-[ac_save_LIBS="$LIBS"
-LIBS="$LIBSPEC $INCLUDELIBS $LIBS $LDPOSTFLAGS"
-AC_TRY_LINK(dnl
-ifelse(AC_LANG, [FORTRAN77], ,
-ifelse([$2], [main], , dnl Avoid conflicting decl of main.
-[/* Override any gcc2 internal prototype to avoid an error.  */
-]ifelse(AC_LANG, CPLUSPLUS, [#ifdef __cplusplus
-extern "C"
-#endif
-])dnl
-[/* We use char because int might match the return type of a gcc2
-    builtin and then its argument prototype would still apply.  */
-char $2();
-])),
-	    [$2()],
-	    eval "ac_cv_lib_$ac_lib_var=yes",
-	    eval "ac_cv_lib_$ac_lib_var=no")
-LIBS="$ac_save_LIBS"
-])dnl
-if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
-  AC_MSG_RESULT(yes)
-  ifelse([$3], ,
-[changequote(, )dnl
-  ac_tr_lib=HAVE_LIB`echo $1 | sed -e 's/[^a-zA-Z0-9_]/_/g' \
-    -e 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'`
-changequote([, ])dnl
-  AC_DEFINE_UNQUOTED($ac_tr_lib)
-  LIBS="$LIBSPEC $LIBS"
-], [$3])
-else
-  AC_MSG_RESULT(no)
-ifelse([$4], , , [$4
-])dnl
-fi
-])
-
 
 dnl
 dnl cercs_require_package(package, include_file, library_file)
