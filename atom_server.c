@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <tcl.h>
-#include "atom.h"
+typedef int atom_t;
 #include "atom_internal.h"
 
 #define MAXBUFLEN 100
