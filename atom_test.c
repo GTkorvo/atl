@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <unix_defs.h>
 #include <atl.h>
+#include <ctype.h>
 #include <string.h>
 
 void
@@ -55,7 +56,8 @@ main()
 	    }
 	    while (isspace(*end)) end++;
 	    if (*end != 0) printf("\tskipped %s at end of number\n", end);
-	    printf("inquiring for atom \n", atom, atom);
+	    printf("inquiring for atom \n");
+	    print_atom(atom); printf("\n");
 	    str = string_from_atom(as, atom);
 	    if (str) {
 		printf("	string translation is \"%s\"\n", str);
