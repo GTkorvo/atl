@@ -17,7 +17,6 @@ LIB_POST=.a
 
 dnl Checks for libraries.
 AC_REQUIRE_HPPCEL_PACKAGE(pbio, io.h, ${LIB_PRE}IO${LIB_POST})
-AC_REQUIRE_HPPCEL_PACKAGE(dataexchange, DE.h, ${LIB_PRE}DE${LIB_POST})
 AC_REQUIRE_HPPCEL_PACKAGE(gen_thread, gen_thread.h,${LIB_PRE}genthreads${LIB_POST})
 dnl Replace `main' with a function in -lgenthreads:
 checkBoth=0
@@ -31,8 +30,6 @@ if test "$checkSocket" = 1; then
     fi
    AC_CHECK_FUNC(gethostbyname, , AC_CHECK_LIB(nsl, getdomainname, [LIBS="$LIBS -lnsl"]))
 fi
-AC_CHECK_LIB(IO, open_IOfile)
-AC_CHECK_LIB(DE, DExchange_create)
 
 dnl Checks for header files.
 AC_HEADER_STDC

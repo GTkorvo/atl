@@ -79,12 +79,12 @@ lib_LTLIBRARIES = libatl.la
 
 noinst_HEADERS = acconfig.h atom_formats.h tclHash.h unix_defs.h
 
-libatl_la_SOURCES = atom.c atom_formats.c attr.c tclHash.c
+libatl_la_SOURCES = atom.c atom_formats.c attr.c tclHash.c gen_info.c
 libatl_la_LIBADD = 
 libatl_la_LDFLAGS = 
 include_HEADERS = atl.h
 
-bin_PROGRAMS = attr_test atom_test atom_server
+bin_PROGRAMS = attr_test atom_test
 
 LIBS = @LIBS@
 
@@ -97,11 +97,6 @@ atom_test_SOURCES = atom_test.c
 atom_test_LDADD = libatl.la
 atom_test_LDFLAGS = 
 atom_test_DEPENDENCIES = libatl.la
-
-atom_server_SOURCES = atom_server.c
-atom_server_LDADD = libatl.la
-atom_server_LDFLAGS = 
-atom_server_DEPENDENCIES = libatl.la
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
@@ -113,12 +108,12 @@ DEFS = @DEFS@ -I. -I$(srcdir) -I.
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 libatl_la_DEPENDENCIES = 
-libatl_la_OBJECTS =  atom.lo atom_formats.lo attr.lo tclHash.lo
+libatl_la_OBJECTS =  atom.lo atom_formats.lo attr.lo tclHash.lo \
+gen_info.lo
 PROGRAMS =  $(bin_PROGRAMS)
 
 attr_test_OBJECTS =  attr_test.o
 atom_test_OBJECTS =  atom_test.o
-atom_server_OBJECTS =  atom_server.o
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -135,8 +130,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-SOURCES = $(libatl_la_SOURCES) $(attr_test_SOURCES) $(atom_test_SOURCES) $(atom_server_SOURCES)
-OBJECTS = $(libatl_la_OBJECTS) $(attr_test_OBJECTS) $(atom_test_OBJECTS) $(atom_server_OBJECTS)
+SOURCES = $(libatl_la_SOURCES) $(attr_test_SOURCES) $(atom_test_SOURCES)
+OBJECTS = $(libatl_la_OBJECTS) $(attr_test_OBJECTS) $(atom_test_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -282,10 +277,6 @@ attr_test: $(attr_test_OBJECTS) $(attr_test_DEPENDENCIES)
 atom_test: $(atom_test_OBJECTS) $(atom_test_DEPENDENCIES)
 	@rm -f atom_test
 	$(LINK) $(atom_test_LDFLAGS) $(atom_test_OBJECTS) $(atom_test_LDADD) $(LIBS)
-
-atom_server: $(atom_server_OBJECTS) $(atom_server_DEPENDENCIES)
-	@rm -f atom_server
-	$(LINK) $(atom_server_LDFLAGS) $(atom_server_OBJECTS) $(atom_server_LDADD) $(LIBS)
 
 install-includeHEADERS: $(include_HEADERS)
 	@$(NORMAL_INSTALL)
@@ -469,6 +460,11 @@ all-redirect all-am all installdirs mostlyclean-generic \
 distclean-generic clean-generic maintainer-clean-generic clean \
 mostlyclean distclean maintainer-clean
 
+
+#atom_server_SOURCES = atom_server.c
+#atom_server_LDADD =  libatl.la
+#atom_server_LDFLAGS =
+#atom_server_DEPENDENCIES = libatl.la
 
 $(OBJECTS): libtool
 libtool: $(LIBTOOL_DEPS)
