@@ -208,13 +208,14 @@ create_attr_list()
     return internal_create_attr_list(0, 0);
 }
 
-extern void
+extern attr_list
 add_ref_attr_list(list)
 attr_list list;
 {
     if(list) {
 	list->ref_count++;
     }
+    return list;
 }
 
 extern int

@@ -66,7 +66,7 @@ extern attr_list create_attr_list();
 
 extern void free_attr_list ARGS((attr_list list));
 
-extern void add_ref_attr_list ARGS((attr_list list));
+extern attr_list add_ref_attr_list ARGS((attr_list list));
 
 extern int attr_list_ref_count ARGS((attr_list list));
 
