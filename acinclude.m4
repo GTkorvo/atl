@@ -47,9 +47,9 @@ dnl      AC_COMPILE_CHECK_SIZEOF(ptrdiff_t, $headers)
 dnl      AC_COMPILE_CHECK_SIZEOF(off_t, $headers)
 dnl
 dnl @author Kaveh Ghazi <ghazi@caip.rutgers.edu>
-dnl @version $Id: acinclude.m4,v 1.1 2002-08-06 18:35:15 eisen Exp $
+dnl @version $Id: acinclude.m4,v 1.2 2004-11-17 17:52:45 eisen Exp $
 dnl
-AC_DEFUN(AC_COMPILE_CHECK_SIZEOF,
+AC_DEFUN([AC_COMPILE_CHECK_SIZEOF],
 [changequote(<<, >>)dnl
 dnl The name to #define.
 define(<<AC_TYPE_NAME>>, translit(sizeof_$1, [a-z *], [A-Z_P]))dnl
@@ -77,7 +77,7 @@ undefine([AC_CV_NAME])dnl
 dnl
 dnl AC_C_BIGENDIAN_CROSS([CROSS-BIGENIAN])
 dnl
-AC_DEFUN(AC_C_BIGENDIAN_CROSS,
+AC_DEFUN([AC_C_BIGENDIAN_CROSS],
 [AC_CACHE_CHECK(whether byte ordering is bigendian, ac_cv_c_bigendian,
 [ac_cv_c_bigendian=unknown
 # See if sys/param.h defines the BYTE_ORDER macro.

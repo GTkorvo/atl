@@ -6,9 +6,6 @@
 /* Define with the name of the domain which the atom server will service */
 #undef ATOM_SERVICE_DOMAIN
 
-/* define if struct hostent is declared in netdb.h or winsock.h */
-#undef HAS_STRUCT_HOSTENT
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -72,9 +69,6 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* define if unistd.h or stdlib.h declares putenv */
-#undef PUTENV_DEFINED
-
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
 
@@ -83,9 +77,6 @@
 
 /* The number of bytes in type short */
 #undef SIZEOF_SHORT
-
-/* define if stdio.h declares sscanf */
-#undef SSCANF_DEFINED
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
