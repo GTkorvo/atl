@@ -1156,8 +1156,10 @@ encode_attr_for_xmit(attr_list l, AttrBuffer b, int *length)
 	}
     }
     add_to_tmp_buffer(b, (unsigned)sizeof(struct int_attr_struct));
+    ((int_attr_p) b->tmp_buffer)->byte_order = WORDS_BIGENDIAN;
     ((int_attr_p) b->tmp_buffer)->int_attr_count = 0;
     ((int_attr_p) b->tmp_buffer)->other_attr_count = 0;
+    ((int_attr_p) b->tmp_buffer)->junk = 0;
     /* not the simple case */
     b->tmp_buffer_in_use_size = 4;
     /* first the int Attributes */
