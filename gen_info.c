@@ -17,7 +17,6 @@ gen_thread_info_t gen_thread_info = {
     (thr_exit_func_t) NULL /* exit_func */,
     (thr_join_func_t) NULL /* join_func */,
     (thr_self_func_t) NULL /* self_func */,
-    (int) 0		   /* NULL threads initialized */,
-    (int) 0		   /* is_kernel level threads system */
+    (int) 0		   /* NULL threads initialized */
 };
 
