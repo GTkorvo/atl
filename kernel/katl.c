@@ -114,7 +114,8 @@ void *data;
     return 0;
   }
   if (strcmp("get_attr", attrs->name) == 0) {
-    attrs->ret_attr_p = get_attr(attrs->list, attrs->index);
+    get_attr(attrs->list, attrs->index, &attrs->name, &attrs->val_type, 
+	     &attrs->value);
     return 0;
   }
   if (strcmp("attr_list_to_string", attrs->name) == 0) {
@@ -132,36 +133,8 @@ void *data;
     attrs->retval = compare_attr_p_by_val(attrs->attr_p1, attrs->attr_p2);
     return 0;
   }
-  if (strcmp("compare_attr_p_xmit_attr_by_val", attrs->name) == 0) {
-    attrs->retval = compare_attr_p_xmit_attr_by_val(attrs->attr_p1, attrs->attr_ref);
-    return 0;
-  }
-  if (strcmp("pack_attr_list", attrs->name) == 0) {
-    attrs->ret_obj = pack_attr_list(attrs->list);
-    return 0;
-  }
-  if (strcmp("pack_attr_list_1", attrs->name) == 0) {
-    pack_attr_list_1(attrs->list, attrs->ret_obj);
-    return 0;
-  }
-  if (strcmp("unpack_attr_list", attrs->name) == 0) {
-    attrs->list = unpack_attr_list(attrs->ret_obj);
-    return 0;
-  }
-  if (strcmp("unpack_attr_list_1", attrs->name) == 0) {
-    unpack_attr_list_1(attrs->ret_obj, attrs->list);
-    return 0;
-  }
-  if (strcmp("unpack_attr_list_2", attrs->name) == 0) {
-    unpack_attr_list_2(attrs->xmit_attr_count, attrs->xmit_list, attrs->list);
-    return 0;
-  }
   if (strcmp("attr_list_subset", attrs->name) == 0) {
     attrs->retval = attr_list_subset(attrs->list1, attrs->list2);
-    return 0;
-  }
-  if (strcmp("attr_list_subset_xmit_object", attrs->name) == 0) {
-    attrs->retval = attr_list_subset_xmit_object(attrs->ret_obj, attrs->list1);
     return 0;
   }
   else
