@@ -375,6 +375,7 @@ atom_t attr_id;
 attr_value_type *val_type_p;
 attr_value *value_p;
 {
+    if (list == NULL) return 0;
     if (list->list_of_lists) {
         int i;
         for (i=0; i< list->l.lists.sublist_count; i++) {
@@ -840,6 +841,7 @@ attr_list_to_string(attrs)
 attr_list attrs;
 {
     int size = 0;
+    if (attrs == NULL) return NULL;
     if (use_base64_string_encoding) {
 	char * result;
 	void *encoded;
