@@ -414,6 +414,7 @@ distcheck: dist
 	@echo "$(distdir).tar.gz is ready for distribution" | \
 	  sed 'h;s/./=/g;p;x;p;x'
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) check-local
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS) config.h \
 		all-local
@@ -492,7 +493,7 @@ mostlyclean-am: mostlyclean-compile mostlyclean-generic \
 uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 	uninstall-info-am uninstall-libLTLIBRARIES
 
-.PHONY: GTAGS all all-am all-local check check-am clean \
+.PHONY: GTAGS all all-am all-local check check-am check-local clean \
 	clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
 	clean-libtool dist dist-all distcheck distclean \
 	distclean-compile distclean-generic distclean-hdr \
@@ -512,8 +513,15 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 @KERNEL_TRUE@		install -c atl_module.o /lib/modules/@KERNEL_VERSION@/misc
 @KERNEL_TRUE@		install -c atl_module.o /lib/modules/misc
 @KERNEL_TRUE@all-local: atl_module.o
+@KERNEL_TRUE@check-local: kernel_check_target
 @KERNEL_FALSE@all-local:
+@KERNEL_FALSE@check-local:
 @KERNEL_FALSE@install-exec-local:
+
+kernel_check_target: atl_module.o kernel/undefined_syms
+	nm atl_module.o | grep U > /tmp/cur_undefined_syms
+	cmp /tmp/cur_undefined_syms kernel/undefined_syms
+	rm /tmp/cur_undefined_syms
 
 atl_module.o:	libatl.la
 	rm -fr /tmp/atl_build

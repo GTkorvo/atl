@@ -22,13 +22,6 @@ typedef struct _syscall_attrs_atl {
     attr_value *value_p;
     int retval;
     int index;
-    attr_p attr_p1;
-    attr_p attr_p2;
-    attr_p ret_attr_p;
-    xmit_object ret_obj;
-    xmit_attr_ref attr_ref;
-    int xmit_attr_count;
-    xmit_attr *xmit_list;
     atom_t ret_atom;
     atom_t atom;
     char *ret_str;

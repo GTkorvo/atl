@@ -114,7 +114,7 @@ void *data;
     return 0;
   }
   if (strcmp("get_attr", attrs->name) == 0) {
-    get_attr(attrs->list, attrs->index, &attrs->name, &attrs->val_type, 
+    get_attr(attrs->list, attrs->index, &attrs->attr_id, &attrs->value_type, 
 	     &attrs->value);
     return 0;
   }
@@ -127,10 +127,6 @@ void *data;
   if (strcmp("attr_list_from_string", attrs->name) == 0) {
     copy_from_user(kstring, attrs->str, strlen(attrs->str)+1);
     attrs->list = attr_list_from_string(kstring);
-    return 0;
-  }
-  if (strcmp("compare_attr_p_by_val", attrs->name) == 0) {
-    attrs->retval = compare_attr_p_by_val(attrs->attr_p1, attrs->attr_p2);
     return 0;
   }
   if (strcmp("attr_list_subset", attrs->name) == 0) {

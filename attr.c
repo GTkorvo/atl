@@ -22,7 +22,6 @@
 #include "kernel/library.h"
 #include <linux/ctype.h>
 #include "kernel/kernel_defs.h"
-
 #endif
 #include "assert.h"
 #include "cercs_env.h"
@@ -79,6 +78,9 @@ static int base64_decode ARGS((unsigned char *input, unsigned char *output));
 atom_server global_as = NULL;
 static int use_base64_string_encoding = 0;
 
+#ifdef MODULE
+#define cercs_getenv(x) getenv(x)
+#endif
 static
 void
 init_global_atom_server(asp)
@@ -90,7 +92,7 @@ atom_server *asp;
 
     if (*asp != NULL) return;
     if ((base64 = cercs_getenv("ATL_BASE64_STRINGS")) != NULL) {
-	sscanf(base64, "%d", &use_base64_string_encoding);
+        use_base64_string_encoding = strtol(base64, NULL, 10);
     }
     /*
      * for notes on my we're doing funny things with the "global" value, 

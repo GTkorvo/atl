@@ -18,16 +18,23 @@ install-exec-local: atl_module.o
 		install -c atl_module.o /lib/modules/@KERNEL_VERSION@/misc
 		install -c atl_module.o /lib/modules/misc
 all-local: atl_module.o
+check-local: kernel_check_target
 MOSTLYCLEANFILES = atl_module.o
 else
 lib_LTLIBRARIES = libatl.la
 bin_PROGRAMS = attr_test atom_test atom_server attr_dump
 include_HEADERS = atl.h
 all-local:
+check-local:
 install-exec-local:
 endif
 
 LIBS = @LIBS@
+
+kernel_check_target: atl_module.o kernel/undefined_syms
+	nm atl_module.o | grep U > /tmp/cur_undefined_syms
+	cmp /tmp/cur_undefined_syms kernel/undefined_syms
+	rm /tmp/cur_undefined_syms
 
 atl_module.o:	libatl.la
 	rm -fr /tmp/atl_build

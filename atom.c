@@ -23,6 +23,8 @@
 #include "unix_defs.h"
 #include <gen_thread.h>
 #else
+/* this is just dummied up */
+struct sockaddr_in { };
 
 #include "kernel/katl.h"
 #include "kernel/library.h"
@@ -71,6 +73,7 @@ int block;
     } else {
 	as->flags |= O_NONBLOCK;
     }
+#ifndef MODULE
 #ifndef HAVE_WINDOWS_H
     if (fcntl(as->sockfd, F_SETFL, as->flags) < 0) {
 	perror("fcntl");
@@ -81,6 +84,7 @@ int block;
 	perror("ioctlsocket");
 	exit(1);
     }
+#endif
 #endif
 }
 
@@ -239,6 +243,7 @@ atom_t atom;
     tmp_value.atom_string = str;
     enter_atom_into_cache(as, &tmp_value);
 
+#ifndef MODULE
     sprintf(buf, "A%d %s", atom, str);
     len = strlen(buf);
     set_blocking(as, 0);	/* set server fd nonblocking */
@@ -253,6 +258,7 @@ atom_t atom;
 	buf[numbytes] = 0;
 	handle_unexpected_msg(as, buf);
     }
+#endif
 }
 
 extern
@@ -275,7 +281,7 @@ char *str;
     entry = Tcl_FindHashEntry(&as->string_hash_table, str);
     thr_mutex_unlock(as->hash_lock);
     if (entry == NULL) {
-
+#ifndef MODULE
 	set_blocking(as, 1);	/* set server fd blocking */
 	len = strlen(str) + 2;
 	buf[0] = 'S';		/* string message */
@@ -302,6 +308,9 @@ char *str;
 	tmp_rec.atom_string = str;
 	tmp_rec.atom = atoi(&buf[1]);
 	/* enter into cache only if we got an answer */
+#else
+	tmp_rec.atom = -1;
+#endif
 	if (tmp_rec.atom != -1) {
 	    enter_atom_into_cache(as, &tmp_rec);
 	} else {
@@ -335,6 +344,7 @@ atom_t atom;
     thr_mutex_unlock(as->hash_lock);
 
     if (entry == NULL) {
+#ifndef MODULE
 	sprintf(buf, "N%d", atom);
 	if (sendto(as->sockfd, buf, strlen(buf), 0,
 		   (struct sockaddr *) &(as->their_addr),
@@ -363,6 +373,9 @@ atom_t atom;
 	tmp_rec.atom = atom;
 
 	stored = enter_atom_into_cache(as, &tmp_rec);
+#else
+	return NULL;
+#endif	
     } else {
 	stored = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
     }
@@ -422,6 +435,7 @@ atom_cache_type cache_style;
     as->next_atom_id = 1000;
     as->cache_style = cache_style;
 
+#ifndef MODULE
     if ((as->he = gethostbyname(atom_server_host)) == NULL) {
 	perror("gethostbyname");
 	exit(1);
@@ -439,6 +453,7 @@ atom_cache_type cache_style;
     as->their_addr.sin_port = htons(PORT);
     as->their_addr.sin_addr = *((struct in_addr *) as->he->h_addr);
     memset(&(as->their_addr.sin_zero), '\0', 8);
+#endif
 
     return as;
 }
