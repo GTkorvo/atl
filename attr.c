@@ -1336,6 +1336,11 @@ decode_attr_from_xmit(void * buf)
 	    if (bswap) byte_swap((char*)&l->l.list.attributes[i].value, 8);
 	    optr += 8;
 	    break;
+	case Attr_Atom:
+	    memcpy(&l->l.list.attributes[i].value, optr, 4);
+	    if (bswap) byte_swap((char*)&l->l.list.attributes[i].value, 4);
+	    optr += 4;
+	    break;
 	case Attr_Opaque:
 	case Attr_String: {
 	    int2 len = *(int2*)optr;
