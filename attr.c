@@ -556,6 +556,7 @@ attr_list list;
 {
 
     init_global_atom_server(&global_as);
+    printf("Attribute list %lx, ref_count = %d\n", list, list->ref_count);
     internal_dump_attr_list(list, 0);
 }
 
