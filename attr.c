@@ -403,21 +403,24 @@ int indent;
         return;
     }
     for (i = 0; i < list->l.list.iattrs->int_attr_count; i++) {
-        char *attr_name = string_from_atom(global_as,
-                                           list->l.list.iattrs->iattr[i].attr_id);
+	int attr_id = list->l.list.iattrs->iattr[i].attr_id;
+	char *c = (char*)&attr_id;
+        char *attr_name = string_from_atom(global_as, attr_id);
         int j;
         if (attr_name == NULL)
             attr_name = "<null attr name>";
         for (j = 0; j < indent; j++) {
             printf("    ");
         }
-	printf("    { %s, Attr_Int4, %ld }\n", attr_name,
+	printf("    { %s ('%c%c%c%c'), Attr_Int4, %ld }\n", attr_name,
+	       c[0], c[1], c[2], c[3],
 	       (long) list->l.list.iattrs->iattr[i].value);
     }
 	
     for (i = 0; i < list->l.list.iattrs->other_attr_count; i++) {
-        char *attr_name = string_from_atom(global_as,
-                                           list->l.list.attributes[i].attr_id);
+	int attr_id = list->l.list.attributes[i].attr_id;
+	char *c = (char*)&attr_id;
+	char *attr_name = string_from_atom(global_as, attr_id);
         char *atom_str = NULL;
         int j;
         if (attr_name == NULL)
@@ -427,21 +430,25 @@ int indent;
         }
         switch (list->l.list.attributes[i].val_type) {
         case Attr_Undefined:
-            printf("    { %s, Undefined, Undefined }\n", attr_name);
+            printf("    { %s ('%c%c%c%c'), Undefined, Undefined }\n", 
+		   attr_name, c[0], c[1], c[2], c[3]);
             break;
         case Attr_Int4:
 	    assert(0);
             break;
         case Attr_Int8:
-            printf("    { %s, Attr_Int8, %ld }\n", attr_name,
+            printf("    { %s ('%c%c%c%c'), Attr_Int8, %ld }\n", attr_name,
+		   c[0], c[1], c[2], c[3],
                    (long) list->l.list.attributes[i].value);
             break;
         case Attr_String:
             if (((char*)list->l.list.attributes[i].value) != NULL) {
-                printf("    { %s, Attr_String, %s }\n", attr_name,
+                printf("    { %s ('%c%c%c%c'), Attr_String, %s }\n", 
+		       attr_name, c[0], c[1], c[2], c[3],
                        (char *) list->l.list.attributes[i].value);
             } else {
-                printf("    { %s, Attr_String, NULL }\n", attr_name);
+                printf("    { %s ('%c%c%c%c'), Attr_String, NULL }\n", 
+		       attr_name, c[0], c[1], c[2], c[3]);
             }
             break;          
         case Attr_Opaque:
@@ -449,7 +456,8 @@ int indent;
                 int j;
                 attr_opaque_p o =
                     (attr_opaque_p) list->l.list.attributes[i].value;
-                printf("    { %s, Attr_Opaque, \"", attr_name);
+                printf("    { %s ('%c%c%c%c'), Attr_Opaque, \"", 
+		       attr_name, c[0], c[1], c[2], c[3]);
                 for (j=0; j< o->length; j++) {
                     printf("%c", ((char*)o->buffer)[j]);
                 }
@@ -459,17 +467,22 @@ int indent;
                 }
                 printf(">}\n");
             } else {
-                printf("    { %s, Attr_Opaque, NULL }\n", attr_name);
+                printf("    { %s ('%c%c%c%c'), Attr_Opaque, NULL }\n", 
+		       attr_name, c[0], c[1], c[2], c[3]);
             }
             break;
-        case Attr_Atom:
-            atom_str = string_from_atom(global_as,
-                                     (atom_t) (long)list->l.list.attributes[i].value);
-            printf("    { %s, Attr_Atom, %s }\n", attr_name,
-                   (char *) atom_str);
+        case Attr_Atom: {
+	    int atom_val = (atom_t)(long)list->l.list.attributes[i].value;
+	    char *cv = (char*)&atom_val;
+            atom_str = string_from_atom(global_as, atom_val);
+            printf("    { %s ('%c%c%c%c'), Attr_Atom, %s ('%c%c%c%c') }\n", 
+		   attr_name, c[0], c[1], c[2], c[3],
+                   (char *) atom_str, cv[0], cv[1], cv[2], cv[3]);
             break;
+	}
         case Attr_List:
-            printf("    { %s, Attr_List, ->\n", attr_name);
+            printf("    { %s ('%c%c%c%c'), Attr_List, ->\n", attr_name,
+		   c[0], c[1], c[2], c[3]);
             internal_dump_attr_list((attr_list) list->l.list.attributes[i].value,
                                     indent+1);
             for (j = 0; j< indent; j++) {
