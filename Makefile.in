@@ -94,7 +94,7 @@ noinst_HEADERS = atom_formats.h tclHash.h unix_defs.h
 
 libatl_la_SOURCES = atom.c atom_formats.c attr.c tclHash.c gen_info.c
 libatl_la_LIBADD = 
-libatl_la_LDFLAGS = 
+libatl_la_LDFLAGS = -no-undefined
 include_HEADERS = atl.h
 
 bin_PROGRAMS = attr_test atom_test
@@ -142,11 +142,10 @@ $(attr_test_SOURCES)
 HEADERS =  $(include_HEADERS) $(noinst_HEADERS)
 
 depcomp = 
-DIST_COMMON =  $(include_HEADERS) $(noinst_HEADERS) ././stamp-h.in \
-./stamp-h.in Makefile.am Makefile.in aclocal.m4 config.h.in \
-config/config.guess config/config.sub config/install-sh config/ltconfig \
-config/ltmain.sh config/missing config/mkinstalldirs configure \
-configure.in
+DIST_COMMON =  $(include_HEADERS) $(noinst_HEADERS) ./stamp-h.in \
+Makefile.am Makefile.in aclocal.m4 config.h.in config/config.guess \
+config/config.sub config/install-sh config/ltconfig config/ltmain.sh \
+config/missing config/mkinstalldirs configure configure.in
 
 
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -401,7 +400,7 @@ dist-all: distdir
 distdir: $(DISTFILES)
 	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/./. $(distdir)/config
+	$(mkinstalldirs) $(distdir)/config
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
