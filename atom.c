@@ -7,12 +7,6 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 
 #include "unix_defs.h"
 #include <gen_thread.h>
@@ -24,13 +18,12 @@
 #include "assert.h"
 #endif
 
-#define MAXDATASIZE 100
 #include "atom_formats.h"
-//#include "tclHash.h"
+#include "tclHash.h"
 
 /* ### IT SHOULD BE FINE WITH CONFIG.H DEFINITIONS BUT ... */
 /* Define to be the hostname to use as ATOM_SERVER_HOST */
-#define ATOM_SERVER_HOST "blackspruce.cc.gatech.edu"
+#define ATOM_SERVER_HOST "marquesas.cc.gatech.edu"
 
 /* Define to be the domain the atom server will serve */
 #define ATOM_SERVICE_DOMAIN "gatech.edu"
@@ -41,11 +34,6 @@ typedef struct _atom_server {
     DExchange de;
     DEPort dep;
 #endif
-#ifdef USE_UDP
-    int sockfd, addr_len;
-    struct hostent *he;
-    struct sockaddr_in their_addr;
-#endif  
     char *server_id;
     int get_send_format_id;
     int prov_use_format_id;
@@ -57,17 +45,6 @@ typedef struct _atom_server {
 } atom_server_struct;
 
 static char *atom_server_host = NULL;
-
-int string_to_int(char *str){
- int no = 0, i = 0;
-
- do{
-  no *= 10;
-  no += str[i]-'0';
-  i++;
- }while(str[i]<='9' && str[i]>='0');
- return no;
-}  
 
 static
  send_get_atom_msg_ptr
@@ -102,16 +79,16 @@ send_get_atom_msg_ptr msg;
 	thr_mutex_unlock(as->hash_lock);
 	return (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
     }
-    Tcl_SetHashValue(entry, msg);
+    Tcl_SetHashValue(entry, stored);
     /* enter into value hash table */
     entry = Tcl_CreateHashEntry(&as->value_hash_table,
-				 stored->atom, &new);
+				(char *) stored->atom, &new);
     if (!new) {
 	printf("Serious internal error in atom cache.  Duplicate value hash entry.\n");
 	thr_mutex_unlock(as->hash_lock);
 	exit(1);
     }
-    Tcl_SetHashValue(entry, msg);
+    Tcl_SetHashValue(entry, stored);
     thr_mutex_unlock(as->hash_lock);
     return stored;
 }
@@ -146,85 +123,6 @@ provisional_use_msg_ptr msg;
 
 extern
  atom_t
-set_string_and_atom(as, str, atom)
-atom_server as;
-char *str;
-atom_t atom;
-{
-    send_get_atom_msg_ptr return_msg;
-    Tcl_HashEntry *entry = NULL, *entry2 = NULL;
-            int new;
-            send_get_atom_msg_ptr stored =
-            (send_get_atom_msg_ptr) malloc(sizeof(send_get_atom_msg));
-
-#ifdef USE_UDP
-    int numbytes,len;
-    char buf[MAXDATASIZE];
-    int addr_len = sizeof(struct sockaddr);
-#endif
-
-//printf("Entered set_string_and_atom\n");
-    thr_mutex_lock(as->hash_lock);
-    entry = Tcl_FindHashEntry(&as->string_hash_table, str);
-    entry2 = Tcl_FindHashEntry(&as->value_hash_table, atom);
-    thr_mutex_unlock(as->hash_lock);
-    if (entry == NULL && entry2 == NULL) {
-
-            stored->atom = atom;
-            stored->atom_string = strdup(str);
-            sprintf(buf,"%s %d",str,atom);
-            len = strlen(buf);
-#ifdef USE_UDP
-       if((numbytes=sendto(as->sockfd, buf, len, 0,
-                     (struct sockaddr *)&(as->their_addr), sizeof(struct sockaddr))) == -1) {
-        perror("sendto");
-        exit(1);
-       }
-       if((numbytes=recvfrom(as->sockfd, buf, MAXDATASIZE-1 , 0,
-                (struct sockaddr *)&(as->their_addr), &addr_len)) == -1) {
-        perror("recvfrom");
-        exit(1);
-        }
-       buf[numbytes] = 0;
-  if(!string_to_int(buf)) return 0; 
-
-#endif
-
-            stored->atom = string_to_int(buf);
-            thr_mutex_lock(as->hash_lock);
-            /* enter into string hash table */
-            entry = Tcl_CreateHashEntry(&as->string_hash_table, str, &new);
-            Tcl_SetHashValue(entry, stored);
-            if (!new) {
-                fprintf(stderr, "2. Serious internal error in atom server.  Duplicate string hash entry.\n");
-                exit(1);
-            }
-            /* enter into value hash table */
-            entry = Tcl_CreateHashEntry(&as->value_hash_table,
-                                        stored->atom , &new);
-            Tcl_SetHashValue(entry, stored);
-            if (!new) {
-                printf("3. Serious internal error in atom server.  Duplicate value hash entry.\n");
-                exit(1);
-            }
-            thr_mutex_unlock(as->hash_lock);
-
-        if (as->cache_style != no_atom_cache) {
-            return_msg = enter_atom_into_cache(as, stored);
-        }
-        return stored->atom;
-    } else {
-
- if(entry)   return_msg = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
- else  return_msg = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry2);
-//printf("Already there in cache.. %s %d\n", return_msg->atom_string, return_msg->atom);
-        return return_msg->atom;
-    }
-
-} 
-
-extern
- atom_t
 atom_from_string(as, str)
 atom_server as;
 char *str;
@@ -232,18 +130,9 @@ char *str;
     send_get_atom_msg inquiry_msg;
     send_get_atom_msg_ptr return_msg;
     Tcl_HashEntry *entry = NULL;
-#ifdef USE_UDP
-    int numbytes,len;
-    char buf[MAXDATASIZE];
-#endif 
-     int new;
-            send_get_atom_msg_ptr msg;
-            send_get_atom_msg_ptr stored =
-            (send_get_atom_msg_ptr) malloc(sizeof(send_get_atom_msg));
 
     inquiry_msg.atom_string = str;
     inquiry_msg.atom = 0;
-     msg = &inquiry_msg;
 
     if (gen_thr_initialized()) {
 	if (as->hash_lock == NULL) {
@@ -255,23 +144,12 @@ char *str;
     thr_mutex_unlock(as->hash_lock);
     if (entry == NULL) {
 #ifndef USE_DATAEXCHANGE
-#ifdef USE_UDP
+	    int new;
+	    send_get_atom_msg_ptr msg = &inquiry_msg;
 
-    len = strlen(str);
-//fprintf(stderr,"ATLATLATLATLSending %s\n", str);
-    if(sendto(as->sockfd, str, len, 0, (struct sockaddr *)&(as->their_addr), sizeof(struct sockaddr)) == -1) perror("sendto");
-    if ((numbytes=recvfrom(as->sockfd, buf, MAXDATASIZE-1, 0, (struct sockaddr *)&(as->their_addr), &(as->addr_len))) == -1) {
-        perror("recvfrom");
-        exit(1);
-       }
-       buf[numbytes] = 0;
-/*
-    return_msg = (send_get_atom_msg_ptr)malloc(sizeof(send_get_atom_msg));
-    return_msg->atom_string = (char *)malloc(sizeof(char)*len);
-    strcpy(return_msg->atom_string, str);
-    return_msg->atom = string_to_int(buf);
-*/
-#endif  
+	    char *str = strdup(msg->atom_string);
+	    send_get_atom_msg_ptr stored =
+	    (send_get_atom_msg_ptr) malloc(sizeof(send_get_atom_msg));
 
 	    stored->atom_string = str;
 	    stored->atom = as->next_atom_id++;
@@ -329,10 +207,6 @@ atom_t atom;
     send_get_atom_msg inquiry_msg;
     send_get_atom_msg_ptr return_msg;
     Tcl_HashEntry *entry = NULL;
-#ifdef USE_UDP
-    int numbytes;
-    char buf[MAXDATASIZE];
-#endif
 
     inquiry_msg.atom_string = NULL;
     inquiry_msg.atom = atom;
@@ -343,34 +217,13 @@ atom_t atom;
 	}
 	thr_mutex_lock(as->hash_lock);
     }
-    entry = Tcl_FindHashEntry(&as->value_hash_table, atom);
+    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) atom);
     thr_mutex_unlock(as->hash_lock);
 
     if (entry == NULL) {
 #ifndef USE_DATAEXCHANGE
-//	assert(0);
-//	return NULL;
-#ifdef USE_UDP
-
-    sprintf(buf, "%d",atom);
-//fprintf(stderr,"ATLATLATLATLSending %s\n", buf);
-    if(sendto(as->sockfd, buf, strlen(buf), 0, (struct sockaddr *)&(as->their_addr), sizeof(struct sockaddr)) == -1) perror("send");
-    if ((numbytes=recvfrom(as->sockfd, buf, MAXDATASIZE-1, 0, (struct sockaddr *)&(as->their_addr), &(as->addr_len))) == -1) {
-        perror("recv");
-        exit(1);
-       }
-       buf[numbytes] = 0;
-
-    if(buf[0] == '0' && buf[1] == 0) return NULL;
-
-    return_msg = (send_get_atom_msg_ptr)malloc(sizeof(send_get_atom_msg));
-    return_msg->atom_string = strdup(buf);
-    return_msg->atom = atom;
-
-        if (as->cache_style != no_atom_cache) {
-            enter_atom_into_cache(as, return_msg);
-        }
-#endif  
+	assert(0);
+	return NULL;
 #else
 	int return_format_id;
 	DEport_write_data(as->dep, as->get_send_format_id,
@@ -499,23 +352,5 @@ atom_cache_type cache_style;
 	}
     }
 #endif
-#ifdef USE_UDP
-
- if ((as->he=gethostbyname(ATOM_SERVER_HOST)) == NULL) {  // get the host info
-        perror("gethostbyname");
-        exit(1);
-    }
-
-    if ((as->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-        perror("socket");
-        exit(1);
-    }
-//printf("PORT is %d\n", PORT);
-    as->their_addr.sin_family = AF_INET;    // host byte order
-    as->their_addr.sin_port = htons(PORT);  // short, network byte order
-    as->their_addr.sin_addr = *((struct in_addr *)as->he->h_addr);
-    memset(&(as->their_addr.sin_zero), '\0', 8);  // zero the rest of the struct
-
-#endif // USE_UDP
     return as;
 }

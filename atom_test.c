@@ -11,16 +11,13 @@ main()
     atom_server as = init_atom_server(prefill_atom_cache);
     printf("Connected to server \"%s\"\n", get_server_id(as));
     while (1) {
-	char line[80], buf[80];
-        int atom = 0;
-        static int set_atom = 4567;
-	int len, test;
+	char line[80];
+	atom_t atom;
+	int len;
 
 	if (fgets(line, sizeof(line), stdin) == NULL) return 0;
 	len = strlen(line);
 	if (len > 0) line[len -1] = 0;  /* truncate \n */
-//  Added by Bala - ignore empty string
-	   if(line[0]==0) continue;
 	if (sscanf(line, "%d", &atom) == 1) {
 	    char *str;
 	    printf("inquiring for atom %d\n", atom);
@@ -32,22 +29,8 @@ main()
 		printf("	no atom %d\n", atom);
 	    }
 	} else {
-	   char *str;
-	   sscanf(line, "%s", &buf);
-	   str = (char *)malloc(sizeof(char)*6); 
-	  if(buf[0] != 'a'){
-		sprintf(str, "%d", atom_from_string(as, buf));
-		if(str[0] == '0') printf("Invalid string\n");
-		else printf("Atom value is %s\n", str); 
-	  } else {
-printf("Enter the string\n");
-scanf("%s", &buf);
-  		sprintf(str, "%d", set_string_and_atom(as, buf, set_atom));
- 		set_atom++;
-		if(str[0] == '0') printf("Atom|string value already present\n");
-		else printf("Atom value is %s\n", str); 
-          }
-           free(str);
+	    printf("inquiring for string \"%s\"\n", line);
+	    printf("	atom value is %d\n", atom_from_string(as, line));
 	}
     }
 }

@@ -1,10 +1,4 @@
-#ifdef USE_TCP
-#define PORT 3333
-#endif
-#ifdef USE_UDP
-#define PORT 4444
-#endif
-//#define PORT 8645 for Dataexchange
+#define PORT 8645
 
 typedef struct _send_get_atom_msg {
     char *atom_string;
