@@ -472,6 +472,8 @@ int indent;
 	    int atom_val = (atom_t)(long)list->l.list.attributes[i].value;
 	    char *cv = (char*)&atom_val;
             atom_str = string_from_atom(global_as, atom_val);
+	    if (atom_str == NULL)
+		atom_str = "<null attr name>";
             printf("    { %s ('%c%c%c%c'), Attr_Atom, %s ('%c%c%c%c') }\n", 
 		   attr_name, c[0], c[1], c[2], c[3],
                    (char *) atom_str, cv[0], cv[1], cv[2], cv[3]);
@@ -589,8 +591,19 @@ attr_list list;
 #ifdef SHARED_ATTR_NUMS
         sprintf(str_tmp, "{%d", tmp.attr_id);
 #else
-        sprintf(str_tmp, "{%s", atom_string =
-                string_from_atom(global_as, list->l.list.iattrs->iattr[i].attr_id));
+	
+	atom_string =string_from_atom(global_as, 
+				      list->l.list.iattrs->iattr[i].attr_id);
+	if (atom_string == NULL) {
+	    static int warned = 0;
+	    if (warned == 0) {
+		printf("Attribute has no name.  Set one with set_attr_string_and_atom();\n");
+		printf("See http://www.cc.gatech.edu/systems/projects/CM/attributes.html\n");
+		warned++;
+	    }
+	    atom_string = strdup("NO-NAME");
+	}
+	sprintf(str_tmp, "{%s", atom_string);
         free(atom_string);
 #endif
         str = strdcat(str, size_p, str_tmp);
@@ -609,8 +622,17 @@ attr_list list;
 #ifdef SHARED_ATTR_NUMS
         sprintf(str_tmp, "{%d", tmp->attr_id);
 #else
-        sprintf(str_tmp, "{%s", atom_string =
-                string_from_atom(global_as, tmp->attr_id));
+	atom_string = string_from_atom(global_as, tmp->attr_id);
+	if (atom_string == NULL) {
+	    static int warned = 0;
+	    if (warned == 0) {
+		printf("Attribute has no name.  Set one with set_attr_string_and_atom();\n");
+		printf("See http://www.cc.gatech.edu/systems/projects/CM/attributes.html\n");
+		warned++;
+	    }
+	    atom_string = strdup("NO-NAME");
+	}
+        sprintf(str_tmp, "{%s", atom_string);
         free(atom_string);
 #endif
         str = strdcat(str, size_p, str_tmp);
