@@ -201,7 +201,7 @@ atom_t atom;
     }
     tmp_value.atom = atom;
     tmp_value.atom_string = str;
-    enter_atom_into_cache(as, tmp_value);
+    enter_atom_into_cache(as, &tmp_value);
     thr_mutex_unlock(as->hash_lock);
 
     sprintf(buf, "A%d %s", atom, str);
@@ -320,7 +320,7 @@ atom_t atom;
 	tmp_rec.atom_string = &buf[1];
 	tmp_rec.atom = atom;
 
-	stored = enter_atom_into_cache(as, tmp_rec);
+	stored = enter_atom_into_cache(as, &tmp_rec);
     } else {
 	stored = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
     }

@@ -30,9 +30,8 @@ main()
     printf("         A<decimal number> <string> to set a string/value association\n");
     printf("         a<hex number> <string> to set a string/value association\n");
     while (1) {
-	char line[80], buf[80];
+	char line[80];
 	long atom = 0;
-	static int set_atom = 4567;
 	int len;
 	int radix = 10;
 
@@ -81,7 +80,7 @@ main()
 	    /* falling through */
 	case 'A': {
 	    long atom;
-	    char *str, *end;
+	    char *end;
 	    atom = strtol(&line[1], &end, radix);
 	    if (end == &line[1]) {
 		printf("\tMissing number\n");
