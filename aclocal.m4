@@ -1824,12 +1824,15 @@ else
     # Tell ltmain to make .lib files, not .a files.
     libext=lib
     # FIXME: Setting linknames here is a bad hack.
-    archive_cmds='$CC -o $lib $libobjs $compiler_flags `echo "$deplibs" | sed -e '\''s/ -lc$//'\''` -link -dll~linknames='
+    archive_cmds='echo EXPORTS | cat - $export_symbols > ${export_symbols}D~$CC -o $lib $libobjs $compiler_flags `echo "$deplibs" | sed -e '\''s/ -lc$//'\''` -link -dll /def:${export_symbols}D'
     # The linker will automatically build a .lib file if we build a DLL.
-    old_archive_from_new_cmds='true'
+    old_archive_from_new_cmds=''
     # FIXME: Should let the user specify the lib program.
-    old_archive_cmds='lib /OUT:$oldlib$oldobjs$old_deplibs'
+    old_archive_cmds='$CC /lib -o \$oldlib $oldobjs$old_deplibs'
     fix_srcfile_path='`cygpath -w "$srcfile"`'
+    fix_path_command='\$path_to_fix=\\\`cygpath -w \\\\\\$\$path_to_fix \| \\\$BS2SL\\\`'
+    library_names_spec='$libname.lib'
+    soname_spec='`echo ${libname} | sed -e 's/^lib/lib/'``echo ${release} | [sed -e 's/[.]/-/g']`${versuffix}.dll'
     ;;
 
   darwin* | rhapsody*)
@@ -2890,6 +2893,9 @@ sys_lib_dlsearch_path_spec=$lt_sys_lib_dlsearch_path_spec
 # Fix the shell variable \$srcfile for the compiler.
 fix_srcfile_path="$fix_srcfile_path"
 
+# Command to fix paths for compiler and linker.
+fix_path_command="$fix_path_command"
+
 # Set to yes if exported symbols are required.
 always_export_symbols=$always_export_symbols
 
@@ -3886,9 +3892,11 @@ dnl
 dnl  AC_SEARCH(variable to define, options to try)
 define(AC_SEARCH,
 [tmp_search_results=""
+echo "configure:__oline__: searching for $1 " >&5
 for tmp_search_value in $1; do 
    if test -r $tmp_search_value; then 
 	tmp_search_results=$tmp_search_value
+	echo "configure:__oline__: first found $tmp_search_results " >&5
 	break
    fi 
 done
