@@ -20,16 +20,26 @@
 extern "C" {
 #endif
 
+#if defined(_WIN32)
+#ifdef ATL_SOURCE
+#define ATL_DECLSPEC __declspec(dllexport) 
+#else 
+#define ATL_DECLSPEC __declspec(dllimport) 
+#endif 
+#else
+#define ATL_DECLSPEC 
+#endif
+
 typedef int atom_t;
 
 /* opaque type for atom server handle */
 typedef struct _atom_server *atom_server;
 
-extern
+extern ATL_DECLSPEC
 atom_t
 atom_from_string ARGS((atom_server as, char *str));
 
-extern
+extern ATL_DECLSPEC
 char *
 string_from_atom ARGS((atom_server as, atom_t atom));
 
@@ -37,11 +47,11 @@ typedef enum {
     no_atom_cache, atom_cache, prefill_atom_cache
 } atom_cache_type;
 
-extern
+extern ATL_DECLSPEC
 atom_server
 init_atom_server ARGS((atom_cache_type cache_style));
 
-extern
+extern ATL_DECLSPEC
 char *
 get_server_id ARGS((atom_server as));
 
@@ -125,89 +135,89 @@ typedef struct xmit_object_s {
 
 
 /* operations on attr_lists */
-extern attr_list create_attr_list();
+extern ATL_DECLSPEC attr_list create_attr_list();
 
-extern void free_attr_list ARGS((attr_list list));
+extern ATL_DECLSPEC void free_attr_list ARGS((attr_list list));
 
-extern void add_ref_attr_list ARGS((attr_list list));
+extern ATL_DECLSPEC void add_ref_attr_list ARGS((attr_list list));
 
-extern attr_list attr_join_lists ARGS((attr_list list1, attr_list list2));
+extern ATL_DECLSPEC attr_list attr_join_lists ARGS((attr_list list1, attr_list list2));
 
-extern attr_list attr_add_list ARGS((attr_list list1, attr_list list2));
+extern ATL_DECLSPEC attr_list attr_add_list ARGS((attr_list list1, attr_list list2));
 
-extern int add_attr ARGS((attr_list attrs, atom_t attr_id, 
+extern ATL_DECLSPEC int add_attr ARGS((attr_list attrs, atom_t attr_id, 
 			  attr_value_type val_type,
 			  attr_value value ));
 
-extern int set_attr ARGS((attr_list attrs, atom_t attr_id, 
+extern ATL_DECLSPEC int set_attr ARGS((attr_list attrs, atom_t attr_id, 
 			  attr_value_type val_type,
 			  attr_value value ));
 
-extern int replace_attr ARGS((attr_list attrs, atom_t attr_id, 
+extern ATL_DECLSPEC int replace_attr ARGS((attr_list attrs, atom_t attr_id, 
 			      attr_value_type val_type, attr_value value ));
 
-extern int query_attr ARGS(( attr_list attrs, atom_t attr_id, 
+extern ATL_DECLSPEC int query_attr ARGS(( attr_list attrs, atom_t attr_id, 
 			    attr_value_type *val_type_p, attr_value *value_p));
 
-extern void dump_attr_list ARGS(( attr_list attrs ));
+extern ATL_DECLSPEC void dump_attr_list ARGS(( attr_list attrs ));
 
-extern
+extern ATL_DECLSPEC
 atom_t
 attr_atom_from_string ARGS((const char *str));
 
-extern
+extern ATL_DECLSPEC
 char *
 attr_string_from_atom ARGS((atom_t atom));
 
-extern int attr_count ARGS((attr_list attrs));
+extern ATL_DECLSPEC int attr_count ARGS((attr_list attrs));
 
-extern attr_p get_attr ARGS((attr_list attrs, int index));
+extern ATL_DECLSPEC attr_p get_attr ARGS((attr_list attrs, int index));
 
-extern
+extern ATL_DECLSPEC
 char *
 attr_list_to_string ARGS((attr_list attrs));
 
-extern
+extern ATL_DECLSPEC
 attr_list
 attr_list_from_string ARGS((char * str));
 
-extern
+extern ATL_DECLSPEC
 int
 compare_attr_p_by_val (attr_p a1, attr_p a2);
 
-extern
+extern ATL_DECLSPEC
 int
 compare_attr_p_xmit_attr_by_val (attr_p ap, xmit_attr_ref xa);
 
-extern
+extern ATL_DECLSPEC
 xmit_object
 pack_attr_list (attr_list attrs);
 
-extern
+extern ATL_DECLSPEC
 void
 pack_attr_list_1 (attr_list attrs,
 		  xmit_object xo);
 
-extern
+extern ATL_DECLSPEC
 attr_list
 unpack_attr_list (xmit_object xo);
 
-extern
+extern ATL_DECLSPEC
 void
 unpack_attr_list_1 (xmit_object xo,
 		    attr_list attrs);
 
-extern
+extern ATL_DECLSPEC
 void
 unpack_attr_list_2 (int xmit_attr_count,
 		    xmit_attr *xmit_list, 
 		    attr_list attrs);
 
-extern
+extern ATL_DECLSPEC
 int
 attr_list_subset (attr_list l1, attr_list l2);
 
-extern
+extern ATL_DECLSPEC
 int
 attr_list_subset_xmit_object (xmit_object xo, attr_list l1);
 

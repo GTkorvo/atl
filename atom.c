@@ -106,7 +106,7 @@ provisional_use_msg_ptr msg;
 }	
 #endif
 
-extern
+extern ATL_DECLSPEC
  atom_t
 atom_from_string(as, str)
 atom_server as;
@@ -178,7 +178,7 @@ char *str;
     return return_msg->atom;
 }
 
-extern
+extern ATL_DECLSPEC
 char *
 string_from_atom(as, atom)
 atom_server as;
@@ -229,7 +229,7 @@ atom_t atom;
     }
 }
 
-extern
+extern ATL_DECLSPEC
 char *
 get_server_id(as)
 atom_server as;
@@ -237,7 +237,7 @@ atom_server as;
     return as->server_id;
 }
 
-atom_server
+ATL_DECLSPEC atom_server
 init_atom_server(cache_style)
 atom_cache_type cache_style;
 {
