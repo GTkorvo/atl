@@ -1173,10 +1173,11 @@ unsigned int size;
 
     if (buf->tmp_buffer_size == 0) {
 	int tmp_size = Max(size, TMP_BUFFER_INIT_SIZE);
-	buf->tmp_buffer = malloc(tmp_size);
+	buf->tmp_buffer = calloc(tmp_size, sizeof(char));
     }
     if (size > buf->tmp_buffer_size) {
 	buf->tmp_buffer = realloc(buf->tmp_buffer, size);
+	memset (buf->tmp_buffer + buf->tmp_buffer_size, 0, size - buf->tmp_buffer_size);
 	buf->tmp_buffer_size = size;
     }
     if (!buf->tmp_buffer) {
@@ -1466,7 +1467,7 @@ unsigned int len;
     maxlen = len*2 + 1;
 #endif
 
-    if((buf = malloc(maxlen)) == NULL)
+    if((buf = calloc(maxlen,sizeof(char))) == NULL)
 	return NULL;
     while (len) {
 	

@@ -40,7 +40,7 @@ main()
     dump_attr_list (al);
     free_attr_list(al);
     free_attr_list(al2);
-
+    
     set_attr_atom_and_string("Fosters", FOSTERS_ATOM);
     set_attr_atom_and_string("IP_ADDR", ATL_CHAR_CONS('C','I','P','A'));
     set_attr_atom_and_string("Red Stripe", RED_STRIPE_ATOM);
@@ -134,9 +134,9 @@ main()
     free_attr_list(list2);
     free_attr_list(list);
 
-    list = create_attr_list();
+    /*    list = create_attr_list();
     list2 = create_attr_list();
-    
+    */
     list = attr_list_from_string(string);
     list2 = attr_list_from_string(string2);
 
