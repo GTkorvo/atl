@@ -1,12 +1,16 @@
 #include <config.h>
-#include <atl.h>
-#include <tclHash.h>
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#else
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
+#endif
 #include <assert.h>
+#include <atl.h>
+#include <tclHash.h>
 #include <unix_defs.h>
 
 typedef struct _attr_sublist_struct {
@@ -30,28 +34,48 @@ typedef struct _attr_list_struct {
     } l;
 } attr_list_struct;
 
-atom_server global_as = NULL;
+__declspec(dllexport) atom_server global_as = NULL;
 
 static
 void
 init_global_atom_server(asp)
 atom_server *asp;
 {
-    char *addr_str;
+    char *addr_str = NULL;
     char var_str[60];
-    
+
     if (*asp != NULL) return;
     /*
      * for notes on my we're doing funny things with the "global" value, 
      * global_as, see the comments in gen_info.c.  This is similar.
      */
     sprintf(var_str, "ATOM_SERVER_ADDRESS_%lx", (long) getpid());
-    if ((addr_str = getenv(var_str)) == NULL) {
+#ifndef HAVE_WINDOWS_H
+    addr_str = getenv(var_str);
+#else
+    { 
+	int ret;
+	char buffer[60];
+	ret = GetEnvironmentVariable(var_str, buffer, sizeof(buffer));
+	if (ret != 0) {
+	    strcpy(var_str, buffer);
+	    addr_str = &var_str[0];
+	}
+    }
+#endif
+    if (addr_str == NULL) {
 	char addr_tmp[64];
+	int value;
 	*asp = init_atom_server(prefill_atom_cache);
+#ifdef HAVE_WINDOWS_H
 	sprintf(addr_tmp, "%s=%lx", var_str, (long)*asp);
 	addr_str = strdup(addr_tmp);
-	putenv(addr_str);
+	value = putenv(addr_str);
+#else
+	sprintf(addr_tmp, "%lx", (long)*asp);
+	addr_str = strdup(addr_tmp);
+	value = SetEnvironmentVariable(var_str, addr_str);
+#endif
     } else {
 	sscanf(addr_str, "%lx", (long*)asp);
     }
