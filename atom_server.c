@@ -101,6 +101,7 @@ int
 main(void)
 {
     int sockfd;
+    int run = 1;
     struct sockaddr_in my_addr;	/* my address information */
 
     struct sockaddr_in their_addr;	/* connector's address information 
@@ -130,10 +131,10 @@ main(void)
     }
     addr_len = sizeof(struct sockaddr);
 
+    run = 1;
     Initialize();
 
-    while (1) {
-
+    while (run) {
 	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0,
 		    (struct sockaddr *) &their_addr, &addr_len)) == -1) {
 	    perror("recvfrom");
@@ -234,7 +235,6 @@ main(void)
 	}
     }
     /* NOTREACHED */
-
     close(sockfd);
     return 0;
 }

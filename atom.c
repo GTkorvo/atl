@@ -21,13 +21,6 @@
 #include "atom_formats.h"
 #include "tclHash.h"
 
-/* ### IT SHOULD BE FINE WITH CONFIG.H DEFINITIONS BUT ... */
-/* Define to be the hostname to use as ATOM_SERVER_HOST */
-#define ATOM_SERVER_HOST "marquesas.cc.gatech.edu"
-
-/* Define to be the domain the atom server will serve */
-#define ATOM_SERVICE_DOMAIN "gatech.edu"
-
 /* opaque type for atom server handle */
 typedef struct _atom_server {
 #ifdef USE_DATAEXCHANGE
