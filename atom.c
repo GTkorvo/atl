@@ -53,6 +53,7 @@ typedef struct _atom_server {
 } atom_server_struct;
 
 static char *atom_server_host = NULL;
+static int establish_server_connection(atom_server as, int do_fallback);
 
 #ifndef O_NONBLOCK
 #define O_NONBLOCK 0x80
@@ -319,7 +320,7 @@ fill_hostaddr(void *addr, char *hostname)
 #endif
 }
 
-extern int
+static int
 establish_server_connection(as, do_fallback)
 atom_server as;
 int do_fallback;
