@@ -943,6 +943,7 @@ attr_list list;
             switch (list->l.list.attributes[i].val_type) {
             case Attr_Undefined:
             case Attr_Int4:
+            case Attr_Int8:
                 break;
             case Attr_Atom:
                 break;
