@@ -1,7 +1,7 @@
 #include <config.h>
 
 #include <io.h>
-#include <atom.h>
+#include <atl.h>
 #include <atom_formats.h>
 
 IOField Atom_send_get_msg_flds[] =

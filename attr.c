@@ -1,6 +1,5 @@
 #include <config.h>
-#include <atom.h>
-#include <attr.h>
+#include <atl.h>
 #include <tclHash.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef HAVE_WINDOWS_H
@@ -23,7 +23,7 @@
 
 #include <io.h>
 #include <DE.h>
-#include <atom.h>
+#include <atl.h>
 #include <atom_formats.h>
 #include <tclHash.h>
 #include <unix_defs.h>
@@ -435,7 +435,7 @@ char **argv;
 
     get_qual_hostname(host_name, sizeof(host_name));
     time(&current_time);
-    strftime(time_str, sizeof(time_str), "%D %R", localtime(&current_time));
+    strftime(time_str, sizeof(time_str), "%m/%d/%Y %R", localtime(&current_time));
     sprintf(stack_server_id, "Host: %s, Port %d, PID %lx, Start: %s",
 	    host_name, PORT, (long)getpid(), time_str);
     server_id = strdup(stack_server_id);

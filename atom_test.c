@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unix_defs.h>
-#include <atom.h>
+#include <atl.h>
 
 int
 main()
@@ -13,8 +13,11 @@ main()
     while (1) {
 	char line[80];
 	atom_t atom;
+	int len;
 
-	fgets(stdin, line, sizeof(line));
+	if (fgets(line, sizeof(line), stdin) == NULL) return 0;
+	len = strlen(line);
+	if (len > 0) line[len -1] = 0;  /* truncate \n */
 	if (sscanf(line, "%d", &atom) == 1) {
 	    char *str;
 	    printf("inquiring for atom %d\n", atom);

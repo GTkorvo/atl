@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,7 +6,7 @@
 
 #include <io.h>
 #include <DE.h>
-#include <atom.h>
+#include <atl.h>
 #include <atom_formats.h>
 #include <tclHash.h>
 #include <unix_defs.h>
