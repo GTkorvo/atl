@@ -267,6 +267,7 @@ atom_t atom;
 	buf[buf[0]+1] = 0;
 	handle_unexpected_msg(as, &buf[1]);
     } else {
+	if (as->their_addr.sin_addr.s_addr == 0) return;
 	set_blocking(as, 0);	/* set server fd nonblocking */
 	if ((numbytes = sendto(as->sockfd, &buf[1], len, 0,
 			       (struct sockaddr *) &(as->their_addr), sizeof(struct sockaddr))) == -1) {
@@ -367,6 +368,7 @@ int do_fallback;
 	if (fill_hostaddr(&sock_addr.sin_addr, atom_server_host) == 0) {
 	    fprintf(stderr, "Unknown Host \"%s\" specified as ATL atom server.\n",
 		    atom_server_host);
+	    as->tcp_fd = -2;
 	    return 0;
 	}
 	sock_addr.sin_port = htons(TCP_PORT);
@@ -408,6 +410,7 @@ int do_fallback;
 	    if (fill_hostaddr(&sock_addr.sin_addr, atom_server_host) == 0){
 		fprintf(stderr, "Unknown Host \"%s\" specified as ATL atom server.\n",
 			atom_server_host);
+		as->tcp_fd = -2;
 		return 0;
 	    }
 	    sock_addr.sin_port = htons(TCP_PORT);
@@ -627,8 +630,10 @@ atom_cache_type cache_style;
 
 #ifndef MODULE
     if ((as->he = gethostbyname(atom_server_host)) == NULL) {
-	perror("gethostbyname (ATOM_SERVER_HOST)");
-	exit(1);
+	as->he = NULL;
+	as->their_addr.sin_addr.s_addr = 0;
+    } else {
+	as->their_addr.sin_addr = *((struct in_addr *) as->he->h_addr);
     }
     if ((as->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 	perror("socket");
@@ -641,7 +646,6 @@ atom_cache_type cache_style;
 #endif
     as->their_addr.sin_family = AF_INET;
     as->their_addr.sin_port = htons(UDP_PORT);
-    as->their_addr.sin_addr = *((struct in_addr *) as->he->h_addr);
     memset(&(as->their_addr.sin_zero), '\0', 8);
 #endif
 
