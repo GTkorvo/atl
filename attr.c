@@ -468,7 +468,7 @@ attr_list list;
 	{ 
 	    int len = first_comma - str - 1;
 	    char * atom_name = malloc(len + 1);
-	    strncat(atom_name, (str+1), len);
+	    strncpy(atom_name, (str+1), len);
 	    atom_name[len] = 0;
 	    attr_id = attr_atom_from_string(atom_name);
 	    free(atom_name);
