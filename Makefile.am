@@ -23,6 +23,8 @@ else
 lib_LTLIBRARIES = libatl.la
 bin_PROGRAMS = attr_test atom_test
 include_HEADERS = atl.h
+all-local:
+install-exec-local:
 endif
 
 LIBS = @LIBS@

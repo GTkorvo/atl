@@ -103,7 +103,7 @@ atom_server *asp;
 	value = SetEnvironmentVariable(var_str, addr_str);
 #endif
     } else {
-        (long)*asp = strtol((char *)addr_str, NULL, 16); 
+        *(long*)asp = strtol((char *)addr_str, NULL, 16); 
     }
 }
 /* operations on attr_lists */
@@ -569,21 +569,21 @@ attr_list list;
 	    break;
 	case '4':
 	    val_type = Attr_Int4;
-            (int *) int_value = atoi(value+1);
+            *(int *) int_value = atoi(value+1);
 	    val = (attr_value)int_value;
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
 	case '8':
 	    val_type = Attr_Int8;
-            (int *) long_value = atoi(value+1);
+            *(int *) long_value = atoi(value+1);
 	    val = (attr_value)long_value;
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
 	case 'A':
 	    val_type = Attr_Atom;
-            (int *) int_value = atoi(value+1);
+            *(int *) int_value = atoi(value+1);
 	    val = (attr_value)int_value;
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
