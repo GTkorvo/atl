@@ -152,6 +152,34 @@ attr_list list2;
     return list1;
 }
 
+/*
+ *  merges list2 into list1.  modifies list1, does not modify list2
+ */
+extern void 
+attr_merge_lists (list1, list2)
+     attr_list list1;
+     attr_list list2;
+{
+  attr_p attr_guy;
+  int i;
+  int c = attr_count (list2);
+  
+  for (i = 0; i < c; i++)
+    {
+      attr_guy = get_attr (list2, i);
+      if (attr_guy->val_type == Attr_String)
+        {
+          char* s = strdup ((char*)attr_guy->value);
+          set_attr (list1, attr_guy->attr_id, attr_guy->val_type, s);
+        }
+      else
+        {
+          set_attr (list1, attr_guy->attr_id, attr_guy->val_type, attr_guy->value);
+        }
+    }
+}
+
+
 extern int
 add_attr(list, attr_id, val_type, value)
 attr_list list;

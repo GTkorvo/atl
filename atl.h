@@ -135,6 +135,8 @@ extern attr_list attr_join_lists ARGS((attr_list list1, attr_list list2));
 
 extern attr_list attr_add_list ARGS((attr_list list1, attr_list list2));
 
+extern void attr_merge_lists ARGS((attr_list list1, attr_list list2));
+
 extern int add_attr ARGS((attr_list attrs, atom_t attr_id, 
 			  attr_value_type val_type,
 			  attr_value value ));
