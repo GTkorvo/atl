@@ -1,5 +1,4 @@
 #include "config.h"
-#include "io.h"
 #include "atl.h"
 #ifndef MODULE
 #include <assert.h>
