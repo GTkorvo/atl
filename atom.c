@@ -55,7 +55,12 @@ send_get_atom_msg_ptr msg;
     stored->atom = msg->atom;
 
     /* enter into string hash table */
-    thr_mutex_lock(as->hash_lock);
+    if (gen_thr_initialized()) {
+	if (as->hash_lock == NULL) {
+	    as->hash_lock = thr_mutex_alloc();
+	}
+	thr_mutex_lock(as->hash_lock);
+    }
     entry = Tcl_CreateHashEntry(&as->string_hash_table, str, &new);
     if (!new) {
 	/* already inserted by someone else */
@@ -119,7 +124,12 @@ char *str;
     inquiry_msg.atom_string = str;
     inquiry_msg.atom = 0;
 
-    thr_mutex_lock(as->hash_lock);
+    if (gen_thr_initialized()) {
+	if (as->hash_lock == NULL) {
+	    as->hash_lock = thr_mutex_alloc();
+	}
+	thr_mutex_lock(as->hash_lock);
+    }
     entry = Tcl_FindHashEntry(&as->string_hash_table, str);
     thr_mutex_unlock(as->hash_lock);
     if (entry == NULL) {
@@ -191,7 +201,12 @@ atom_t atom;
     inquiry_msg.atom_string = NULL;
     inquiry_msg.atom = atom;
 
-    thr_mutex_lock(as->hash_lock);
+    if (gen_thr_initialized()) {
+	if (as->hash_lock == NULL) {
+	    as->hash_lock = thr_mutex_alloc();
+	}
+	thr_mutex_lock(as->hash_lock);
+    }
     entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) atom);
     thr_mutex_unlock(as->hash_lock);
 
