@@ -470,23 +470,8 @@ extern
 attr_list
 unpack_attr_list (xmit_object xo)
 {
-  int i;
   attr_list al = create_attr_list();
-
-  for (i = 0; i < xo.attr_count; i++)
-    {
-      if (xo.attrs[i].attr_type == Attr_String)
-	set_attr (al,
-		  xo.attrs[i].attr_name,
-		  xo.attrs[i].attr_type,
-		  xo.attrs[i].attr_string_val);
-      else
-	set_attr (al,
-		  xo.attrs[i].attr_name,
-		  xo.attrs[i].attr_type,
-		  (void*)xo.attrs[i].attr_atom_val);
-    }
-
+  unpack_attr_list_2 (xo.attr_count, xo.attrs, al);
   return al;
 }
 
@@ -495,19 +480,110 @@ extern
 void
 unpack_attr_list_1 (xmit_object xo, attr_list al)
 {
+  unpack_attr_list_2 (xo.attr_count, xo.attrs, al);
+}
+
+extern
+void
+unpack_attr_list_2 (int xmit_count,
+		    xmit_attr *xmit_list,
+		    attr_list al)
+{
   int i;
 
-  for (i = 0; i < xo.attr_count; i++)
+  for (i = 0; i < xmit_count; i++)
     {
-      if (xo.attrs[i].attr_type == Attr_String)
+      if (xmit_list[i].attr_type == Attr_String)
 	set_attr (al,
-		  xo.attrs[i].attr_name,
-		  xo.attrs[i].attr_type,
-		  xo.attrs[i].attr_string_val);
+		  xmit_list[i].attr_name,
+		  xmit_list[i].attr_type,
+		  xmit_list[i].attr_string_val);
       else
 	set_attr (al,
-		  xo.attrs[i].attr_name,
-		  xo.attrs[i].attr_type,
-		  (void*)xo.attrs[i].attr_atom_val);
+		  xmit_list[i].attr_name,
+		  xmit_list[i].attr_type,
+		  (void*)xmit_list[i].attr_atom_val);
     }
 }
+
+
+extern
+int
+compare_attr_p_by_val (attr_p a1, attr_p a2)
+{
+  int eq = 0;
+  
+  if (a1 == a2)
+    return 1;
+
+  if (a1->val_type == a2->val_type)
+    {
+      if (a1->val_type == Attr_Int4 ||
+	  a1->val_type == Attr_Int8)
+	{
+	  eq = (a1->value == a2->value);
+	}
+      else if (a1->val_type == Attr_String)
+	{
+	  eq = (strcmp ((char*)a1->value, "*") == 0 ||
+		strcmp ((char*)a2->value, "*") == 0 ||
+		strcmp ((char*)a1->value, (char*)a2->value) == 0);
+	}
+      else if (a1->val_type == Attr_List)
+	{
+	  eq = attr_list_subset ((attr_list)a1->value,
+				 (attr_list)a2->value);
+	}
+      else
+	{
+	  eq = 1;
+	}
+
+    }
+  
+  return eq;
+}
+
+
+extern
+int
+attr_list_subset (attr_list l1, attr_list l2)
+{
+  /*
+   *  This function returns true if l1 is a subset of l2.  I
+   *  define this as:  for each element of l1, there is an element
+   *  of l2 with the same attribute name, attribute type, and attribute
+   *  value.
+   */
+  int i, j, eq = 1;
+  int l1_count;
+  int l2_count;
+  attr_p l1_tmp, l2_tmp;
+
+  l1_count = attr_count (l1);
+  l2_count = attr_count (l2);
+  
+  if (l2_count < l1_count) return 0;
+
+  for (i = 0; i < l1_count && eq; i++)
+    {
+      
+      l1_tmp = get_attr (l1, i);
+
+      for (j = 0; j < l2_count; j++)
+	{
+	  l2_tmp = get_attr (l2, j);
+	  
+	  eq = compare_attr_p_by_val (l1_tmp, l2_tmp);
+	}
+    }
+
+  return eq;
+}
+	
+	
+  
+
+  
+
+  
