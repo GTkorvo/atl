@@ -1,3 +1,4 @@
+#include <sys/filio.h>
 #include "config.h"
 #include "io.h"
 #include "atl.h"
@@ -31,7 +32,7 @@
 
 /* opaque type for atom server handle */
 typedef struct _atom_server {
-    int sockfd, addr_len;
+    int sockfd;
     struct hostent *he;
     struct sockaddr_in their_addr;
     int flags;
@@ -251,9 +252,10 @@ char *str;
 	}
 	buf[0] = 0;
 	while (buf[0] != 'N') {
+	    int addr_len = sizeof(struct sockaddr);
 	    if ((numbytes = recvfrom(as->sockfd, buf, MAXDATASIZE - 1, 0,
 				   (struct sockaddr *) &(as->their_addr),
-				     &(as->addr_len))) == -1) {
+				     &addr_len)) == -1) {
 		perror("recvfrom");
 		exit(1);
 	    }
@@ -302,9 +304,10 @@ atom_t atom;
 	set_blocking(as, 1);	/* set server fd blocking */
 	buf[0] = 0;
 	while (buf[0] != 'S') {
+	    int addr_len = sizeof(struct sockaddr);
 	    if ((numbytes = recvfrom(as->sockfd, buf, MAXDATASIZE - 1, 0,
 				   (struct sockaddr *) &(as->their_addr),
-				     &(as->addr_len))) == -1) {
+				     &addr_len)) == -1) {
 		perror("recv");
 		exit(1);
 	    }
