@@ -198,6 +198,7 @@ atom_t atom;
     if (entry == NULL) {
 #ifndef USE_DATAEXCHANGE
 	assert(0);
+	return NULL;
 #else
 	int return_format_id;
 	DEport_write_data(as->dep, as->get_send_format_id,
@@ -214,10 +215,10 @@ atom_t atom;
 
 	assert(return_format_id == as->get_send_format_id);
 
-#endif
 	if (as->cache_style != no_atom_cache) {
 	    return_msg = enter_atom_into_cache(as, return_msg);
 	}
+#endif
     } else {
 	return_msg = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
     }

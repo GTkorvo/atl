@@ -410,7 +410,7 @@ attr_list list;
 	case Attr_String:
 	    {
 		char tmp_str[24];
-		sprintf(tmp_str, ",S%d,", strlen(tmp->value));
+		sprintf(tmp_str, ",S%d,", (int)strlen(tmp->value));
 		str = strdcat(str, size_p, tmp_str);
 		str = strdcat(str, size_p, (char*)tmp->value);
 	    }
