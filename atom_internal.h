@@ -4,5 +4,6 @@ typedef struct _send_get_atom_msg {
 } send_get_atom_msg, *send_get_atom_msg_ptr;
 
 
-#define PORT 4444
+#define UDP_PORT 4444
+#define TCP_PORT 4445
 

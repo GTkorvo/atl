@@ -70,6 +70,7 @@ THREAD_LIBS="-lgen_thread"
 fi
 
 checkBoth=0
+AC_CHECK_FUNCS(fork gethostname)
 AC_CHECK_FUNC(connect, checkSocket=0, checkSocket=1)
 save_libs=$LIBS;
 if test "$checkSocket" = 1; then
