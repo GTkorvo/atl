@@ -4,6 +4,7 @@
 #include <tclHash.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <malloc.h>
 #include <assert.h>
 #include <unix_defs.h>
@@ -497,7 +498,7 @@ unpack_attr_list_2 (int xmit_count,
 	set_attr (al,
 		  xmit_list[i].attr_name,
 		  xmit_list[i].attr_type,
-		  xmit_list[i].attr_string_val);
+		  strdup ((char*)xmit_list[i].attr_string_val));
       else
 	set_attr (al,
 		  xmit_list[i].attr_name,
