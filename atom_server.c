@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 #else
 #include <windows.h>
 #include <winsock.h>
@@ -139,15 +140,9 @@ extern int
 establish_server_connection()
 {
     int sock;
-    int junk_errno;
-    char *junk_str;
-    int ret;
-#ifndef MODULE
-    int delay_value = 1;
-#else
+#ifdef MODULE
     struct socket *socket;	
 #endif
-    char ping_char = 'P';
     struct sockaddr_in sock_addr;
 
 
@@ -180,8 +175,7 @@ char **argv;
     struct sockaddr_in sock_addr;	/* connector's address information */
     int sock_opt_val = 1;
 
-    int addr_len, numbytes, i;
-    char buf[MAXBUFLEN];
+    int i;
 
     for (i = 1; i < argc; i++) {
 	if (strcmp(argv[i], "-no_fork") == 0) {
@@ -402,7 +396,6 @@ handle_tcp_data(sockfd)
     unsigned char len;
     char buf[MAXBUFLEN];
     char response[MAXBUFLEN];
-    struct sockaddr_in their_addr;	/* connector's address information */
     if ((numbytes = read(sockfd, &len, 1)) != 1) {
 	if ((numbytes == -1) && (errno != EBADF)){
 	    perror("read");

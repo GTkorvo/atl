@@ -326,9 +326,6 @@ atom_server as;
 int do_fallback;
 {
     int sock;
-    int junk_errno;
-    char *junk_str;
-    int ret;
 #ifndef MODULE
     int delay_value = 1;
 #else
@@ -445,14 +442,6 @@ int do_fallback;
 #ifdef SIGPIPE
 	signal(SIGPIPE, SIG_IGN);
 #endif
-	if (ret != 1) {
-	    /* 
-	     * got a server, but it was unacceptable in some way, 
-	     * didn't give us a magic number or had restarted since 
-	     *  last time. 
-	     */
-	    return 0;
-	}
     }
     return 1;
 }
