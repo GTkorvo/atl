@@ -1679,8 +1679,6 @@ else
     # FIXME: Should let the user specify the lib program.
     old_archive_cmds='$CC /lib -o \$oldlib $oldobjs$old_deplibs'
     fix_srcfile_path='`cygpath -w "$srcfile"`'
-    library_names_spec='$libname.lib'
-    soname_spec='`echo ${libname} | sed -e 's/^lib/lib/'``echo ${release} | [sed -e 's/[.]/-/g']`${versuffix}.dll'
     ;;
 
   darwin* | rhapsody*)
@@ -2139,6 +2137,13 @@ cygwin* | mingw* | pw32*)
     ;;
   yes,pw32*)
     library_names_spec='`echo ${libname} | sed -e 's/^lib/pw/'``echo ${release} | sed -e 's/[.]/-/g'`${versuffix}.dll'
+    ;;
+  ,cygwin*)
+    # When not using gcc, we currently assume that we are using
+    # Microsoft Visual C++.
+    library_names_spec="\${libname}\`echo \${release} | sed -e s/[.]/-/g\`\${versuffix}.dll"
+    soname_spec="\${libname}\`echo \${release} | sed -e s/[.]/-/g\`\${versuffix}.lib"
+    postinstall_cmds="\$install_prog \`echo \$dir/\$srcname | sed -e 's/\\.dll/\\.lib/'\` \$destdir"
     ;;
   *)
     library_names_spec='${libname}`echo ${release} | sed -e 's/[[.]]/-/g'`${versuffix}.dll $libname.lib'
