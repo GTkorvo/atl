@@ -1095,17 +1095,17 @@ attr_list_subset (attr_list l1, attr_list l2)
   return keep_going;
 }
 	
+extern
+void
+set_string_and_atom(atom_server as, char *str, atom_t atom);
+
 extern atom_t set_attr_atom_and_string(str, atom)
 const char *str;
 atom_t atom;
 {
-
-   atom_t ret_val;
-
    init_global_atom_server(&global_as);
-   ret_val = set_string_and_atom(global_as, (char *)str, atom);
-   return ret_val;
-
+   set_string_and_atom(global_as, (char *)str, atom);
+   return atom;
 } 
   
 typedef struct Attr_tmp_buffer {

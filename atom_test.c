@@ -6,6 +6,11 @@
 #include <atl.h>
 #include <ctype.h>
 #include <string.h>
+#include <gen_thread.h>
+
+extern
+void
+set_string_and_atom(atom_server as, char *str, atom_t atom);
 
 void
 print_atom(int atom)

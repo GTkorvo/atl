@@ -359,6 +359,7 @@ process_data(char* buf, char *response)
 
 static void
 handle_udp_data(sockfd)
+int sockfd;
 {
     int numbytes;
     int     addr_len = sizeof(struct sockaddr);
@@ -391,6 +392,7 @@ handle_udp_data(sockfd)
 
 static void
 handle_tcp_data(sockfd)
+int sockfd;
 {
     int numbytes;
     unsigned char len;
