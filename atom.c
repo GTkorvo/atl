@@ -259,7 +259,6 @@ atom_cache_type cache_style;
 		atom_server_host);
 	exit(1);
     }
-    as->cache_style = cache_style;
 
     DExchange_register_format(as->de, "get atom", Atom_send_get_msg_flds);
     DExchange_set_format_fixed(as->de, "get atom", 1);
@@ -279,6 +278,7 @@ atom_cache_type cache_style;
     Tcl_InitHashTable(&as->value_hash_table, TCL_ONE_WORD_KEYS);
     as->hash_lock = thr_mutex_alloc();
     as->next_atom_id = 1000;
+    as->cache_style = cache_style;
 #ifdef USE_DATAEXCHANGE
     {
 	send_get_atom_msg_ptr return_msg;
