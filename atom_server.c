@@ -210,7 +210,6 @@ get_qual_hostname(char *buf, int len)
 {
     struct hostent *host;
 
-    char *network_string = getenv("DEXCHANGE_NETWORK");
     gethostname(buf, len);
     buf[len - 1] = '\0';
     if (memchr(buf, '.', strlen(buf)) == NULL) {
@@ -246,10 +245,19 @@ get_qual_hostname(char *buf, int len)
     }
     if (((host = gethostbyname(buf)) == NULL) ||
 	(memchr(buf, '.', strlen(buf)) == NULL)){
-	static int warn_once = 0;
-	if (warn_once == 0) {
-	    warn_once++;
-	    printf("Attempts to establish your fully qualified hostname have failed horribly.  Sorry.\n");
+	/* just use the bloody IP address */
+	gethostname(buf, len);
+	host  = gethostbyname(buf);
+	if (host != NULL) {
+	    char *tmp = inet_ntoa(*(struct in_addr*)(host->h_addr_list[0]));
+	    strncpy(buf, tmp, len);
+	} else {
+	    static int warn_once = 0;
+	    if (warn_once == 0) {
+		warn_once++;
+		printf("Attempts to establish your fully qualified hostname, or indeed any useful\nnetwork address, have failed horribly.  Sorry.\n");
+		strcpy(buf, "Unknown");
+	    }
 	}
     }
 }
