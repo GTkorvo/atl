@@ -2087,15 +2087,16 @@ else
     # Microsoft Visual C++.
     # hardcode_libdir_flag_spec is actually meaningless, as there is
     # no search path for DLLs.
-    always_export_symbols=yes
     hardcode_libdir_flag_spec=' '
     allow_undefined_flag=unsupported
-    export_symbols_cmds='$NM $libobjs $convenience | $global_symbol_pipe | sed '\''/^B/ s/\(.*\)/\1 DATA/; s/^.[[ 	]][[^ 	]]*[[ 	]]//'\'' | sort | uniq > $export_symbols'
-    archive_expsym_cmds='echo EXPORTS | cat - $export_symbols > ${export_symbols}D~$CC -o $lib $libobjs $compiler_flags `echo "$deplibs" | sed -e '\''s/ -lc$//;s/\.dll/\.lib/'\''` -link -dll /def:${export_symbols}D'
+    # Tell ltmain to make .lib files, not .a files.
+    libext=lib
+    # FIXME: Setting linknames here is a bad hack.
+    archive_cmds='$CC -o $lib $libobjs $compiler_flags `echo "$deplibs" | sed -e '\''s/ -lc$//'\''` -link -dll~linknames='
     # The linker will automatically build a .lib file if we build a DLL.
-    old_archive_from_new_cmds=''
+    old_archive_from_new_cmds='true'
     # FIXME: Should let the user specify the lib program.
-    old_archive_cmds='$CC /lib -o \$oldlib $oldobjs$old_deplibs'
+    old_archive_cmds='lib /OUT:$oldlib$oldobjs$old_deplibs'
     fix_srcfile_path='`cygpath -w "$srcfile"`'
     ;;
 
@@ -2551,20 +2552,10 @@ cygwin* | mingw* | pw32*)
     ;;
   yes,mingw*)
     library_names_spec='${libname}`echo ${release} | sed -e 's/[[.]]/-/g'`${versuffix}.dll'
-    sys_lib_search_path_spec=`$CC -print-search-dirs | grep "^libraries:" | sed -e "s/^libraries://" -e "s/;/ /g"`
+    sys_lib_search_path_spec="/usr/lib/mingw /usr/lib/w32api "`$CC -print-search-dirs | grep "^libraries:" | sed -e "s/^libraries://" -e "s/;/ /g"`
     ;;
   yes,pw32*)
     library_names_spec='`echo ${libname} | sed -e 's/^lib/pw/'``echo ${release} | sed -e 's/[.]/-/g'`${versuffix}.dll'
-    ;;
-  ,cygwin*)
-    # When not using gcc, we currently assume that we are using
-    # Microsoft Visual C++.
-    library_names_spec="\${libname}\`echo \${release} | sed -e s/[.]/-/g\`\${versuffix}.dll"
-    soname_spec="\${libname}\`echo \${release} | sed -e s/[.]/-/g\`\${versuffix}.lib"
-    postinstall_cmds="\$install_prog \`echo \$dir/\$srcname | sed -e 's/\\.dll/\\.lib/;s/T\$//'\` \$destdir"
-    # Tell ltmain to make .lib files, not .a files.
-    libext=lib
-    libname_spec='$name'
     ;;
   *)
     library_names_spec='${libname}`echo ${release} | sed -e 's/[[.]]/-/g'`${versuffix}.dll $libname.lib'

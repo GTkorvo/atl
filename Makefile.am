@@ -68,7 +68,7 @@ atom_test_DEPENDENCIES = libatl.la
 atom_server_SOURCES = atom_server.c tclHash.c
 atom_server_LDADD =  $(SOCKET_LIBS)
 atom_server_LDFLAGS = -static
-atom_server_DEPENDENCIES = libatl.la
+atom_server_DEPENDENCIES =
 
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck

@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
-#endif
 #include <unix_defs.h>
+#endif
 #else
 #ifndef __KERNEL__
 #define __KERNEL__

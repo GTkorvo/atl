@@ -5,11 +5,17 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+#ifndef HAVE_WINDOWS_H
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#else
+#include <windows.h>
+#include <winsock.h>
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
 #include <fcntl.h>
-#include <tcl.h>
+#include <tclHash.h>
 typedef int atom_t;
 #include "atom_internal.h"
 
@@ -101,6 +107,33 @@ Initialize(void)
     Tcl_InitHashTable(valuehash, TCL_ONE_WORD_KEYS);
 }
 
+#ifndef O_NONBLOCK
+#define O_NONBLOCK 0x80
+#endif
+static void
+set_blocking(fd, block)
+int fd;
+int block;
+{
+    int flags = 0;
+    if (block) {
+	flags &= (~O_NONBLOCK);
+    } else {
+	flags |= O_NONBLOCK;
+    }
+#ifndef HAVE_WINDOWS_H
+    if (fcntl(fd, F_SETFL, flags) < 0) {
+	perror("fcntl");
+	exit(1);
+    }
+#else
+    if (ioctlsocket(fd, FIONBIO, (unsigned long*)!block) != 0) {
+	perror("ioctlsocket");
+	exit(1);
+    }
+#endif
+}
+
 int
 main(argc, argv)
 int argc;
@@ -154,12 +187,7 @@ char **argv;
 	    perror("socket");
 	    exit(1);
 	}
-	flags = fcntl(test_fd, F_GETFL);
-	flags |= O_NONBLOCK;
-	if (fcntl(test_fd, F_SETFL, flags) < 0) {
-	    perror("fcntl");
-	    exit(1);
-	}
+	set_blocking(test_fd, 0);
 	cur_time = start_time = time(NULL);
 	while ((response_char != 'R') && ((cur_time - start_time < 30))) {
 	    if ((numbytes = sendto(test_fd, &ping_char, 1, 0,

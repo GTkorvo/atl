@@ -9,10 +9,15 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
-#include <netdb.h>
 #include <sys/types.h>
+#ifndef HAVE_WINDOWS_H
+#include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#else
+#include <windows.h>
+#include <winsock.h>
+#endif
 #include <fcntl.h>
 
 #include "unix_defs.h"
@@ -47,6 +52,9 @@ typedef struct _atom_server {
 
 static char *atom_server_host = NULL;
 
+#ifndef O_NONBLOCK
+#define O_NONBLOCK 0x80
+#endif
 static void
 set_blocking(as, block)
 atom_server as;
@@ -63,10 +71,17 @@ int block;
     } else {
 	as->flags |= O_NONBLOCK;
     }
+#ifndef HAVE_WINDOWS_H
     if (fcntl(as->sockfd, F_SETFL, as->flags) < 0) {
 	perror("fcntl");
 	exit(1);
     }
+#else
+    if (ioctlsocket(as->sockfd, FIONBIO, (unsigned long*)!block) != 0) {
+	perror("ioctlsocket");
+	exit(1);
+    }
+#endif
 }
 
 static void
@@ -340,12 +355,33 @@ atom_server as;
     return as->server_id;
 }
 
+#ifdef HAVE_WINDOWS_H
+/* Winsock init stuff, ask for ver 1.1 */
+static WORD wVersionRequested = MAKEWORD(1, 1);
+static WSADATA wsaData;
+
+static void
+nt_socket_init_func()
+{
+    int nErrorStatus;
+    nErrorStatus = WSAStartup(wVersionRequested, &wsaData);
+    if (nErrorStatus != 0) {
+	fprintf(stderr, "Could not initialize windows socket library!");
+	WSACleanup();
+	exit(-1);
+    }
+}
+#else
+static void nt_socket_init_func(){}
+#endif
+
 atom_server
 init_atom_server(cache_style)
 atom_cache_type cache_style;
 {
     atom_server as = (atom_server) malloc(sizeof(atom_server_struct));
 
+    nt_socket_init_func();
     if (atom_server_host == NULL) {	/* environment override */
 	atom_server_host = getenv("ATOM_SERVER_HOST");
     }
@@ -368,8 +404,11 @@ atom_cache_type cache_style;
 	perror("socket");
 	exit(1);
     }
+#ifndef HAVE_WINDOWS_H
     as->flags = fcntl(as->sockfd, F_GETFL);
-
+#else
+    as->flags = 0;
+#endif
     as->their_addr.sin_family = AF_INET;
     as->their_addr.sin_port = htons(PORT);
     as->their_addr.sin_addr = *((struct in_addr *) as->he->h_addr);

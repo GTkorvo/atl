@@ -117,7 +117,7 @@ atom_test_DEPENDENCIES = libatl.la
 atom_server_SOURCES = atom_server.c tclHash.c
 atom_server_LDADD = $(SOCKET_LIBS)
 atom_server_LDFLAGS = -static
-atom_server_DEPENDENCIES = libatl.la
+atom_server_DEPENDENCIES = 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
@@ -156,8 +156,8 @@ DIST_SOURCES = $(libatl_la_SOURCES) $(atom_server_SOURCES) \
 	$(atom_test_SOURCES) $(attr_test_SOURCES)
 HEADERS = $(include_HEADERS) $(noinst_HEADERS)
 
-DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) ././stamp-h.in \
-	./stamp-h.in Makefile.am Makefile.in aclocal.m4 config.h.in \
+DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) ./stamp-h1.in \
+	Makefile.am Makefile.in aclocal.m4 config.h.in \
 	config/config.guess config/config.sub config/install-sh \
 	config/ltconfig config/ltmain.sh config/missing \
 	config/mkinstalldirs configure configure.in
@@ -192,28 +192,28 @@ $(srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(srcdir)/configure.in $(ACLOCAL_M4)
 
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.in 
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
-config.h: stamp-h
+config.h: stamp-h1
 	@if test ! -f $@; then \
-		rm -f stamp-h; \
-		$(MAKE) stamp-h; \
+		rm -f stamp-h1; \
+		$(MAKE) stamp-h1; \
 	else :; fi
-stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
-	@rm -f stamp-h stamp-hT
-	@echo timestamp > stamp-hT 2> /dev/null
+stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
+	@rm -f stamp-h1 stamp-h1T
+	@echo timestamp > stamp-h1T 2> /dev/null
 	cd $(top_builddir) \
 	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
 	     $(SHELL) ./config.status
-	@mv stamp-hT stamp-h
-$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/./stamp-h.in
+	@mv stamp-h1T stamp-h1
+$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/./stamp-h1.in
 	@if test ! -f $@; then \
-		rm -f $(srcdir)/./stamp-h.in; \
-		$(MAKE) $(srcdir)/./stamp-h.in; \
+		rm -f $(srcdir)/./stamp-h1.in; \
+		$(MAKE) $(srcdir)/./stamp-h1.in; \
 	else :; fi
-$(srcdir)/./stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	@rm -f $(srcdir)/./stamp-h.in $(srcdir)/./stamp-h.inT
-	@echo timestamp > $(srcdir)/./stamp-h.inT 2> /dev/null
+$(srcdir)/./stamp-h1.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	@rm -f $(srcdir)/./stamp-h1.in $(srcdir)/./stamp-h1.inT
+	@echo timestamp > $(srcdir)/./stamp-h1.inT 2> /dev/null
 	cd $(top_srcdir) && $(AUTOHEADER)
-	@mv $(srcdir)/./stamp-h.inT $(srcdir)/./stamp-h.in
+	@mv $(srcdir)/./stamp-h1.inT $(srcdir)/./stamp-h1.in
 
 distclean-hdr:
 	-rm -f config.h
@@ -294,7 +294,7 @@ install-includeHEADERS: $(include_HEADERS)
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f="`echo $$p | sed -e 's|^.*/||'`"; \
 	  echo " $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(includedir)/$$f"; \
-	  cmp -s $$d$$p $(DESTDIR)$(includedir)/$$f || $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(includedir)/$$f; \
+	  $(INSTALL_HEADER) $$d$$p $(DESTDIR)$(includedir)/$$f; \
 	done
 
 uninstall-includeHEADERS:
@@ -348,7 +348,7 @@ GZIP_ENV = --best
 distdir: $(DISTFILES)
 	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/./. $(distdir)/config
+	$(mkinstalldirs) $(distdir)/config
 	@for file in $(DISTFILES); do \
 	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
