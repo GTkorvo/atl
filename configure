@@ -6947,15 +6947,15 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 
 LIBTOOL="$LIBTOOL --silent"
 
-test "$CC" = "gcc" && CFLAGS="$CFLAGS -Wall"
-
 CPPFLAGS="$CPPFLAGS -DATL_SOURCE"
 LIB_PRE=lib
 LIB_POST=.a
 case "$host_os" in
   winnt* | cygwin | mingw* )
-    LIB_POST=".lib"
-    LIB_PRE=""
+    if test "$GCC" = no ; then
+	LIB_POST=".lib"
+	LIB_PRE=""
+    fi
     SOCKET_LIBS="$LIBS -lwsock32 -luser32 -ladvapi32"
     ;;
 esac

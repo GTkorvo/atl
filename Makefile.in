@@ -156,8 +156,8 @@ DIST_SOURCES = $(libatl_la_SOURCES) $(atom_server_SOURCES) \
 	$(atom_test_SOURCES) $(attr_test_SOURCES)
 HEADERS = $(include_HEADERS) $(noinst_HEADERS)
 
-DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) ./stamp-h1.in \
-	Makefile.am Makefile.in aclocal.m4 config.h.in \
+DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) ././stamp-h1.in \
+	./stamp-h1.in Makefile.am Makefile.in aclocal.m4 config.h.in \
 	config/config.guess config/config.sub config/install-sh \
 	config/ltconfig config/ltmain.sh config/missing \
 	config/mkinstalldirs configure configure.in
@@ -348,7 +348,7 @@ GZIP_ENV = --best
 distdir: $(DISTFILES)
 	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/config
+	$(mkinstalldirs) $(distdir)/./. $(distdir)/config
 	@for file in $(DISTFILES); do \
 	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
