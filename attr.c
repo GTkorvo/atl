@@ -34,7 +34,10 @@ typedef struct _attr_list_struct {
     } l;
 } attr_list_struct;
 
-__declspec(dllexport) atom_server global_as = NULL;
+#ifdef HAVE_WINDOWS_H
+__declspec(dllexport) 
+#endif
+atom_server global_as = NULL;
 
 static
 void
@@ -67,7 +70,7 @@ atom_server *asp;
 	char addr_tmp[64];
 	int value;
 	*asp = init_atom_server(prefill_atom_cache);
-#ifdef HAVE_WINDOWS_H
+#ifndef HAVE_WINDOWS_H
 	sprintf(addr_tmp, "%s=%lx", var_str, (long)*asp);
 	addr_str = strdup(addr_tmp);
 	value = putenv(addr_str);
