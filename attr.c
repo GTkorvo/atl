@@ -801,7 +801,7 @@ attr_list list;
 	    break;
 	case '4':
 	    val_type = Attr_Int4;
-            val = (attr_value) atoi(value+1);
+            val = (attr_value) (long) atoi(value+1);
             end = strchr(value+1, ',') + 1;
  	    if (end == (char*)1) end = value + strlen(value);
 	    break;
@@ -814,7 +814,7 @@ attr_list list;
 	    break;
 	case 'A':
 	    val_type = Attr_Atom;
-	    val = (attr_value)atoi(value+1);
+	    val = (attr_value)(long)atoi(value+1);
 	    end = strchr(value+1, ',') + 1;
 	    if (end == (char*)1) end = value + strlen(value);
 	    break;
@@ -955,7 +955,7 @@ get_attr(attr_list list,int index, atom_t *name,
 	if (index < list->l.list.iattrs->int_attr_count) {
 	    *name = list->l.list.iattrs->iattr[index].attr_id;
 	    *val_type = Attr_Int4;
-	    *value = (attr_value) list->l.list.iattrs->iattr[index].value;
+	    *value = (attr_value) (long) list->l.list.iattrs->iattr[index].value;
 	    return 1;
 	}
 	index -= list->l.list.iattrs->int_attr_count;

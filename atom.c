@@ -124,7 +124,7 @@ char *msg;
 			);
 		}
 	    }
-	    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) atom);
+	    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long)atom);
 	    if (entry != NULL) {
 		send_get_atom_msg_ptr atom_entry =
 		(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
@@ -188,7 +188,7 @@ send_get_atom_msg_ptr msg;
     Tcl_SetHashValue(entry, stored);
     /* enter into value hash table */
     entry = Tcl_CreateHashEntry(&as->value_hash_table,
-				(char *) stored->atom, &new);
+				(char *) (long) stored->atom, &new);
     if (!new) {
 	printf("Serious internal error in atom cache.  Duplicate value hash entry.\n");
 	thr_mutex_unlock(as->hash_lock);
@@ -230,7 +230,7 @@ atom_t atom;
 	    return;
 	}
     }
-    entry2 = Tcl_FindHashEntry(&as->value_hash_table, (char *) atom);
+    entry2 = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long) atom);
     thr_mutex_unlock(as->hash_lock);
     if (entry2 != NULL) {
 	send_get_atom_msg_ptr atom_entry =
@@ -533,7 +533,7 @@ atom_t atom;
 	}
 	thr_mutex_lock(as->hash_lock);
     }
-    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) atom);
+    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long) atom);
     thr_mutex_unlock(as->hash_lock);
 
     if (entry == NULL) {

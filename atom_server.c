@@ -49,7 +49,7 @@ atom_to_string(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_hash_tab
     if (verbose)
 	printf("Doing a atom_to_string\n");
 
-    entry = Tcl_FindHashEntry(value_hash_table, (char *) value);
+    entry = Tcl_FindHashEntry(value_hash_table, (char *) (long) value);
 
     if (entry) {
 	value_string = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
@@ -93,7 +93,8 @@ set_string_and_atom(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_has
     stored->atom = set_atom;
     entry = Tcl_CreateHashEntry(string_hash_table, a, &new);
     Tcl_SetHashValue(entry, stored);
-    entry = Tcl_CreateHashEntry(value_hash_table, (char *) stored->atom, &new);
+    entry = Tcl_CreateHashEntry(value_hash_table, (char *) (long) stored->atom,
+				&new);
     Tcl_SetHashValue(entry, stored);
     return_msg = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
     return return_msg->atom;	/* Success */
@@ -335,7 +336,7 @@ process_data(char* buf, char *response)
 		return;
 	    }
 	}
-	entry = Tcl_FindHashEntry(valuehash, (char *) atom);
+	entry = Tcl_FindHashEntry(valuehash, (char *) (long) atom);
 	if (entry != NULL) {
 	    send_get_atom_msg_ptr atom_entry =
 		(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
