@@ -227,31 +227,28 @@ attr_list list2;
     return list1;   
 }
 
-/*
+/* 
  *  merges list2 into list1.  modifies list1, does not modify list2
  */
-extern void 
-attr_merge_lists (list1, list2)
-     attr_list list1;
-     attr_list list2;
+extern void
+attr_merge_lists(list1, list2)
+attr_list list1;
+attr_list list2;
 {
-  attr attr_guy;
-  int i;
-  int c = attr_count (list2);
-  
-  for (i = 0; i < c; i++)
-    {
-	get_attr (list2, i, &attr_guy.attr_id, &attr_guy.val_type,
-			   &attr_guy.value);
-      if (attr_guy.val_type == Attr_String)
-        {
-          char* s = strdup ((char*)attr_guy.value);
-          set_attr (list1, attr_guy.attr_id, attr_guy.val_type, s);
-        }
-      else
-        {
-          set_attr (list1, attr_guy.attr_id, attr_guy.val_type, attr_guy.value);
-        }
+    attr attr_guy;
+    int i;
+    int c = attr_count(list2);
+    /* need to make this more efficient */
+
+    for (i = 0; i < c; i++) {
+	get_attr(list2, i, &attr_guy.attr_id, &attr_guy.val_type,
+		 &attr_guy.value);
+	if (attr_guy.val_type == Attr_String) {
+	    char *s = strdup((char *) attr_guy.value);
+	    set_attr(list1, attr_guy.attr_id, attr_guy.val_type, s);
+	} else {
+	    set_attr(list1, attr_guy.attr_id, attr_guy.val_type, attr_guy.value);
+	}
     }
 }
 
@@ -267,7 +264,7 @@ attr_value value;
 	int count = list->l.list.iattrs->int_attr_count;
 	if (count > 0) {
 	    int size = sizeof(struct int_attr_struct) + 
-			    count* sizeof(int_attr);
+			    (count+1)* sizeof(int_attr);
 	    list->l.list.iattrs = realloc(list->l.list.iattrs, size);
 	}
 	list->l.list.iattrs->iattr[count].attr_id = attr_id;
@@ -1180,6 +1177,7 @@ encode_attr_for_xmit(attr_list l, AttrBuffer b, int *length)
     /* then the remaining Attributes */
     recursive_encode(l, b, Attr_Undefined);
     *length = b->tmp_buffer_in_use_size;
+    add_to_tmp_buffer(b, 4);  /* pad at the end */
     return b->tmp_buffer;
 }
 
