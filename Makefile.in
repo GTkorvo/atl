@@ -515,7 +515,6 @@ katl.h:
 #atom_server_LDFLAGS =
 #atom_server_DEPENDENCIES = libatl.la
 
-$(OBJECTS): libtool
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

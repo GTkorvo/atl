@@ -70,6 +70,5 @@ atom_test_DEPENDENCIES = libatl.la
 #atom_server_LDFLAGS =
 #atom_server_DEPENDENCIES = libatl.la
 
-$(OBJECTS): libtool
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
