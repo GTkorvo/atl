@@ -482,7 +482,7 @@ int indent;
 		print_str = "<null attr name>";
             printf("    { %s ('%c%c%c%c'), Attr_Atom, %s ('%c%c%c%c') }\n", 
 		   print_name, c[0], c[1], c[2], c[3],
-                   (char *) atom_str, cv[0], cv[1], cv[2], cv[3]);
+                   (char *) print_str, cv[0], cv[1], cv[2], cv[3]);
 	    if (atom_str) free(atom_str);
             break;
 	}
