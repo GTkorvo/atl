@@ -2113,7 +2113,7 @@ fi
 if test -n "$CHAOS_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $CHAOS_HOMEDIR/include/io.h $CHAOS_HOMEDIR/share/io.h $CHAOS_HOMEDIR/include/$hppcel_cv_archive/io.h $CHAOS_HOMEDIR/lib/$hppcel_cv_archive/io.h $CHAOS_HOMEDIR/lib/io.h"
 fi
-if test -n "$PARALLEL_HOMEDIR" -n "$hppcel_cv_archive"; then
+if test -n "$PARALLEL_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $PARALLEL_HOMEDIR/include/io.h $PARALLEL_HOMEDIR/share/io.h $PARALLEL_HOMEDIR/include/$hppcel_cv_archive/io.h $PARALLEL_HOMEDIR/lib/$hppcel_cv_archive/io.h $PARALLEL_HOMEDIR/lib/io.h"
 fi
 search_list="$search_list /usr/lib/io.h /usr/local/lib/io.h /usr/include/io.h /usr/share/io.h /opt/pbio/lib/io.h /opt/pbio/include/io.h /opt/misc/lib/io.h /opt/misc/include/io.h /opt/misc/share/io.h"
@@ -2179,7 +2179,7 @@ fi
 if test -n "$CHAOS_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $CHAOS_HOMEDIR/include/${LIB_PRE}IO${LIB_POST} $CHAOS_HOMEDIR/share/${LIB_PRE}IO${LIB_POST} $CHAOS_HOMEDIR/include/$hppcel_cv_archive/${LIB_PRE}IO${LIB_POST} $CHAOS_HOMEDIR/lib/$hppcel_cv_archive/${LIB_PRE}IO${LIB_POST} $CHAOS_HOMEDIR/lib/${LIB_PRE}IO${LIB_POST}"
 fi
-if test -n "$PARALLEL_HOMEDIR" -n "$hppcel_cv_archive"; then
+if test -n "$PARALLEL_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $PARALLEL_HOMEDIR/include/${LIB_PRE}IO${LIB_POST} $PARALLEL_HOMEDIR/share/${LIB_PRE}IO${LIB_POST} $PARALLEL_HOMEDIR/include/$hppcel_cv_archive/${LIB_PRE}IO${LIB_POST} $PARALLEL_HOMEDIR/lib/$hppcel_cv_archive/${LIB_PRE}IO${LIB_POST} $PARALLEL_HOMEDIR/lib/${LIB_PRE}IO${LIB_POST}"
 fi
 search_list="$search_list /usr/lib/${LIB_PRE}IO${LIB_POST} /usr/local/lib/${LIB_PRE}IO${LIB_POST} /usr/include/${LIB_PRE}IO${LIB_POST} /usr/share/${LIB_PRE}IO${LIB_POST} /opt/pbio/lib/${LIB_PRE}IO${LIB_POST} /opt/pbio/include/${LIB_PRE}IO${LIB_POST} /opt/misc/lib/${LIB_PRE}IO${LIB_POST} /opt/misc/include/${LIB_PRE}IO${LIB_POST} /opt/misc/share/${LIB_PRE}IO${LIB_POST}"
@@ -2265,7 +2265,7 @@ fi
 if test -n "$CHAOS_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $CHAOS_HOMEDIR/include/gen_thread.h $CHAOS_HOMEDIR/share/gen_thread.h $CHAOS_HOMEDIR/include/$hppcel_cv_archive/gen_thread.h $CHAOS_HOMEDIR/lib/$hppcel_cv_archive/gen_thread.h $CHAOS_HOMEDIR/lib/gen_thread.h"
 fi
-if test -n "$PARALLEL_HOMEDIR" -n "$hppcel_cv_archive"; then
+if test -n "$PARALLEL_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $PARALLEL_HOMEDIR/include/gen_thread.h $PARALLEL_HOMEDIR/share/gen_thread.h $PARALLEL_HOMEDIR/include/$hppcel_cv_archive/gen_thread.h $PARALLEL_HOMEDIR/lib/$hppcel_cv_archive/gen_thread.h $PARALLEL_HOMEDIR/lib/gen_thread.h"
 fi
 search_list="$search_list /usr/lib/gen_thread.h /usr/local/lib/gen_thread.h /usr/include/gen_thread.h /usr/share/gen_thread.h /opt/gen_thread/lib/gen_thread.h /opt/gen_thread/include/gen_thread.h /opt/misc/lib/gen_thread.h /opt/misc/include/gen_thread.h /opt/misc/share/gen_thread.h"
@@ -2331,7 +2331,7 @@ fi
 if test -n "$CHAOS_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $CHAOS_HOMEDIR/include/${LIB_PRE}genthreads${LIB_POST} $CHAOS_HOMEDIR/share/${LIB_PRE}genthreads${LIB_POST} $CHAOS_HOMEDIR/include/$hppcel_cv_archive/${LIB_PRE}genthreads${LIB_POST} $CHAOS_HOMEDIR/lib/$hppcel_cv_archive/${LIB_PRE}genthreads${LIB_POST} $CHAOS_HOMEDIR/lib/${LIB_PRE}genthreads${LIB_POST}"
 fi
-if test -n "$PARALLEL_HOMEDIR" -n "$hppcel_cv_archive"; then
+if test -n "$PARALLEL_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $PARALLEL_HOMEDIR/include/${LIB_PRE}genthreads${LIB_POST} $PARALLEL_HOMEDIR/share/${LIB_PRE}genthreads${LIB_POST} $PARALLEL_HOMEDIR/include/$hppcel_cv_archive/${LIB_PRE}genthreads${LIB_POST} $PARALLEL_HOMEDIR/lib/$hppcel_cv_archive/${LIB_PRE}genthreads${LIB_POST} $PARALLEL_HOMEDIR/lib/${LIB_PRE}genthreads${LIB_POST}"
 fi
 search_list="$search_list /usr/lib/${LIB_PRE}genthreads${LIB_POST} /usr/local/lib/${LIB_PRE}genthreads${LIB_POST} /usr/include/${LIB_PRE}genthreads${LIB_POST} /usr/share/${LIB_PRE}genthreads${LIB_POST} /opt/gen_thread/lib/${LIB_PRE}genthreads${LIB_POST} /opt/gen_thread/include/${LIB_PRE}genthreads${LIB_POST} /opt/misc/lib/${LIB_PRE}genthreads${LIB_POST} /opt/misc/include/${LIB_PRE}genthreads${LIB_POST} /opt/misc/share/${LIB_PRE}genthreads${LIB_POST}"

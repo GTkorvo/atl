@@ -895,7 +895,7 @@ search_list="$search_list `pwd`/../$1/$2 `pwd`/../lib/$2 `pwd`/../include/$2 `pw
 if test -n "$CHAOS_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $CHAOS_HOMEDIR/include/$2 $CHAOS_HOMEDIR/share/$2 $CHAOS_HOMEDIR/include/$hppcel_cv_archive/$2 $CHAOS_HOMEDIR/lib/$hppcel_cv_archive/$2 $CHAOS_HOMEDIR/lib/$2"
 fi
-if test -n "$PARALLEL_HOMEDIR" -n "$hppcel_cv_archive"; then
+if test -n "$PARALLEL_HOMEDIR" -a -n "$hppcel_cv_archive"; then
 search_list="$search_list $PARALLEL_HOMEDIR/include/$2 $PARALLEL_HOMEDIR/share/$2 $PARALLEL_HOMEDIR/include/$hppcel_cv_archive/$2 $PARALLEL_HOMEDIR/lib/$hppcel_cv_archive/$2 $PARALLEL_HOMEDIR/lib/$2"
 fi
 search_list="$search_list /usr/lib/$2 /usr/local/lib/$2 /usr/include/$2 /usr/share/$2 /opt/$1/lib/$2 /opt/$1/include/$2 /opt/misc/lib/$2 /opt/misc/include/$2 /opt/misc/share/$2"
@@ -1529,6 +1529,17 @@ AC_DEFUN(AC_STRUCT_FDS_BITS,
 ac_cv_struct_fds_bits=yes, ac_cv_struct_fds_bits=no)])
 if test $ac_cv_struct_fds_bits = yes; then
   AC_DEFINE(HAVE_FDS_BITS,1,[Define if fd_set has element fds_bits])
+fi
+])
+AC_DEFUN(AC_STRUCT_IOVEC,
+[AC_CACHE_CHECK([whether struct iovec is in sys/uio.h],
+  ac_cv_struct_iovec,
+[AC_TRY_COMPILE([#include <sys/types.h>
+#include <sys/uio.h>],
+[struct iovec *vec;],
+  ac_cv_struct_iovec=yes, ac_cv_struct_iovec=no)])
+if test $ac_cv_struct_iovec = no; then
+  AC_DEFINE(NEED_IOVEC_DEFINE)
 fi
 ])
 
