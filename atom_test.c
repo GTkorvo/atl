@@ -54,7 +54,7 @@ main()
 		printf("\tMissing number\n");
 		continue;
 	    }
-	    while (isspace(*end)) end++;
+	    while (isspace((int)*end)) end++;
 	    if (*end != 0) printf("\tskipped %s at end of number\n", end);
 	    printf("inquiring for atom \n");
 	    print_atom(atom); printf("\n");
@@ -63,14 +63,14 @@ main()
 		printf("	string translation is \"%s\"\n", str);
 		free(str);
 	    } else {
-		printf("	no atom %d\n", atom);
+		printf("	no atom %ld\n", atom);
 	    }
 	    break;
 	}
 	case 'S': {
 	    char *str = &line[1];
 	    int atom;
-	    while (isspace(*str)) str++;
+	    while (isspace((int)*str)) str++;
 	    printf("inquiring for string \"%s\"\n", str);
 	    atom = atom_from_string(as, str);
 	    printf("\tatom translation is ");print_atom(atom);
@@ -88,7 +88,7 @@ main()
 		printf("\tMissing number\n");
 		continue;
 	    }
-	    while (isspace(*end)) end++;
+	    while (isspace((int)*end)) end++;
 	    if (*end == 0) {
 		printf("\tMissing string\n");
 		continue;

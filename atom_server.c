@@ -175,7 +175,6 @@ char **argv;
 						 * struct */
     {
 	char ping_char = 'P';
-	int flags;
 	int start_time;
 	int cur_time;
 	int test_fd;
