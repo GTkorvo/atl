@@ -185,6 +185,13 @@ attr_list list;
     }
 }
 
+extern int
+attr_list_ref_count(list)
+attr_list list;
+{
+    return (list->ref_count);
+}
+
 /* operations on attr_lists */
 extern attr_list
 attr_join_lists(list1, list2)
