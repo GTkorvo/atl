@@ -74,6 +74,7 @@ atom_server *asp;
 	sprintf(addr_tmp, "%s=%lx", var_str, (long)*asp);
 	addr_str = strdup(addr_tmp);
 	value = putenv(addr_str);
+	if (value != 0) perror("putenv failed\n");
 #else
 	sprintf(addr_tmp, "%lx", (long)*asp);
 	addr_str = strdup(addr_tmp);
