@@ -442,6 +442,8 @@ static void
 close_client(int client)
 {
     if (verbose) LOG("Closing client %d\n", client);
+    if (client == conn_sock_inet) return;
+    if (client == udp_sock) return;
     clients[client].created = -1;
     close(client);
     FD_CLR(client, &server_fdset);
@@ -451,16 +453,18 @@ static void
 server_init(int udp_socket, int tcp_socket)
 {
     int max_fd = FD_SETSIZE;	/* returns process fd table size */
+    int i;
     FD_ZERO(&server_fdset);
     udp_sock = udp_socket;
     conn_sock_inet = tcp_socket;
     FD_SET(udp_socket, &server_fdset);
     FD_SET(tcp_socket, &server_fdset);
     clients = (ASClient)malloc(sizeof(struct _ASClient)*max_fd);
-    clients[udp_socket].created = -1;
-    clients[tcp_socket].created = -1;
-    memset((char*)clients, 0, sizeof(struct _ASClient) *max_fd);
+    for(i=0; i < max_fd; i++) {
+	clients[i].created = -1;
+    }
 }
+
 #define CONN_TIMEOUT_INTERVAL 3600
 
 static void
