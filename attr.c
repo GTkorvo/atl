@@ -317,6 +317,7 @@ attr_value value;
 		list->l.list.iattrs->iattr[index].value = (int4)(long)value;
 		return 1;
 	    }
+	    index++;
 	}
     } else {
 	while (index < list->l.list.iattrs->other_attr_count) {
@@ -325,6 +326,7 @@ attr_value value;
 		list->l.list.attributes[index].value = value;
 		return 1;
 	    }
+	    index++;
 	}
     }
     return 0;  
