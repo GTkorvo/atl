@@ -1475,9 +1475,9 @@ unsigned int len;
     char * buf;
     int buflen = 0;
     int c1, c2, c3;
-    int maxlen = len*4/3 + 3;
+    int maxlen = len*4/3 + 4;
 #ifdef OVERKILL
-    maxlen = len*2 + 1;
+    maxlen = len*2 + 2;
 #endif
 
     if((buf = calloc(maxlen,sizeof(char))) == NULL)
