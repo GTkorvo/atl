@@ -62,7 +62,7 @@ typedef struct attr_opaque {
 } attr_opaque, *attr_opaque_p;
 
 /* operations on attr_lists */
-extern attr_list create_attr_list();
+extern attr_list create_attr_list(void);
 
 extern void free_attr_list ARGS((attr_list list));
 
@@ -118,7 +118,7 @@ attr_list
 attr_list_from_string ARGS((char * str));
 
 extern
-AttrBuffer create_AttrBuffer();
+AttrBuffer create_AttrBuffer(void);
 
 void
 free_AttrBuffer ARGS((AttrBuffer buf));
