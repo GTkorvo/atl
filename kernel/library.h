@@ -66,7 +66,11 @@ extern int (*sys_socket)    (int family, int type, int protocol);
 
 extern int (*sys_connect)   (int fd, struct sockaddr *uservaddr, int addrlen);
 
+#if 0
 extern struct hostent *lookup_name(const char *name);
+#else
+#define lookup_name(n)      (NULL)
+#endif
 
 extern int socket (int family, int type, int protocol);
 extern int setsockopt (int fd, int level, int optname, 

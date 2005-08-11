@@ -1,32 +1,38 @@
 #include "config.h"
 #include "atl.h"
 
-#ifndef MODULE
-#include <config.h>
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
+#ifndef LINUX_KERNEL_MODULE
+#  include <config.h>
+#  ifdef HAVE_WINDOWS_H
+#    include <windows.h>
+#  else
+#    include <ctype.h>
+#    include <stdio.h>
+#    include <stdlib.h>
+#    include <string.h>
+#    ifdef HAVE_MALLOC_H
+#      include <malloc.h>
+#    endif
+#    include <unix_defs.h>
+#  endif
 #else
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
-#include <unix_defs.h>
-#endif
-#else
-#ifndef __KERNEL__
-#define __KERNEL__
+#  ifndef __KERNEL__
+#    define __KERNEL__
+#  endif
+#  ifndef MODULE
+#    define MODULE
+#  endif
+
+#  include "kernel/katl.h"
+#  include "kernel/library.h"
+#  include <linux/ctype.h>
+#  include "kernel/kernel_defs.h"
 #endif
 
-#include "kernel/katl.h"
-#include "kernel/library.h"
-#include <linux/ctype.h>
-#include "kernel/kernel_defs.h"
-#endif
 #include "assert.h"
-#include "cercs_env.h"
+#ifndef LINUX_KERNEL_MODULE
+#  include "cercs_env.h"
+#endif
 
 #if SIZEOF_INT == 4
 typedef int int4;
@@ -81,7 +87,12 @@ atom_server global_as = NULL;
 static int use_base64_string_encoding = 1;
 
 #ifdef MODULE
-#define cercs_getenv(x) getenv(x)
+char * atl_getenv(const char *);
+int    atl_setenv(const char *, const char *, int);
+char * atl_strdup(char *);
+#define cercs_getenv(x) atl_getenv(x)
+#define getenv atl_getenv
+#define strdup  atl_strdup
 #endif
 static
 void
@@ -124,7 +135,7 @@ atom_server *asp;
 #ifdef MODULE
 	sprintf(addr_tmp, "%lx", (long)*asp);
 	addr_str = strdup(addr_tmp);
-	setenv(var_str, addr_str, 1);
+	atl_setenv(var_str, addr_str, 1);
 #else
 	sprintf(addr_tmp, "%s=%lx", var_str, (long)*asp);
 	addr_str = strdup(addr_tmp);
@@ -1186,7 +1197,8 @@ unsigned int size;
 
     if (buf->tmp_buffer_size == 0) {
 	int tmp_size = Max(size, TMP_BUFFER_INIT_SIZE);
-	buf->tmp_buffer = calloc(tmp_size, sizeof(char));
+	buf->tmp_buffer = malloc(tmp_size * sizeof(char));
+	if(buf->tmp_buffer) memset(buf->tmp_buffer, 0, tmp_size * sizeof(char));
     }
     if (size > buf->tmp_buffer_size) {
 	buf->tmp_buffer = realloc(buf->tmp_buffer, size);
@@ -1480,8 +1492,13 @@ unsigned int len;
     maxlen = len*2 + 2;
 #endif
 
-    if((buf = calloc(maxlen,sizeof(char))) == NULL)
+    buf = malloc(maxlen * sizeof(char));
+    if(buf == NULL) {
 	return NULL;
+    } else {
+	memset(buf, 0, maxlen * sizeof(char));
+    }
+
     while (len) {
 	
 	c1 = (unsigned char)*buffer++;

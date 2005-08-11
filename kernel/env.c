@@ -1,8 +1,8 @@
 #include "katl.h"
 
-char **__environ = NULL;
+static char **__environ = NULL;
 
-char *
+static char *
 __findenv(name, offset)
 	register const char *name;
 	int *offset;
@@ -27,7 +27,7 @@ __findenv(name, offset)
 
 /* Return the value of the environment variable NAME.  */
 char *
-getenv (name)
+atl_getenv (name)
      const char *name;
 {
   const size_t len = strlen (name);
@@ -49,7 +49,7 @@ getenv (name)
  *	"value".  If rewrite is set, replace any current value.
  */
 int
-setenv(name, value, rewrite)
+atl_setenv(name, value, rewrite)
 	register const char *name;
 	register const char *value;
 	int rewrite;
@@ -77,14 +77,14 @@ setenv(name, value, rewrite)
 			for (P = __environ, cnt = 0; *P; ++P, ++cnt);
 
 		if (alloced) {			/* just increase size */
-			__environ = (char **)DReallocMM((char *)__environ,
+			__environ = (char **)atl_DReallocMM((char *)__environ,
 			    (size_t)(sizeof(char *) * (cnt + 2)));
 			if (!__environ)
 				return (-1);
 		}
 		else {				/* get new space */
 			alloced = 1;		/* copy old entries into it */
-			P = (char **)DAllocMM((size_t)(sizeof(char *) *
+			P = (char **)atl_DAllocMM((size_t)(sizeof(char *) *
 			    (cnt + 2)));
 			if (!P)
 				return (-1);
@@ -96,7 +96,7 @@ setenv(name, value, rewrite)
 	}
 	for (C = (char *)name; *C && *C != '='; ++C);	/* no `=' in name */
 	if (!(__environ[offset] =			/* name + `=' + value */
-	    DAllocMM((size_t)((int)(C - name) + l_value + 2))))
+	    atl_DAllocMM((size_t)((int)(C - name) + l_value + 2))))
 		return (-1);
 	for (C = __environ[offset]; (*C = *name++) && *C != '='; ++C)
 		;

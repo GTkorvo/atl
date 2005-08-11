@@ -1,15 +1,14 @@
-         U DAllocMM
-         U DFreeMM
-         U DReallocMM
+         U atl_DAllocMM
+         U atl_DFreeMM
+         U atl_DReallocMM
          U ECalls_current
          U ECalls_current_flag
          U __generic_copy_from_user
          U __generic_copy_to_user
          U _ctype
          U atoi
-         U initialize_artemis
          U printk
          U sprintf
          U strdup
          U sys_call_table
-         U sys_exit
+         U atl_sys_exit

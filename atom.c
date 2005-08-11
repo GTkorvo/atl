@@ -1,40 +1,56 @@
 #include "config.h"
 #include "atl.h"
+
+#ifdef LINUX_KERNEL_MODULE
+#  ifndef MODULE
+#    define MODULE
+#  endif
+#  ifndef __KERNEL__
+#    define __KERNEL__
+#  endif
+#  include <linux/kernel.h>
+#  include <linux/module.h>
+#endif
+
 #ifndef MODULE
-#include <assert.h>
-#include <string.h>
-#include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/types.h>
-#ifndef HAVE_WINDOWS_H
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#else
-#include <windows.h>
-#include <winsock.h>
-#endif
-#include <fcntl.h>
+#  include <assert.h>
+#  include <string.h>
+#  include <stdlib.h>
+#  ifdef HAVE_MALLOC_H
+#    include <malloc.h>
+#  endif
+#  include <stdio.h>
+#  include <unistd.h>
+#  include <errno.h>
+#  include <sys/types.h>
+#  ifndef HAVE_WINDOWS_H
+#    include <netdb.h>
+#    include <sys/socket.h>
+#    include <netinet/in.h>
+#    include <netinet/tcp.h>
+#    include <arpa/inet.h>
+#  else
+#    include <windows.h>
+#    include <winsock.h>
+#  endif
+#  include <fcntl.h>
 
-#include "unix_defs.h"
-#include <gen_thread.h>
-#include "cercs_env.h"
+#  include "unix_defs.h"
+#  include <gen_thread.h>
+#  include "cercs_env.h"
 #else
-/* this is just dummied up */
-struct sockaddr_in { };
-
-#include "kernel/katl.h"
-#include "kernel/library.h"
-#include "kernel/kernel_defs.h"
-#include "assert.h"
+#  include "kernel/katl.h"
+#  include "kernel/library.h"
+#  include "kernel/kernel_defs.h"
+#  include "assert.h"
+#  include <linux/in.h>
+char * atl_getenv(const char *);
+int    atl_setenv(const char *, const char *, int);
+char * atl_strdup(char *);
+#  define cercs_getenv    atl_getenv
+#  define strdup          atl_strdup
 #endif
+
 #include "atom_internal.h"
 
 #define MAXDATASIZE 100
@@ -355,9 +371,6 @@ int do_fallback;
 	    printk("Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
 	    return 0;
 	}
-	//make_rt_sock(socket);
-	sock = get_pseudofd(socket, 
-	    (struct socket **)current->artemis->fdartemis);
 #else
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 	    fprintf(stderr, "Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
@@ -398,9 +411,6 @@ int do_fallback;
 		printk("Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
 	       return 0;
 	    }
-	    //make_rt_sock(socket);
-	    sock = get_pseudofd(socket, 
-		(struct socket **)current->artemis->fdartemis);
 #else
 	    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		fprintf(stderr, "Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");

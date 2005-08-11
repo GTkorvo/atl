@@ -13,7 +13,7 @@
 
 #ifdef MODULE
 #define printf	printk
-#define abort()	sys_exit(-1)
+#define abort()	atl_sys_exit(-1)
 #endif
 
 #define assert(expression)  \
