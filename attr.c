@@ -31,7 +31,11 @@
 
 #include "assert.h"
 #ifndef LINUX_KERNEL_MODULE
-#  include "cercs_env.h"
+#  ifdef HAVE_CERCS_ENV_H
+#    include "cercs_env.h"
+#  else
+#    define cercs_getenv(a) ((char *)0)
+#  endif
 #endif
 
 #if SIZEOF_INT == 4

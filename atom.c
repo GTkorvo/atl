@@ -36,8 +36,20 @@
 #  include <fcntl.h>
 
 #  include "unix_defs.h"
-#  include <gen_thread.h>
-#  include "cercs_env.h"
+#  ifdef HAVE_GEN_THREAD_H
+#    include <gen_thread.h>
+#  else
+typedef void *  thr_mutex_t;
+#    define thr_mutex_lock(a)
+#    define thr_mutex_unlock(b)
+#    define thr_mutex_alloc() NULL
+#    define gen_thr_initialized() 0
+#  endif
+#  ifdef HAVE_CERCS_ENV_H
+#    include "cercs_env.h"
+#  else
+#    define cercs_getenv(a) ((char *)0)
+#  endif
 #else
 #  include "kernel/katl.h"
 #  include "kernel/library.h"

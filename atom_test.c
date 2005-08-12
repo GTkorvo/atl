@@ -10,6 +10,7 @@
 #ifdef HAVE_GEN_THREAD_H
 #include <gen_thread.h>
 #else
+#define gen_pthread_init()
 #define gen_thr_initialized()  0
 #define thr_mutex_lock(m)
 #define thr_mutel_unlock(m)
