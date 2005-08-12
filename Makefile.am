@@ -76,7 +76,7 @@ attr_dump_LDADD =  libatl.la
 attr_dump_DEPENDENCIES =  libatl.la
 
 atom_server_SOURCES = atom_server.c
-atom_server_LDADD =  $(SOCKET_LIBS) tclHash.$(OBJEXT) -lcercs_env
+atom_server_LDADD =  $(SOCKET_LIBS) tclHash.$(OBJEXT) @CERCS_ENV_LIB@
 atom_server_LDFLAGS = -static
 atom_server_DEPENDENCIES = tclHash.$(OBJEXT)
 
