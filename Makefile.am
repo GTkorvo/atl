@@ -6,7 +6,7 @@ noinst_HEADERS = tclHash.h unix_defs.h
 
 libatl_la_SOURCES = atom.c attr.c tclHash.c
 libatl_la_DEPENDENCIES = @KERNEL_OBJS@
-libatl_la_LIBADD = @KERNEL_OBJS@ -lcercs_env
+libatl_la_LIBADD = @KERNEL_OBJS@ @CERCS_ENV_LIB@
 libatl_la_LDFLAGS = -no-undefined $(SOCKET_LIBS) $(THREAD_LIBS)
 
 

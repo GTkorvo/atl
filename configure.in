@@ -68,6 +68,7 @@ CERCS_REQUIRE_PACKAGE(gen_thread, gen_thread.h,libgen_thread.la)
 CERCS_REQUIRE_PACKAGE(cercs_env, cercs_env.h,libcercs_env.la)
 if test -n "$cercs_cv_cercs_env_link_dir"; then
 LDFLAGS="$LDFLAGS -L$cercs_cv_cercs_env_link_dir"
+CERCS_ENV_LIB="-lcercs_env"
 fi
 if test -n "$cercs_cv_gen_thread_link_arg"; then
 THREAD_LIBS="-lgen_thread"
@@ -154,6 +155,7 @@ AC_DEFINE_UNQUOTED(ATOM_SERVICE_DOMAIN, "$ATOM_SERVICE_DOMAIN", [Define with the
 SERVER_LIBS=$LIBS
 AC_SUBST(SERVER_LIBS)
 AC_SUBST(THREAD_LIBS)
+AC_SUBST(CERCS_ENV_LIB)
 
 AC_CONFIG_FILES(Makefile)
 AC_OUTPUT
