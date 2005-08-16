@@ -1538,3 +1538,17 @@ unsigned int len;
     return buf;
 }
 
+int atl_base64_decode(input, output)
+unsigned char *input;
+unsigned char *output;
+{
+    return base64_decode(input, output);
+}
+
+char *
+atl_base64_encode(buffer, len)
+char *buffer;
+unsigned int len;
+{
+    return base64_encode(buffer, len);
+}

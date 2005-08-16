@@ -133,6 +133,12 @@ encode_attr_for_xmit ARGS((attr_list l, AttrBuffer b, int *length));
 extern attr_list 
 decode_attr_from_xmit ARGS((void * buf));
 
+extern int 
+atl_base64_decode ARGS((unsigned char *input, unsigned char *output));
+
+extern char *
+atl_base64_encode ARGS((char *buffer, unsigned int len));
+
 #ifdef	__cplusplus
 	   }
 #endif
