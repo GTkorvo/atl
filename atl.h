@@ -45,7 +45,9 @@ char *
 get_server_id ARGS((atom_server as));
 
 typedef enum _attr_value_type { Attr_Undefined, Attr_Int4, Attr_Int8, 
-				Attr_String, Attr_Opaque, Attr_Atom, Attr_List } attr_value_type;
+				Attr_String, Attr_Opaque, Attr_Atom, 
+				Attr_List, Attr_Float16, Attr_Float8, 
+				Attr_Float4 } attr_value_type;
 
 /* opaque type for attr_lists */
 typedef struct _attr_list_struct *attr_list;
@@ -82,15 +84,66 @@ extern int add_attr ARGS((attr_list attrs, atom_t attr_id,
 			  attr_value_type val_type,
 			  attr_value value ));
 
+extern int add_float_attr ARGS((attr_list attrs, atom_t attr_id, 
+				 float value ));
+
+extern int add_double_attr ARGS((attr_list attrs, atom_t attr_id, 
+				 double value ));
+
+extern int add_int_attr ARGS((attr_list attrs, atom_t attr_id, 
+			      int value ));
+
+extern int add_long_attr ARGS((attr_list attrs, atom_t attr_id, 
+			      long value ));
+
+extern int add_string_attr ARGS((attr_list attrs, atom_t attr_id, 
+			      char *value ));
+
 extern int set_attr ARGS((attr_list attrs, atom_t attr_id, 
 			  attr_value_type val_type,
 			  attr_value value ));
 
+extern int set_float_attr ARGS((attr_list attrs, atom_t attr_id, 
+				 float value ));
+
+extern int set_double_attr ARGS((attr_list attrs, atom_t attr_id, 
+				 double value ));
+
+extern int set_int_attr ARGS((attr_list attrs, atom_t attr_id, 
+			      int value ));
+
+extern int set_long_attr ARGS((attr_list attrs, atom_t attr_id, 
+			      long value ));
+
+extern int set_string_attr ARGS((attr_list attrs, atom_t attr_id, 
+				 char *string ));
+
 extern int replace_attr ARGS((attr_list attrs, atom_t attr_id, 
 			      attr_value_type val_type, attr_value value ));
 
+extern int replace_float_attr ARGS((attr_list attrs, atom_t attr_id, 
+				 float value ));
+
+extern int replace_double_attr ARGS((attr_list attrs, atom_t attr_id, 
+				 double value ));
+
+extern int replace_int_attr ARGS((attr_list attrs, atom_t attr_id, 
+			      int value ));
+
+extern int replace_long_attr ARGS((attr_list attrs, atom_t attr_id, 
+			      long value ));
+
+extern int replace_string_attr ARGS((attr_list attrs, atom_t attr_id, 
+				 char *string ));
+
 extern int query_attr ARGS(( attr_list attrs, atom_t attr_id, 
 			    attr_value_type *val_type_p, attr_value *value_p));
+
+extern int get_int_attr ARGS(( attr_list attrs, atom_t attr_id, int *value_p));
+extern int get_long_attr ARGS(( attr_list attrs, atom_t attr_id, long *value_p));
+extern int get_double_attr ARGS(( attr_list attrs, atom_t attr_id, double *value_p));
+extern int get_float_attr ARGS(( attr_list attrs, atom_t attr_id, float *value_p));
+extern int get_string_attr ARGS(( attr_list attrs, atom_t attr_id, char **value_p));
 
 extern void dump_attr_list ARGS(( attr_list attrs ));
 

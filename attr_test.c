@@ -20,6 +20,7 @@
 #define YUENGLING_ATOM ATL_CHAR_CONS('Y','U','E','N')
 #define CARTA_BLANCA_ATOM ATL_CHAR_CONS('C','A','R','T')
 #define MILLER_LITE_ATOM ATL_CHAR_CONS('Y','U','C','K')
+#define URQUEL_ATOM ATL_CHAR_CONS('U','R','Q','U')
 
 int
 main()
@@ -48,11 +49,13 @@ main()
     set_attr_atom_and_string("Yuengling", YUENGLING_ATOM);
     set_attr_atom_and_string("Carta Blanca", CARTA_BLANCA_ATOM);
     set_attr_atom_and_string("Miller Lite", MILLER_LITE_ATOM);
+    set_attr_atom_and_string("Pilsner Urquel", URQUEL_ATOM);
 
     add_attr(list, ATL_CHAR_CONS('C','I','P','A'), Attr_Int4, (attr_value) 
 	     (((unsigned int)130<<24) + ((unsigned int) 207<<16) +((unsigned int)5 << 8) + 68));
     add_attr(list, FOSTERS_ATOM, Attr_Int4, (attr_value) 2);
     add_attr(list, RED_STRIPE_ATOM, Attr_String, (attr_value) strdup("Uno mas"));
+    add_double_attr(list, URQUEL_ATOM, 3.14159);
     dump_attr_list(list);
 /*    add_attr(list2, FOSTERS_ATOM, Attr_Int4, (attr_value) 4);*/
     attr_add_list(list, list2);

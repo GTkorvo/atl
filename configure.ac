@@ -1,10 +1,10 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([atl],[2.0],[eisen@cc.gatech.edu])
+AC_INIT([atl],[3.0],[eisen@cc.gatech.edu])
 AC_CONFIG_SRCDIR([atom.c])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE(AC_PACKAGE_TARNAME,AC_PACKAGE_VERSION)
 AM_MAINTAINER_MODE
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -25,7 +25,7 @@ linux-gnu*)
 			-- building linux kernel --
 ])
 	CPPFLAGS="$CPPFLAGS -I/usr/src/linux/include"
-	if test $ac_cv_prog_gcc = yes; then
+	if test $ac_cv_c_compiler_gnu = yes; then
 		CFLAGS="-fomit-frame-pointer -g -O2"
 	fi
 	KERNEL_VERSION=`awk -F\" '/REL/ {print $$2}' /usr/include/linux/version.h`
@@ -98,6 +98,8 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_BIGENDIAN_CROSS($bigendian_default)
 AC_COMPILE_CHECK_SIZEOF(int)
 AC_COMPILE_CHECK_SIZEOF(short)
+AC_COMPILE_CHECK_SIZEOF(float)
+AC_COMPILE_CHECK_SIZEOF(double)
 AC_C_CONST
 AC_PUTENV_DEFINED
 AC_SSCANF_DEFINED
