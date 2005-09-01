@@ -353,14 +353,14 @@ extern int
 add_float_attr(list, attr_id, fvalue)
 attr_list list;
 atom_t attr_id;
-float fvalue;
+double fvalue;
 {
     attr_value_type t = Attr_Float4;
     attr_union tmp;
     tmp.u.f = fvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
-    add_pattr(list, attr_id, t, tmp);
+    return add_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -373,7 +373,7 @@ long lvalue;
     attr_union tmp;
     tmp.u.l = lvalue;
     if (sizeof(long) == 8) t = Attr_Int8;
-    add_pattr(list, attr_id, t, tmp);
+    return add_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -386,7 +386,7 @@ int ivalue;
     attr_union tmp;
     tmp.u.i = ivalue;
     if (sizeof(int) == 8) t = Attr_Int8;
-    add_pattr(list, attr_id, t, tmp);
+    return add_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -400,21 +400,21 @@ double dvalue;
     tmp.u.d = dvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
-    set_pattr(list, attr_id, t, tmp);
+    return set_pattr(list, attr_id, t, tmp);
 }
 
 extern int
 set_float_attr(list, attr_id, fvalue)
 attr_list list;
 atom_t attr_id;
-float fvalue;
+double fvalue;
 {
     attr_value_type t = Attr_Float4;
     attr_union tmp;
     tmp.u.f = fvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
-    set_pattr(list, attr_id, t, tmp);
+    return set_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -427,7 +427,7 @@ long lvalue;
     attr_union tmp;
     tmp.u.l = lvalue;
     if (sizeof(long) == 8) t = Attr_Int8;
-    set_pattr(list, attr_id, t, tmp);
+    return set_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -440,7 +440,7 @@ int ivalue;
     attr_union tmp;
     tmp.u.i = ivalue;
     if (sizeof(int) == 8) t = Attr_Int8;
-    set_pattr(list, attr_id, t, tmp);
+    return set_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -454,21 +454,21 @@ double dvalue;
     tmp.u.d = dvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
-    replace_pattr(list, attr_id, t, tmp);
+    return replace_pattr(list, attr_id, t, tmp);
 }
 
 extern int
 replace_float_attr(list, attr_id, fvalue)
 attr_list list;
 atom_t attr_id;
-float fvalue;
+double fvalue;
 {
     attr_value_type t = Attr_Float4;
     attr_union tmp;
     tmp.u.f = fvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
-    replace_pattr(list, attr_id, t, tmp);
+    return replace_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -481,7 +481,7 @@ long lvalue;
     attr_union tmp;
     tmp.u.l = lvalue;
     if (sizeof(long) == 8) t = Attr_Int8;
-    replace_pattr(list, attr_id, t, tmp);
+    return replace_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -494,7 +494,7 @@ int ivalue;
     attr_union tmp;
     tmp.u.i = ivalue;
     if (sizeof(int) == 8) t = Attr_Int8;
-    replace_pattr(list, attr_id, t, tmp);
+    return replace_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -505,51 +505,51 @@ attr_value_type val_type;
 attr_union value;
 {
     int i;
-  if (val_type == Attr_Int4) {
-    int count = list->l.list.iattrs->int_attr_count;
-    if (count > 0) {
-      int size = sizeof(struct int_attr_struct) + 
-	(count+1)* sizeof(int_attr);
-      list->l.list.iattrs = realloc(list->l.list.iattrs, size);
+    if (val_type == Attr_Int4) {
+	int count = list->l.list.iattrs->int_attr_count;
+	if (count > 0) {
+	    int size = sizeof(struct int_attr_struct) + 
+		(count+1)* sizeof(int_attr);
+	    list->l.list.iattrs = realloc(list->l.list.iattrs, size);
+	}
+	
+	for (i = count - 1; i >= 0; i--) {
+	    if (list->l.list.iattrs->iattr[i].attr_id > attr_id) {
+		list->l.list.iattrs->iattr[i+1].attr_id = list->l.list.iattrs->iattr[i].attr_id;
+		list->l.list.iattrs->iattr[i+1].value = list->l.list.iattrs->iattr[i].value;
+	    } else {
+		break;
+	    }
+	}
+	
+	list->l.list.iattrs->iattr[i+1].attr_id = attr_id;
+	list->l.list.iattrs->iattr[i+1].value = (int4) (long) value.u.i;
+	list->l.list.iattrs->int_attr_count++;
+    } else {
+	int count = list->l.list.iattrs->other_attr_count;
+	if (count == 0) {
+	    list->l.list.attributes = (attr_p) malloc(sizeof(attr));
+	} else {	    
+	    list->l.list.attributes = (attr_p) realloc(list->l.list.attributes,
+						       sizeof(attr)*(count+1));
+	}
+	
+	for (i = count - 1; i >= 0; i--) {
+	    if (list->l.list.attributes[i].attr_id > attr_id) {
+		list->l.list.attributes[i+1].attr_id = list->l.list.attributes[i].attr_id;
+		list->l.list.attributes[i+1].val_type = list->l.list.attributes[i].val_type;
+		list->l.list.attributes[i+1].value = list->l.list.attributes[i].value;
+	    } else {
+		break;
+	    }
+	}
+	
+	list->l.list.attributes[i+1].attr_id = attr_id;
+	list->l.list.attributes[i+1].val_type = val_type;
+	list->l.list.attributes[i+1].value = value;
+	list->l.list.iattrs->other_attr_count++;
     }
-
-    for (i = count - 1; i >= 0; i--) {
-      if (list->l.list.iattrs->iattr[i].attr_id > attr_id) {
-	list->l.list.iattrs->iattr[i+1].attr_id = list->l.list.iattrs->iattr[i].attr_id;
-	list->l.list.iattrs->iattr[i+1].value = list->l.list.iattrs->iattr[i].value;
-      } else {
-	break;
-      }
-    }
-
-    list->l.list.iattrs->iattr[i+1].attr_id = attr_id;
-    list->l.list.iattrs->iattr[i+1].value = (int4) (long) value.u.i;
-    list->l.list.iattrs->int_attr_count++;
-  } else {
-    int count = list->l.list.iattrs->other_attr_count;
-    if (count == 0) {
-      list->l.list.attributes = (attr_p) malloc(sizeof(attr));
-    } else {	    
-      list->l.list.attributes = (attr_p) realloc(list->l.list.attributes,
-						 sizeof(attr)*(count+1));
-    }
-
-    for (i = count - 1; i >= 0; i--) {
-      if (list->l.list.attributes[i].attr_id > attr_id) {
-	list->l.list.attributes[i+1].attr_id = list->l.list.attributes[i].attr_id;
-	list->l.list.attributes[i+1].val_type = list->l.list.attributes[i].val_type;
-	list->l.list.attributes[i+1].value = list->l.list.attributes[i].value;
-      } else {
-	break;
-      }
-    }
-
-    list->l.list.attributes[i+1].attr_id = attr_id;
-    list->l.list.attributes[i+1].val_type = val_type;
-    list->l.list.attributes[i+1].value = value;
-    list->l.list.iattrs->other_attr_count++;
-  }
-  return 1;
+    return 1;
 }
 
 extern int
@@ -559,94 +559,94 @@ atom_t attr_id;
 attr_value_type val_type;
 attr_value val;
 {
-  int i;
-  attr_union value;
-  switch(val_type) {
-  case Attr_Int8:
-      if (sizeof(long) == 8) {
-	  value.u.l = (long) val;
-      }
-  case Attr_Int4:
-  case Attr_Atom:
+    int i;
+    attr_union value;
+    switch(val_type) {
+    case Attr_Int8:
+	if (sizeof(long) == 8) {
+	    value.u.l = (long) val;
+	}
+    case Attr_Int4:
+    case Attr_Atom:
       if (sizeof(int) == 4) {
 	  value.u.i = (long)val;
       }
       break;
-  case Attr_Float16:
-      if (sizeof(double) == 16) {
-	  value.u.d = *(double*)&val;
-	  break;
-      }
-  case Attr_Float8:
-      if (sizeof(double) == 8) {
-	  value.u.d = *(double*)&val;
-	  break;
-      } else if (sizeof(float) == 8) {
-	  value.u.f = *(float*)&val;
-	  break;
-      }
-  case Attr_Float4:
-      if (sizeof(double) == 4) {
-	  value.u.d = *(double*)&val;
-	  break;
-      } else if (sizeof(float) == 4) {
-	  value.u.f = *(float*)&val;
-	  break;
-      }
-      break;
-  case Attr_String:
-  case Attr_Opaque:
-  case Attr_List:
-      value.u.p = val;
-      break;
-  case Attr_Undefined:
-      break;
-  }
-  if (val_type == Attr_Int4) {
-    int count = list->l.list.iattrs->int_attr_count;
-    if (count > 0) {
-      int size = sizeof(struct int_attr_struct) + 
-	(count+1)* sizeof(int_attr);
-      list->l.list.iattrs = realloc(list->l.list.iattrs, size);
-    }
-
-    for (i = count - 1; i >= 0; i--) {
-      if (list->l.list.iattrs->iattr[i].attr_id > attr_id) {
-	list->l.list.iattrs->iattr[i+1].attr_id = list->l.list.iattrs->iattr[i].attr_id;
-	list->l.list.iattrs->iattr[i+1].value = list->l.list.iattrs->iattr[i].value;
-      } else {
+    case Attr_Float16:
+	if (sizeof(double) == 16) {
+	    value.u.d = *(double*)&val;
+	    break;
+	}
+    case Attr_Float8:
+	if (sizeof(double) == 8) {
+	    value.u.d = *(double*)&val;
+	    break;
+	} else if (sizeof(float) == 8) {
+	    value.u.f = *(float*)&val;
+	    break;
+	}
+    case Attr_Float4:
+	if (sizeof(double) == 4) {
+	    value.u.d = *(double*)&val;
+	    break;
+	} else if (sizeof(float) == 4) {
+	    value.u.f = *(float*)&val;
+	    break;
+	}
 	break;
-      }
-    }
-
-    list->l.list.iattrs->iattr[i+1].attr_id = attr_id;
-    list->l.list.iattrs->iattr[i+1].value = (int4) (long) val;
-    list->l.list.iattrs->int_attr_count++;
-  } else {
-    int count = list->l.list.iattrs->other_attr_count;
-    if (count == 0) {
-      list->l.list.attributes = (attr_p) malloc(sizeof(attr));
-    } else {	    
-      list->l.list.attributes = (attr_p) realloc(list->l.list.attributes,
-						 sizeof(attr)*(count+1));
-    }
-
-    for (i = count - 1; i >= 0; i--) {
-      if (list->l.list.attributes[i].attr_id > attr_id) {
-	list->l.list.attributes[i+1].attr_id = list->l.list.attributes[i].attr_id;
-	list->l.list.attributes[i+1].val_type = list->l.list.attributes[i].val_type;
-	list->l.list.attributes[i+1].value = list->l.list.attributes[i].value;
-      } else {
+    case Attr_String:
+    case Attr_Opaque:
+    case Attr_List:
+	value.u.p = val;
 	break;
-      }
+    case Attr_Undefined:
+	break;
     }
-
-    list->l.list.attributes[i+1].attr_id = attr_id;
-    list->l.list.attributes[i+1].val_type = val_type;
-    list->l.list.attributes[i+1].value = value;
-    list->l.list.iattrs->other_attr_count++;
-  }
-  return 1;
+    if (val_type == Attr_Int4) {
+	int count = list->l.list.iattrs->int_attr_count;
+	if (count > 0) {
+	    int size = sizeof(struct int_attr_struct) + 
+		(count+1)* sizeof(int_attr);
+	    list->l.list.iattrs = realloc(list->l.list.iattrs, size);
+	}
+	
+	for (i = count - 1; i >= 0; i--) {
+	    if (list->l.list.iattrs->iattr[i].attr_id > attr_id) {
+		list->l.list.iattrs->iattr[i+1].attr_id = list->l.list.iattrs->iattr[i].attr_id;
+		list->l.list.iattrs->iattr[i+1].value = list->l.list.iattrs->iattr[i].value;
+	    } else {
+		break;
+	    }
+	}
+	
+	list->l.list.iattrs->iattr[i+1].attr_id = attr_id;
+	list->l.list.iattrs->iattr[i+1].value = (int4) (long) val;
+	list->l.list.iattrs->int_attr_count++;
+    } else {
+	int count = list->l.list.iattrs->other_attr_count;
+	if (count == 0) {
+	    list->l.list.attributes = (attr_p) malloc(sizeof(attr));
+	} else {	    
+	    list->l.list.attributes = (attr_p) realloc(list->l.list.attributes,
+						       sizeof(attr)*(count+1));
+	}
+	
+	for (i = count - 1; i >= 0; i--) {
+	    if (list->l.list.attributes[i].attr_id > attr_id) {
+		list->l.list.attributes[i+1].attr_id = list->l.list.attributes[i].attr_id;
+		list->l.list.attributes[i+1].val_type = list->l.list.attributes[i].val_type;
+		list->l.list.attributes[i+1].value = list->l.list.attributes[i].value;
+	    } else {
+		break;
+	    }
+	}
+	
+	list->l.list.attributes[i+1].attr_id = attr_id;
+	list->l.list.attributes[i+1].val_type = val_type;
+	list->l.list.attributes[i+1].value = value;
+	list->l.list.iattrs->other_attr_count++;
+    }
+    return 1;
 }
 
 extern int 

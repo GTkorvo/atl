@@ -85,7 +85,7 @@ extern int add_attr ARGS((attr_list attrs, atom_t attr_id,
 			  attr_value value ));
 
 extern int add_float_attr ARGS((attr_list attrs, atom_t attr_id, 
-				 float value ));
+				 double value ));
 
 extern int add_double_attr ARGS((attr_list attrs, atom_t attr_id, 
 				 double value ));
@@ -104,7 +104,7 @@ extern int set_attr ARGS((attr_list attrs, atom_t attr_id,
 			  attr_value value ));
 
 extern int set_float_attr ARGS((attr_list attrs, atom_t attr_id, 
-				 float value ));
+				double value ));
 
 extern int set_double_attr ARGS((attr_list attrs, atom_t attr_id, 
 				 double value ));
@@ -122,7 +122,7 @@ extern int replace_attr ARGS((attr_list attrs, atom_t attr_id,
 			      attr_value_type val_type, attr_value value ));
 
 extern int replace_float_attr ARGS((attr_list attrs, atom_t attr_id, 
-				 float value ));
+				    double value ));
 
 extern int replace_double_attr ARGS((attr_list attrs, atom_t attr_id, 
 				 double value ));
