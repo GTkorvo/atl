@@ -22,7 +22,7 @@ AC_ARG_ENABLE(kernel-build,[Build for inclusion in the kernel],
 case "${host_os}" in
 linux-gnu*)
 	AC_MSG_WARN([
-			-- building linux kernel --
+		-- building as a Linux kernel module --
 ])
 	CPPFLAGS="$CPPFLAGS -I/usr/src/linux/include"
 	if test $ac_cv_c_compiler_gnu = yes; then
