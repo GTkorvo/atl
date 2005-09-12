@@ -28,7 +28,7 @@ linux-gnu*)
 	if test $ac_cv_c_compiler_gnu = yes; then
 		CFLAGS="-fomit-frame-pointer -g -O2"
 	fi
-	KERNEL_VERSION=`awk -F\" '/REL/ {print $$2}' /usr/include/linux/version.h`
+	KERNEL_VERSION=`awk -F\" '/REL/ {print $$2}' /usr/src/linux/include/linux/version.h`
 	KERNEL_OBJS="katl.lo env.lo strtol.lo"
 	AC_DEFINE(LINUX_KERNEL_MODULE,1,[Define if compiling for linux kernel])
 	kernel_build=true

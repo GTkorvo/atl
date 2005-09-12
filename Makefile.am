@@ -14,9 +14,8 @@ if KERNEL
 bin_PROGRAMS = 
 BUILT_SOURCES = strtol.c env.c katl.c
 install-exec-local: atl_module.o
-		install -d /lib/modules/@KERNEL_VERSION@/misc /lib/modules/misc
-		install -c atl_module.o /lib/modules/@KERNEL_VERSION@/misc
-		install -c atl_module.o /lib/modules/misc
+		install -d /lib/modules/@KERNEL_VERSION@/kernel/misc
+		install -c atl_module.o /lib/modules/@KERNEL_VERSION@/kernel/misc
 all-local: atl_module.o
 check-local: kernel_check_target
 MOSTLYCLEANFILES = atl_module.o
