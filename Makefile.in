@@ -52,7 +52,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/cercs.m4 \
 	$(top_srcdir)/config/definitions.m4 $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/configure.in
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -709,9 +709,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 	uninstall-info-am uninstall-libLTLIBRARIES
 
 @KERNEL_TRUE@install-exec-local: atl_module.o
-@KERNEL_TRUE@		install -d /lib/modules/@KERNEL_VERSION@/misc /lib/modules/misc
-@KERNEL_TRUE@		install -c atl_module.o /lib/modules/@KERNEL_VERSION@/misc
-@KERNEL_TRUE@		install -c atl_module.o /lib/modules/misc
+@KERNEL_TRUE@		install -d /lib/modules/@KERNEL_VERSION@/kernel/misc
+@KERNEL_TRUE@		install -c atl_module.o /lib/modules/@KERNEL_VERSION@/kernel/misc
 @KERNEL_TRUE@all-local: atl_module.o
 @KERNEL_TRUE@check-local: kernel_check_target
 @KERNEL_FALSE@all-local:
