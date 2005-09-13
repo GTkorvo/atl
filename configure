@@ -3231,16 +3231,16 @@ if test "${enable_kernel_build+set}" = set; then
 case "${host_os}" in
 linux-gnu*)
 	{ echo "$as_me:$LINENO: WARNING:
-			-- building linux kernel --
+		-- building as a Linux kernel module --
 " >&5
 echo "$as_me: WARNING:
-			-- building linux kernel --
+		-- building as a Linux kernel module --
 " >&2;}
 	CPPFLAGS="$CPPFLAGS -I/usr/src/linux/include"
 	if test $ac_cv_c_compiler_gnu = yes; then
 		CFLAGS="-fomit-frame-pointer -g -O2"
 	fi
-	KERNEL_VERSION=`awk -F\" '/REL/ {print $$2}' /usr/include/linux/version.h`
+	KERNEL_VERSION=`awk -F\" '/REL/ {print $$2}' /usr/src/linux/include/linux/version.h`
 	KERNEL_OBJS="katl.lo env.lo strtol.lo"
 
 cat >>confdefs.h <<\_ACEOF
