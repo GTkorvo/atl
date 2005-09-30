@@ -1452,6 +1452,7 @@ get_int_attr(attr_list l, atom_t attr_id, int *valp)
     default:
 	return 0;
     }
+    return 1;
 }
 
 int
@@ -1485,6 +1486,7 @@ get_long_attr(attr_list l, atom_t attr_id, long *valp)
     default:
 	return 0;
     }
+    return 1;
 }
 
 int
@@ -1518,6 +1520,7 @@ get_double_attr(attr_list l, atom_t attr_id, double *valp)
     default:
 	return 0;
     }
+    return 1;
 }
 
 int
@@ -1551,6 +1554,7 @@ get_float_attr(attr_list l, atom_t attr_id, float *valp)
     default:
 	return 0;
     }
+    return 1;
 }
 
 int
@@ -1567,6 +1571,7 @@ get_string_attr(attr_list l, atom_t attr_id, char **valp)
     default:
 	return 0;
     }
+    return 1;
 }
 
 int
