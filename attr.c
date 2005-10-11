@@ -1361,6 +1361,7 @@ attr_list
 attr_list_from_string(str)
 char * str;
 {
+    if (str == NULL) return NULL;
     if ((*str == ' ') || (*str == '\t') || (*str == '{')) {
 	attr_list ret_val = create_attr_list();
 	if (add_list_from_string(str, ret_val) != 1) {
