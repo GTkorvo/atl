@@ -390,6 +390,18 @@ int ivalue;
 }
 
 extern int
+add_string_attr(list, attr_id, ivalue)
+attr_list list;
+atom_t attr_id;
+char *ivalue;
+{
+    attr_value_type t = Attr_String;
+    attr_union tmp;
+    tmp.u.p = ivalue;
+    return add_pattr(list, attr_id, t, tmp);
+}
+
+extern int
 set_double_attr(list, attr_id, dvalue)
 attr_list list;
 atom_t attr_id;
