@@ -344,8 +344,8 @@ double dvalue;
     attr_value_type t = Attr_Float4;
     attr_union tmp;
     tmp.u.d = dvalue;
-    if (sizeof(float) == 8) t = Attr_Float8;
-    if (sizeof(float) == 16) t = Attr_Float16;
+    if (sizeof(double) == 8) t = Attr_Float8;
+    if (sizeof(double) == 16) t = Attr_Float16;
     add_pattr(list, attr_id, t, tmp);
 }
 
