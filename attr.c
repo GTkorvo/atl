@@ -450,6 +450,7 @@ int ivalue;
 {
     attr_value_type t = Attr_Int4;
     attr_union tmp;
+    tmp.u.l = 0;
     tmp.u.i = ivalue;
     if (sizeof(int) == 8) t = Attr_Int8;
     return set_pattr(list, attr_id, t, tmp);
