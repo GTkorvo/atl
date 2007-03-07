@@ -154,14 +154,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\attr_dump.c"
-				>
-			</File>
-			<File
-				RelativePath=".\attr_test.c"
-				>
-			</File>
-			<File
 				RelativePath=".\tclHash.c"
 				>
 			</File>
