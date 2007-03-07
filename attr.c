@@ -1,4 +1,5 @@
 #include "config.h"
+#include "stdio.h"
 #include "atl.h"
 
 #ifndef LINUX_KERNEL_MODULE
@@ -36,6 +37,10 @@
 #  else
 #    define cercs_getenv(a) ((char *)0)
 #  endif
+#endif
+
+#if defined(_MSC_VER)
+#define strdup _strdup
 #endif
 
 #if SIZEOF_INT == 4
@@ -147,9 +152,9 @@ atom_server *asp;
     { 
 	int ret;
 	char buffer[60];
-	ret = GetEnvironmentVariable(var_str, buffer, sizeof(buffer));
+	ret = GetEnvironmentVariable(var_str, &buffer[0], sizeof(buffer));
 	if (ret != 0) {
-	    strcpy(var_str, buffer);
+	    strcpy(var_str, &buffer[0]);
 	    addr_str = &var_str[0];
 	}
     }
@@ -1069,7 +1074,7 @@ attr_list list;
 {
 
     init_global_atom_server(&global_as);
-    printf("Attribute list %lx, ref_count = %d\n", (long)list, list->ref_count);
+    printf("Attribute list %p, ref_count = %d\n", list, list->ref_count);
     internal_dump_attr_list(list, 0);
 }
 
@@ -1452,16 +1457,16 @@ get_int_attr(attr_list l, atom_t attr_id, int *valp)
 	*valp = v.u.i;
 	break;
     case Attr_Float16:
-	if (sizeof(double) == 16) *valp = v.u.d;
-	if (sizeof(float) == 16) *valp = v.u.f;
+	if (sizeof(double) == 16) *valp = (int)v.u.d;
+	if (sizeof(float) == 16) *valp = (int)v.u.f;
 	break;
     case Attr_Float8:
-	if (sizeof(double) == 8) *valp = v.u.d;
-	if (sizeof(float) == 8) *valp = v.u.f;
+	if (sizeof(double) == 8) *valp = (int)v.u.d;
+	if (sizeof(float) == 8) *valp = (int)v.u.f;
 	break;
     case Attr_Float4:
-	if (sizeof(double) == 4) *valp = v.u.d;
-	if (sizeof(float) == 4) *valp = v.u.f;
+	if (sizeof(double) == 4) *valp = (int)v.u.d;
+	if (sizeof(float) == 4) *valp = (int)v.u.f;
 	break;
     default:
 	return 0;
@@ -1486,16 +1491,16 @@ get_long_attr(attr_list l, atom_t attr_id, long *valp)
 	*valp = v.u.i;
 	break;
     case Attr_Float16:
-	if (sizeof(double) == 16) *valp = v.u.d;
-	if (sizeof(float) == 16) *valp = v.u.f;
+	if (sizeof(double) == 16) *valp = (long)v.u.d;
+	if (sizeof(float) == 16) *valp = (long)v.u.f;
 	break;
     case Attr_Float8:
-	if (sizeof(double) == 8) *valp = v.u.d;
-	if (sizeof(float) == 8) *valp = v.u.f;
+	if (sizeof(double) == 8) *valp = (long)v.u.d;
+	if (sizeof(float) == 8) *valp = (long)v.u.f;
 	break;
     case Attr_Float4:
-	if (sizeof(double) == 4) *valp = v.u.d;
-	if (sizeof(float) == 4) *valp = v.u.f;
+	if (sizeof(double) == 4) *valp = (long)v.u.d;
+	if (sizeof(float) == 4) *valp = (long)v.u.f;
 	break;
     default:
 	return 0;
@@ -1546,23 +1551,23 @@ get_float_attr(attr_list l, atom_t attr_id, float *valp)
     if (ret == 0) return 0;
     switch(t) {
     case Attr_Int4:
-	if (sizeof(int) == 4) *valp = v.u.i;
-	*valp = v.u.i;
+	if (sizeof(int) == 4) *valp = (float)v.u.i;
+	*valp = (float)v.u.i;
 	break;
     case Attr_Int8:
-	if (sizeof(long) == 8) *valp = v.u.l;
-	*valp = v.u.i;
+	if (sizeof(long) == 8) *valp = (float)v.u.l;
+	*valp = (float)v.u.i;
 	break;
     case Attr_Float16:
-	if (sizeof(double) == 16) *valp = v.u.d;
+	if (sizeof(double) == 16) *valp = (float)v.u.d;
 	if (sizeof(float) == 16) *valp = v.u.f;
 	break;
     case Attr_Float8:
-	if (sizeof(double) == 8) *valp = v.u.d;
+	if (sizeof(double) == 8) *valp = (float)v.u.d;
 	if (sizeof(float) == 8) *valp = v.u.f;
 	break;
     case Attr_Float4:
-	if (sizeof(double) == 4) *valp = v.u.d;
+	if (sizeof(double) == 4) *valp = (float)v.u.d;
 	if (sizeof(float) == 4) *valp = v.u.f;
 	break;
     default:
@@ -1916,7 +1921,7 @@ recursive_encode(attr_list l, AttrBuffer b, attr_value_type t)
 		    int pad_len;
 		    if (attr->val_type == Attr_String) {
 			value = (char*) attr->value.u.p;
-			len = strlen((char*)value) + 1;
+			len = (int)strlen((char*)value) + 1;
 		    } else {
 			value = ((attr_opaque_p)attr->value.u.p)->buffer;
 			len = ((attr_opaque_p)attr->value.u.p)->length;
