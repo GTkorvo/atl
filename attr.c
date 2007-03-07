@@ -2,7 +2,7 @@
 #include "atl.h"
 
 #ifndef LINUX_KERNEL_MODULE
-#  include <config.h>
+#  include "config.h"
 #  ifdef HAVE_WINDOWS_H
 #    include <windows.h>
 #  else
@@ -710,8 +710,8 @@ attr_value_type val_type;
 attr_value val;
 {
     int index = 0;
-    assert(list->list_of_lists == 0);
   attr_union value;
+    assert(list->list_of_lists == 0);
   switch(val_type) {
   case Attr_Int8:
       if (sizeof(long) == 8) {

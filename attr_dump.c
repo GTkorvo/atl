@@ -3,7 +3,7 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include <atl.h>
+#include "atl.h"
 
 int
 main(int argc, char **argv)

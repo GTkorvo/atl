@@ -12,7 +12,7 @@
 #include <malloc.h>
 #endif
 #include <stdio.h>
-#include <atl.h>
+#include "atl.h"
 
 #define FOSTERS_ATOM ATL_CHAR_CONS('F', 'O', 'S', 'T')
 #define RED_STRIPE_ATOM ATL_CHAR_CONS('R','e','d','S')
