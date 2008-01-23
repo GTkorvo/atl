@@ -21,9 +21,6 @@
 #  endif
 #  include <stdio.h>
 #  include <string.h>
-#  ifndef FPRINTF_DEFINED
-extern int fprintf (FILE *, const char *,...);
-#  endif
 #else
 #  ifndef __KERNEL__
 #    define __KERNEL__
