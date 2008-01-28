@@ -19975,19 +19975,19 @@ search_list="$search_list $CHAOS_HOMEDIR/$cercs_cv_archive/gen_thread/include/ge
 fi
 if test "$libdir" != '${exec_prefix}/lib'; then
 tmpdir=`echo ${libdir} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/gen_thread.h"
+search_list="$tmpdir/gen_thread.h $search_list"
 fi
 if test "$exec_prefix" != "NONE"; then
 tmpdir=`echo ${exec_prefix} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/lib/gen_thread.h"
+search_list="$tmpdir/lib/gen_thread.h $search_list"
 fi
 if test "$includedir" != '${prefix}/include'; then
 tmpdir=`echo ${includedir} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/gen_thread.h"
+search_list="$tmpdir/gen_thread.h $search_list"
 fi
 if test "$prefix" != "NONE"; then
 tmpdir=`echo ${prefix} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/include/gen_thread.h"
+search_list="$tmpdir/include/gen_thread.h $search_list"
 fi
 if test "include" == "lib"; then
   for tmp_lib_value in $sys_lib_search_path_spec; do
@@ -20065,19 +20065,19 @@ search_list="$search_list $CHAOS_HOMEDIR/$cercs_cv_archive/gen_thread/lib/libgen
 fi
 if test "$libdir" != '${exec_prefix}/lib'; then
 tmpdir=`echo ${libdir} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/libgen_thread.la"
+search_list="$tmpdir/libgen_thread.la $search_list"
 fi
 if test "$exec_prefix" != "NONE"; then
 tmpdir=`echo ${exec_prefix} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/lib/libgen_thread.la"
+search_list="$tmpdir/lib/libgen_thread.la $search_list"
 fi
 if test "$includedir" != '${prefix}/include'; then
 tmpdir=`echo ${includedir} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/libgen_thread.la"
+search_list="$tmpdir/libgen_thread.la $search_list"
 fi
 if test "$prefix" != "NONE"; then
 tmpdir=`echo ${prefix} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/lib/libgen_thread.la"
+search_list="$tmpdir/lib/libgen_thread.la $search_list"
 fi
 if test "lib" == "lib"; then
   for tmp_lib_value in $sys_lib_search_path_spec; do
@@ -20306,19 +20306,19 @@ search_list="$search_list $CHAOS_HOMEDIR/$cercs_cv_archive/cercs_env/include/cer
 fi
 if test "$libdir" != '${exec_prefix}/lib'; then
 tmpdir=`echo ${libdir} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/cercs_env.h"
+search_list="$tmpdir/cercs_env.h $search_list"
 fi
 if test "$exec_prefix" != "NONE"; then
 tmpdir=`echo ${exec_prefix} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/lib/cercs_env.h"
+search_list="$tmpdir/lib/cercs_env.h $search_list"
 fi
 if test "$includedir" != '${prefix}/include'; then
 tmpdir=`echo ${includedir} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/cercs_env.h"
+search_list="$tmpdir/cercs_env.h $search_list"
 fi
 if test "$prefix" != "NONE"; then
 tmpdir=`echo ${prefix} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/include/cercs_env.h"
+search_list="$tmpdir/include/cercs_env.h $search_list"
 fi
 if test "include" == "lib"; then
   for tmp_lib_value in $sys_lib_search_path_spec; do
@@ -20396,19 +20396,19 @@ search_list="$search_list $CHAOS_HOMEDIR/$cercs_cv_archive/cercs_env/lib/libcerc
 fi
 if test "$libdir" != '${exec_prefix}/lib'; then
 tmpdir=`echo ${libdir} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/libcercs_env.la"
+search_list="$tmpdir/libcercs_env.la $search_list"
 fi
 if test "$exec_prefix" != "NONE"; then
 tmpdir=`echo ${exec_prefix} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/lib/libcercs_env.la"
+search_list="$tmpdir/lib/libcercs_env.la $search_list"
 fi
 if test "$includedir" != '${prefix}/include'; then
 tmpdir=`echo ${includedir} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/libcercs_env.la"
+search_list="$tmpdir/libcercs_env.la $search_list"
 fi
 if test "$prefix" != "NONE"; then
 tmpdir=`echo ${prefix} |  sed 's%/$%%'`
-search_list="$search_list $tmpdir/lib/libcercs_env.la"
+search_list="$tmpdir/lib/libcercs_env.la $search_list"
 fi
 if test "lib" == "lib"; then
   for tmp_lib_value in $sys_lib_search_path_spec; do
