@@ -1,4 +1,4 @@
-dnl  Mon Jan 21 10:48:58 EST 2008
+dnl  Mon Oct 29 09:09:35 EDT 2007
 dnl
 dnl cercs_require_package(package, include_file, library_file)
 dnl   either include file or library_file may be left off if not needed
@@ -41,13 +41,7 @@ dnl
 AC_MSG_CHECKING(needed include args for $1 package)
 AC_CACHE_VAL(translit(cercs_cv_$1_include_arg, `/',`_'), 
 [
-ifelse([$4],1,[
-search_list="$PWD/../$1 $PWD/../../$1 $PWD/../../../$1"
-CERCS_SEARCH($search_list)
-if test -n "$tmp_search_results"; then
-cercs_tmp=$tmp_search_results
-fi
-],
+ifelse([$4],1,cercs_tmp=`pwd`/../$1,
 CERCS_FIND_FILE($1, $2, cercs_tmp, $with_translit, include))
 if test -n "$cercs_tmp" -a "$cercs_tmp" != "/usr/include/$2"; then
 translit(cercs_cv_$1_include_arg, `/',`_')=-I`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s#.$2##g"`
@@ -76,13 +70,7 @@ dnl
 AC_MSG_CHECKING(needed link args for $1 package)
 AC_CACHE_VAL(translit(cercs_cv_$1_link_dir,  `/',`_'), 
 [
-ifelse([$4],1,[
-search_list="$PWD/../$1 $PWD/../../$1 $PWD/../../../$1"
-CERCS_SEARCH($search_list)
-if test -n "$tmp_search_results"; then
-cercs_tmp=$tmp_search_results
-fi
-],
+ifelse([$4],1,cercs_tmp=`pwd`/../$1,
 CERCS_FIND_FILE($1, $3, cercs_tmp, $with_translit, lib))
 if test -n "$cercs_tmp" -a "$cercs_tmp" != "$3"; then
 translit(cercs_cv_$1_link_dir, `/',`_')=`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.$3//g"`
@@ -157,19 +145,19 @@ search_list="$search_list $CHAOS_HOMEDIR/$cercs_cv_archive/$1/$5/$2 $CHAOS_HOMED
 fi
 if test "$libdir" != '${exec_prefix}/lib'; then
 tmpdir=`echo ${libdir} |  sed 's%/$%%'` 
-search_list="$search_list $tmpdir/$2"
+search_list="$tmpdir/$2 $search_list"
 fi
 if test "$exec_prefix" != "NONE"; then
 tmpdir=`echo ${exec_prefix} |  sed 's%/$%%'` 
-search_list="$search_list $tmpdir/lib/$2"
+search_list="$tmpdir/lib/$2 $search_list"
 fi
 if test "$includedir" != '${prefix}/include'; then
 tmpdir=`echo ${includedir} |  sed 's%/$%%'` 
-search_list="$search_list $tmpdir/$2"
+search_list="$tmpdir/$2 $search_list"
 fi
 if test "$prefix" != "NONE"; then
 tmpdir=`echo ${prefix} |  sed 's%/$%%'` 
-search_list="$search_list $tmpdir/$5/$2"
+search_list="$tmpdir/$5/$2 $search_list"
 fi
 if test "$5" == "lib"; then
   for tmp_lib_value in $sys_lib_search_path_spec; do
