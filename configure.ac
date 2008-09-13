@@ -1,7 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT([atl],[3.0],[eisen@cc.gatech.edu])
 AC_CONFIG_SRCDIR([atom.c])
-AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_MACRO_DIR([config])
 AM_INIT_AUTOMAKE(AC_PACKAGE_TARNAME,AC_PACKAGE_VERSION)
 AM_MAINTAINER_MODE
 AC_CONFIG_HEADERS([config.h])
