@@ -137,10 +137,10 @@ atom_server *asp;
     char var_str[60];
     char *base64;
 
-    if (*asp != NULL) return;
     if ((base64 = cercs_getenv("ATL_BASE64_STRINGS")) != NULL) {
         use_base64_string_encoding = strtol(base64, NULL, 10);
     }
+    if (*asp != NULL) return;
     /*
      * for notes on my we're doing funny things with the "global" value, 
      * global_as, see the comments in gen_info.c.  This is similar.

@@ -3,11 +3,11 @@
 AUTOMAKE_OPTIONS = no-dependencies foreign
 ACLOCAL_AMFLAGS = -I config
 
-noinst_HEADERS = tclHash.h unix_defs.h
+noinst_HEADERS = unix_defs.h
 
-libatl_la_SOURCES = atom.c attr.c tclHash.c
+libatl_la_SOURCES = atom.c attr.c lookup3.c tclHash.c
 libatl_la_DEPENDENCIES = @KERNEL_OBJS@
-libatl_la_LIBADD = @KERNEL_OBJS@ @CERCS_ENV_LIB@
+plibatl_la_LIBADD = @KERNEL_OBJS@ @CERCS_ENV_LIB@
 libatl_la_LDFLAGS = -no-undefined $(SOCKET_LIBS) $(THREAD_LIBS)
 
 

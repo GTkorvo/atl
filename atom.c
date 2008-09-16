@@ -227,7 +227,6 @@ send_get_atom_msg_ptr msg;
     return (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
 }
 
-extern
 void
 set_string_and_atom(as, str, atom)
 atom_server as;
@@ -259,8 +258,8 @@ atom_t atom;
 	}
     }
     entry2 = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long) atom);
-    thr_mutex_unlock(as->hash_lock);
-    if (entry2 != NULL) {
+    thr_mutex_unlock(as->hash_lock); 
+   if (entry2 != NULL) {
 	send_get_atom_msg_ptr atom_entry =
 	(send_get_atom_msg_ptr) Tcl_GetHashValue(entry2);
 	if ((atom_entry != NULL) &&
@@ -472,7 +471,9 @@ int do_fallback;
     }
     return 1;
 }
-	
+
+extern atom_t ATLget_hash(const char *str);
+
 extern
  atom_t
 atom_from_string(as, str)
@@ -483,6 +484,7 @@ char *str;
     Tcl_HashEntry *entry = NULL;
     int numbytes, len;
     unsigned char buf[MAXDATASIZE];
+    atom_t atom;
 
     if (gen_thr_initialized()) {
 	if (as->hash_lock == NULL) {
@@ -490,51 +492,12 @@ char *str;
 	}
 	thr_mutex_lock(as->hash_lock);
     }
-    entry = Tcl_FindHashEntry(&as->string_hash_table, str);
-    thr_mutex_unlock(as->hash_lock);
-    if (entry == NULL) {
-#ifndef MODULE
-	if (establish_server_connection(as, 1) == 0) return -1;
-	set_blocking(as, 1);	/* set server fd blocking */
-	len = strlen(str) + 2;
-	buf[1] = 'S';		/* string message */
-	strncpy((char*)&buf[2], str, sizeof(buf) - 1);
-	buf[0] = len;
-	printf("Writing %d chars, %s\n", buf[0], &buf[1]);
-	if (write(as->tcp_fd, buf, len+1) == -1) {
-	    perror("write");
-	    close(as->tcp_fd);
-	}
-	buf[1] = 0;
-	while (buf[1] != 'N') {
-	    if ((numbytes = read(as->tcp_fd, buf, 1)) == -1) {
-		perror("read");
-		return -1;
-	    }
-	    if ((numbytes = read(as->tcp_fd, &buf[1], buf[0])) != buf[0]) {
-		perror("read2");
-		return -1;
-	    }
-	    buf[numbytes+1] = 0;
-	    if (buf[1] != 'N')
-		handle_unexpected_msg(as, &buf[1]);
-	}
 
-	tmp_rec.atom_string = str;
-	tmp_rec.atom = atoi((char*)&buf[2]);
-	/* enter into cache only if we got an answer */
-#else
-	tmp_rec.atom = -1;
-#endif
-	if (tmp_rec.atom != -1) {
-	    enter_atom_into_cache(as, &tmp_rec);
-	} else {
-	    printf("No atom value found for string\"%s\".\n", str);
-	}
-	return tmp_rec.atom;
-    } else {
-	return ((send_get_atom_msg_ptr) Tcl_GetHashValue(entry))->atom;
-    }
+    atom = ATLget_hash(str);
+
+    set_string_and_atom(as, str, atom);
+
+    return atom;
 }
 
 extern
