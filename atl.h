@@ -192,7 +192,7 @@ atl_base64_decode ARGS((unsigned char *input, unsigned char *output));
 extern char *
 atl_base64_encode ARGS((char *buffer, unsigned int len));
 
-#ifdef	__cplusplus
+#if defined(__cplusplus) || defined(c_plusplus)
 	   }
 #endif
 
