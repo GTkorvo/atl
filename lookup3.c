@@ -2,7 +2,7 @@
   This file was derived from lookup3.c by Bob Jenkins as noted below.  
   It has been modified to prevent name conflicts in multiple inclusions 
   and to better control configuration.
-/*
+
 -------------------------------------------------------------------------------
 lookup3.c, by Bob Jenkins, May 2006, Public Domain.
 
