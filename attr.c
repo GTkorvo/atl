@@ -351,7 +351,7 @@ double dvalue;
     tmp.u.d = dvalue;
     if (sizeof(double) == 8) t = Attr_Float8;
     if (sizeof(double) == 16) t = Attr_Float16;
-    add_pattr(list, attr_id, t, tmp);
+    return add_pattr(list, attr_id, t, tmp);
 }
 
 extern int
@@ -1377,7 +1377,7 @@ attr_list attrs;
 extern
 attr_list
 attr_list_from_string(str)
-char * str;
+const char * str;
 {
     if (str == NULL) return NULL;
     if ((*str == ' ') || (*str == '\t') || (*str == '{')) {
@@ -1389,15 +1389,10 @@ char * str;
 	return ret_val;
     } else {
 	attr_list ret_val;
-	unsigned char *output = (unsigned char *)str;
-	if (((int)(long)str & 0x3) != 0) { /* not aligned */
-	    output = (unsigned char *) strdup((char *)str);
-	}
+	unsigned char *output = (unsigned char *)strdup(str);
 	base64_decode((unsigned char *)str, output);
 	ret_val = decode_attr_from_xmit(output);
-	if (((int)(long)str & 0x3) != 0) { /* not aligned */
-	    free(output);
-	}
+	free(output);
 	return ret_val;
     }
 }

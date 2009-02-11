@@ -480,10 +480,6 @@ atom_from_string(as, str)
 atom_server as;
 char *str;
 {
-    send_get_atom_msg tmp_rec;
-    Tcl_HashEntry *entry = NULL;
-    int numbytes, len;
-    unsigned char buf[MAXDATASIZE];
     atom_t atom;
 
     if (gen_thr_initialized()) {

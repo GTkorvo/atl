@@ -168,7 +168,7 @@ attr_list_to_string ARGS((attr_list attrs));
 
 extern
 attr_list
-attr_list_from_string ARGS((char * str));
+attr_list_from_string ARGS((const char * str));
 
 extern
 AttrBuffer create_AttrBuffer(void);
