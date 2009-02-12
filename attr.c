@@ -1259,7 +1259,7 @@ attr_list list;
 
 static int
 add_list_from_string(str, list)
-char *str;
+const char *str;
 attr_list list;
 {
     while (1) {
@@ -1895,6 +1895,8 @@ recursive_encode(attr_list l, AttrBuffer b, attr_value_type t)
 		switch (attr->val_type) {
 		case Attr_Int4:
 		case Attr_Undefined:
+		case Attr_Float16:
+		case Attr_Float4:
 		    assert(0);
 		    break;
 		case Attr_Atom:
@@ -2036,6 +2038,8 @@ decode_attr_from_xmit(void * buf)
 	switch(l->l.list.attributes[i].val_type) {
 	case Attr_Int4:
 	case Attr_Undefined:
+	case Attr_Float16:
+	case Attr_Float4:
 	    assert(0);
 	    break;
 	case Attr_Int8:
