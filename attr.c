@@ -1078,6 +1078,60 @@ attr_list list;
     internal_dump_attr_list(list, 0);
 }
 
+/*
+ * Return 1 when attr_id find was successful, else returns 0
+ * The attr_id is placed in item
+ */
+extern int
+get_attr_id(attr_list list, int item_no, atom_t *item)
+{
+
+    init_global_atom_server(&global_as);
+
+    if (item_no < 0) return 0;
+
+    if (list == NULL) return 0;
+
+    if (!list->list_of_lists) {
+        int int_attr_count = list->l.list.iattrs->int_attr_count;
+        int other_attr_count = list->l.list.iattrs->int_attr_count;
+        int total_attr_count = int_attr_count + other_attr_count;
+
+        if (item_no >= total_attr_count) return 0;
+
+        if (item_no < int_attr_count) {
+            *item = list->l.list.iattrs->iattr[item_no].attr_id;
+	    return 1;
+        } else {
+            item_no -= int_attr_count;
+            *item = list->l.list.attributes[item_no].attr_id;
+	    return 1;
+        }
+    } else {
+        int i;
+        for (i=0; i<list->l.lists.sublist_count; i++) {
+            attr_list atl = list->l.lists.lists[i];
+            int int_attr_count = atl->l.list.iattrs->int_attr_count;
+            int other_attr_count = atl->l.list.iattrs->int_attr_count;
+            int total_attr_count = int_attr_count + other_attr_count;
+
+            if (item_no > total_attr_count) {
+                item_no -= total_attr_count;
+	    } else {
+                if (item_no < int_attr_count) {
+                    *item = atl->l.list.iattrs->iattr[item_no].attr_id;
+		    return 1;
+                } else {
+                    item_no -= int_attr_count;
+                    *item = atl->l.list.attributes[item_no].attr_id;
+		    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 static void
 internal_dump_attr_list (list, indent)
 attr_list list;

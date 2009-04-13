@@ -147,6 +147,8 @@ extern int get_string_attr ARGS(( attr_list attrs, atom_t attr_id, char **value_
 
 extern void dump_attr_list ARGS(( attr_list attrs ));
 
+extern int get_attr_id(attr_list list, int item_no, atom_t *item);
+
 extern int get_attr ARGS((attr_list list,int index, atom_t *name,
 			  attr_value_type *val_type, attr_value *value));
 
