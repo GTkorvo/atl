@@ -7,9 +7,14 @@ noinst_HEADERS = unix_defs.h
 
 libatl_la_SOURCES = atom.c attr.c lookup3.c tclHash.c
 libatl_la_DEPENDENCIES = @KERNEL_OBJS@
-plibatl_la_LIBADD = @KERNEL_OBJS@ @CERCS_ENV_LIB@
+libatl_la_LIBADD = @KERNEL_OBJS@ @CERCS_ENV_LIB@
 libatl_la_LDFLAGS = -no-undefined $(SOCKET_LIBS) $(THREAD_LIBS)
 
+EXTRA_PROGRAMS = atom_check
+TESTS = atom_check
+
+atom_check_SOURCES= atom_check.c
+atom_check_LDADD= libatl.la
 
 if KERNEL
 bin_PROGRAMS = 

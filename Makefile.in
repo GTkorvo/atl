@@ -34,6 +34,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+EXTRA_PROGRAMS = atom_check$(EXEEXT)
+TESTS = atom_check$(EXEEXT)
 @KERNEL_FALSE@bin_PROGRAMS = attr_test$(EXEEXT) atom_test$(EXEEXT) \
 @KERNEL_FALSE@	atom_server$(EXEEXT) attr_dump$(EXEEXT)
 subdir = .
@@ -69,7 +71,6 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libatl_la_LIBADD =
 am_libatl_la_OBJECTS = atom.lo attr.lo lookup3.lo tclHash.lo
 libatl_la_OBJECTS = $(am_libatl_la_OBJECTS)
 libatl_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -78,6 +79,9 @@ libatl_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 @KERNEL_FALSE@am_libatl_la_rpath = -rpath $(libdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
+am_atom_check_OBJECTS = atom_check.$(OBJEXT)
+atom_check_OBJECTS = $(am_atom_check_OBJECTS)
+atom_check_DEPENDENCIES = libatl.la
 am_atom_server_OBJECTS = atom_server.$(OBJEXT)
 atom_server_OBJECTS = $(am_atom_server_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -108,10 +112,12 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libatl_la_SOURCES) $(atom_server_SOURCES) \
-	$(atom_test_SOURCES) attr_dump.c $(attr_test_SOURCES)
-DIST_SOURCES = $(libatl_la_SOURCES) $(atom_server_SOURCES) \
-	$(atom_test_SOURCES) attr_dump.c $(attr_test_SOURCES)
+SOURCES = $(libatl_la_SOURCES) $(atom_check_SOURCES) \
+	$(atom_server_SOURCES) $(atom_test_SOURCES) attr_dump.c \
+	$(attr_test_SOURCES)
+DIST_SOURCES = $(libatl_la_SOURCES) $(atom_check_SOURCES) \
+	$(atom_server_SOURCES) $(atom_test_SOURCES) attr_dump.c \
+	$(attr_test_SOURCES)
 am__include_HEADERS_DIST = atl.h
 includeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(include_HEADERS) $(noinst_HEADERS)
@@ -254,8 +260,10 @@ ACLOCAL_AMFLAGS = -I config
 noinst_HEADERS = unix_defs.h
 libatl_la_SOURCES = atom.c attr.c lookup3.c tclHash.c
 libatl_la_DEPENDENCIES = @KERNEL_OBJS@
-plibatl_la_LIBADD = @KERNEL_OBJS@ @CERCS_ENV_LIB@
+libatl_la_LIBADD = @KERNEL_OBJS@ @CERCS_ENV_LIB@
 libatl_la_LDFLAGS = -no-undefined $(SOCKET_LIBS) $(THREAD_LIBS)
+atom_check_SOURCES = atom_check.c
+atom_check_LDADD = libatl.la
 @KERNEL_TRUE@BUILT_SOURCES = strtol.c env.c katl.c
 @KERNEL_TRUE@MOSTLYCLEANFILES = atl_module.o
 @KERNEL_FALSE@lib_LTLIBRARIES = libatl.la
@@ -386,6 +394,9 @@ clean-binPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
+atom_check$(EXEEXT): $(atom_check_OBJECTS) $(atom_check_DEPENDENCIES) 
+	@rm -f atom_check$(EXEEXT)
+	$(LINK) $(atom_check_OBJECTS) $(atom_check_LDADD) $(LIBS)
 atom_server$(EXEEXT): $(atom_server_OBJECTS) $(atom_server_DEPENDENCIES) 
 	@rm -f atom_server$(EXEEXT)
 	$(atom_server_LINK) $(atom_server_OBJECTS) $(atom_server_LDADD) $(LIBS)
@@ -428,8 +439,8 @@ install-includeHEADERS: $(include_HEADERS)
 	@list='$(include_HEADERS)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " cmp -s '$$d$$p' '$(DESTDIR)$(includedir)/$$f' || $(includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
-	   cmp -s "$$d$$p" "$(DESTDIR)$(includedir)/$$f" || $(includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
+	  echo " $(includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
+	  $(includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
 	done
 
 uninstall-includeHEADERS:
@@ -487,6 +498,79 @@ GTAGS:
 
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
+
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; ws='[	 ]'; \
+	srcdir=$(srcdir); export srcdir; \
+	list=' $(TESTS) '; \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *$$ws$$tst$$ws*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		echo "XPASS: $$tst"; \
+	      ;; \
+	      *) \
+		echo "PASS: $$tst"; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *$$ws$$tst$$ws*) \
+		xfail=`expr $$xfail + 1`; \
+		echo "XFAIL: $$tst"; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		echo "FAIL: $$tst"; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      echo "SKIP: $$tst"; \
+	    fi; \
+	  done; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="All $$all tests passed"; \
+	    else \
+	      banner="All $$all tests behaved as expected ($$xfail expected failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all tests failed"; \
+	    else \
+	      banner="$$failed of $$all tests did not behave as expected ($$xpass unexpected passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    skipped="($$skip tests were not run)"; \
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  echo "$$dashes"; \
+	  echo "$$banner"; \
+	  test -z "$$skipped" || echo "$$skipped"; \
+	  test -z "$$report" || echo "$$report"; \
+	  echo "$$dashes"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
 
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
@@ -614,7 +698,7 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) check-local
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS check-local
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS) config.h \
@@ -716,8 +800,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS all all-am all-local am--refresh check check-am \
-	check-local clean clean-binPROGRAMS clean-generic \
+.PHONY: CTAGS GTAGS all all-am all-local am--refresh check check-TESTS \
+	check-am check-local clean clean-binPROGRAMS clean-generic \
 	clean-libLTLIBRARIES clean-libtool ctags dist dist-all \
 	dist-bzip2 dist-gzip dist-shar dist-tarZ dist-zip distcheck \
 	distclean distclean-compile distclean-generic distclean-hdr \
