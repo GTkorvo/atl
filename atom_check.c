@@ -11,6 +11,9 @@ int
 main()
 {
     atom_t atom = attr_atom_from_string("ECho_attr_test_atom");
-    printf("Atom test for ECho_Attr_test_atom is %x\n", atom);
+    if (atom != 0x732a7ade) {
+	printf("Atom test for ECho_Attr_test_atom is %x, expected 732a7ade\n", atom);
+	return 1;
+    }
     return 0;
 }
