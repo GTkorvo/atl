@@ -1,4 +1,4 @@
-/* config.h.in.  Generated from configure.in by autoheader.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define with the name of the host which will run the atom server */
 #undef ATOM_SERVER_HOST
@@ -56,6 +56,10 @@
 
 /* Define if compiling for linux kernel */
 #undef LINUX_KERNEL_MODULE
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Name of package */
 #undef PACKAGE
