@@ -1856,15 +1856,6 @@ extern
 void
 set_string_and_atom(atom_server as, char *str, atom_t atom);
 
-extern atom_t set_attr_atom_and_string(str, atom)
-const char *str;
-atom_t atom;
-{
-   init_global_atom_server(&global_as);
-   set_string_and_atom(global_as, (char *)str, atom);
-   return atom;
-} 
-  
 typedef struct Attr_tmp_buffer {
     void *tmp_buffer;
     int tmp_buffer_size;

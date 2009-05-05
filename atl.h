@@ -152,8 +152,6 @@ extern int get_attr_id(attr_list list, int item_no, atom_t *item);
 extern int get_attr ARGS((attr_list list,int index, atom_t *name,
 			  attr_value_type *val_type, attr_value *value));
 
-extern atom_t set_attr_atom_and_string ARGS((const char *str, atom_t atom));
-
 extern
 atom_t
 attr_atom_from_string ARGS((const char *str));
