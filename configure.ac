@@ -65,7 +65,6 @@ AC_SUBST(KERNEL_OBJS)
 AC_SUBST(KERNEL_VERSION)
 
 dnl Checks for libraries.
-CERCS_REQUIRE_PACKAGE(gen_thread, gen_thread.h,libgen_thread.la)
 CERCS_REQUIRE_PACKAGE(cercs_env, cercs_env.h,libcercs_env.la)
 if test -n "$cercs_cv_cercs_env_link_dir"; then
 LDFLAGS="$LDFLAGS -L$cercs_cv_cercs_env_link_dir"
