@@ -108,7 +108,7 @@ translit(arg="$cercs_cv_$1_link_arg "`echo $cercs_cv_$1_link_dir, `/',`_') | sed
 fi
 fi
 if test `echo $arg | grep -c "$1"` -eq 0; then
-dnl if arg does not includes a project spec add it at the end
+# if arg does not includes a project spec add it at the end
 new_flags="$new_flags $arg"
 else
 new_flags="$arg $new_flags"
@@ -188,19 +188,19 @@ if test -n "$with_rpm_build_specified"; then
   fi
 fi
 if test -n "$with_deb_build_specified"; then
-dnl test build directories
+# test build directories
    if test -d "../$1"; then
       tmp_search_results=`pwd`/../$1;
    fi
    if test -d "../../$1"; then
-      tmp_search_results=`pwd`../../$1;
+      tmp_search_results=`pwd`/../../$1;
    fi
-  dnl srcdir presence overrides
+# srcdir presence overrides
    if test -f "$srcdir/../$1/$2"; then
-      tmp_search_results=$srcdir/../$1;
+      tmp_search_results='${abs_top_srcdir}/../$1';
    fi
    if test -f "$srcdir/../../$1/$2"; then
-      tmp_search_results=$srcdir/../../$1;
+      tmp_search_results='${abs_top_srcdir}/../../$1';
    fi
 fi
 if test -n "$tmp_search_results"; then
