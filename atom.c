@@ -333,7 +333,7 @@ fill_hostaddr(void *addr, char *hostname)
     
     host_addr = gethostbyname(hostname);
     if (host_addr == NULL) {
-	unsigned long addr = inet_addr(hostname);
+	int addr = inet_addr(hostname);
 	if (addr == -1) {
 	    /* 
 	     *  not translatable as a hostname or 
