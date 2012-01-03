@@ -141,49 +141,8 @@ atom_server *asp;
         use_base64_string_encoding = strtol(base64, NULL, 10);
     }
     if (*asp != NULL) return;
-    /*
-     * for notes on my we're doing funny things with the "global" value, 
-     * global_as, see the comments in gen_info.c.  This is similar.
-     */
-    sprintf(var_str, "ATOM_SERVER_ADDRESS_%lx", (long) getpid());
-#ifndef HAVE_WINDOWS_H
-    addr_str = getenv(var_str);
-#else
-    { 
-	int ret;
-	char buffer[60];
-	ret = GetEnvironmentVariable(var_str, &buffer[0], sizeof(buffer));
-	if (ret != 0) {
-	    strcpy(var_str, &buffer[0]);
-	    addr_str = &var_str[0];
-	}
-    }
-#endif
-    if (addr_str == NULL) {
-	char addr_tmp[64];
-#ifndef MODULE
-	int value;
-#endif
-	*asp = init_atom_server(prefill_atom_cache);
-#ifndef HAVE_WINDOWS_H
-#ifdef MODULE
-	sprintf(addr_tmp, "%lx", (long)*asp);
-	addr_str = strdup(addr_tmp);
-	atl_setenv(var_str, addr_str, 1);
-#else
-	sprintf(addr_tmp, "%s=%lx", var_str, (long)*asp);
-	addr_str = strdup(addr_tmp);
-	value = putenv(addr_str);
-	if (value != 0) perror("putenv failed\n");
-#endif
-#else
-	sprintf(addr_tmp, "%lx", (long)*asp);
-	addr_str = strdup(addr_tmp);
-	value = SetEnvironmentVariable(var_str, addr_str);
-#endif
-    } else {
-        *(long*)asp = strtol((char *)addr_str, NULL, 16); 
-    }
+
+    *asp = init_atom_server(prefill_atom_cache);
 }
 
 attr_list
