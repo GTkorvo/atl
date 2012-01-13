@@ -48,7 +48,7 @@ typedef void *  thr_mutex_t;
 #  ifdef HAVE_CERCS_ENV_H
 #    include "cercs_env.h"
 #  else
-#    define cercs_getenv(a) ((char *)0)
+#    define cercs_getenv(a) (getenv(a))
 #  endif
 #else
 #  include "kernel/katl.h"
@@ -313,7 +313,7 @@ atom_t atom;
 #endif
 }
 
-static int atom_server_verbose = 0;
+static int atom_server_verbose = -1;
 
 static int
 fill_hostaddr(void *addr, char *hostname)
@@ -333,8 +333,8 @@ fill_hostaddr(void *addr, char *hostname)
     
     host_addr = gethostbyname(hostname);
     if (host_addr == NULL) {
-	int addr = inet_addr(hostname);
-	if (addr == -1) {
+	int address = inet_addr(hostname);
+	if (address == -1) {
 	    /* 
 	     *  not translatable as a hostname or 
 	     * as a dot-style string IP address
@@ -342,7 +342,7 @@ fill_hostaddr(void *addr, char *hostname)
 	    return 0;
 	}
 	assert(sizeof(int) == sizeof(struct in_addr));
-	*((int*)addr) = (int)addr;
+	*((int*)addr) = (int)address;
     } else {
 	memcpy(addr, host_addr->h_addr, host_addr->h_length);
     }
