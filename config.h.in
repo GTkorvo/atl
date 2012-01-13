@@ -9,6 +9,9 @@
 /* define if struct hostent is declared in netdb.h or winsock.h */
 #undef HAS_STRUCT_HOSTENT
 
+/* Define to 1 if you have the <cercs_env.h> header file. */
+#undef HAVE_CERCS_ENV_H
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

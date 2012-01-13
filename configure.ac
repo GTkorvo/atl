@@ -92,7 +92,7 @@ LIBS=$save_libs
 AC_SUBST(SOCKET_LIBS)
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(malloc.h sys/time.h unistd.h windows.h)
+AC_CHECK_HEADERS(malloc.h sys/time.h unistd.h windows.h cercs_env.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_BIGENDIAN_CROSS($bigendian_default)
