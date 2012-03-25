@@ -176,7 +176,22 @@ attr_copy_list(attr_list orig)
 }
 
 #ifndef WORDS_BIGENDIAN
-#define WORDS_BIGENDIAN 0
+static int words_bigendian = -1;
+
+static int
+set_bigendian () {
+  /* Are we little or big endian?  From Harbison&Steele.  */
+  union
+  {
+    long l;
+    char c[sizeof (long)];
+  } u;
+  u.l = 1;
+  words_bigendian = (u.c[sizeof (long) - 1] == 1);
+  return words_bigendian;
+}
+
+#define WORDS_BIGENDIAN ((words_bigendian == -1) ? set_bigendian() : words_bigendian)
 #endif
 
 /* operations on attr_lists */

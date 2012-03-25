@@ -103,9 +103,6 @@
 /* Version number of package */
 #define VERSION "3.0"
 
-/* Define if byteorder is bigendian */
-/* #undef WORDS_BIGENDIAN */
-
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
 

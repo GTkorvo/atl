@@ -990,7 +990,6 @@ AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
 m4_include([config/cercs.m4])
-m4_include([config/definitions.m4])
 m4_include([config/libtool.m4])
 m4_include([config/ltoptions.m4])
 m4_include([config/ltsugar.m4])

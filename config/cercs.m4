@@ -1,4 +1,4 @@
-dnl  Mon Jan 28 13:01:16 EST 2008
+dnl  Sun Mar 25 01:32:40 EDT 2012
 dnl
 dnl cercs_require_package(package, include_file, library_file)
 dnl   either include file or library_file may be left off if not needed
@@ -84,8 +84,37 @@ cercs_tmp=$tmp_search_results
 fi
 ],
 CERCS_FIND_FILE($1, $3, cercs_tmp, $with_translit, lib))
+[
+found=$3
+if test -z "$cercs_tmp" -o "$cercs_tmp" != "$3"; then
+case $3 in 
+dnl  Try .so instead of .la
+   *.la)  lib_tmp=`echo $3 | sed 's/.la$/.so/g'`
+	CERCS_FIND_FILE($1, $lib_tmp, cercs_tmp, $with_translit, lib)
+	found=$lib_tmp
+	;;
+esac
+fi
+if test -z "$cercs_tmp" -o "$cercs_tmp" != "$3"; then
+case $3 in 
+dnl  Try .dylib instead of .la
+   *.la)  lib_tmp=`echo $3 | sed 's/.la$/.dylib/g'`
+	CERCS_FIND_FILE($1, $lib_tmp, cercs_tmp, $with_translit, lib)
+	found=$lib_tmp
+	;;
+esac
+fi
+if test -z "$cercs_tmp" -o "$cercs_tmp" != "$3"; then
+case $3 in 
+dnl  Try .a instead of .la
+    *.la) lib_tmp=`echo $3 | sed 's/.la$/.a/g'`
+	CERCS_FIND_FILE($1, $lib_tmp, cercs_tmp, $with_translit, lib)
+	found=$lib_tmp
+	;;
+esac
+fi]
 if test -n "$cercs_tmp" -a "$cercs_tmp" != "$3"; then
-translit(cercs_cv_$1_link_dir, `/',`_')=`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.$3//g"`
+translit(cercs_cv_$1_link_dir, `/',`_')=`$PATHPROG $cercs_tmp | sed 's#\\\\#/#g' | sed "s/.$found//g"`
 else
 translit(cercs_cv_$1_link_dir="",  `/',`_')
 fi
@@ -101,12 +130,6 @@ translit(if test -n "$cercs_cv_$1_link_arg"; then, `/',`_')
 translit(arg=$cercs_cv_$1_link_arg, `/',`_')
 no_dash_arg=`echo $arg | sed 's/^-//g'`
 [if test `echo $new_flags | grep -c "$no_dash_arg"` -eq 0; then
-root=`echo $3 | sed 's/\..*//'`
-translit(if test ! -r $cercs_cv_$1_link_dir, `/`, `_`)/$root.la; then
-if eval "test \"\${LIBTOOL+set}\" = set"; then
-translit(arg="$cercs_cv_$1_link_arg "`echo $cercs_cv_$1_link_dir, `/',`_') | sed "/./ s/^/-R/1"`
-fi
-fi
 if test `echo $arg | grep -c "$1"` -eq 0; then
 # if arg does not includes a project spec add it at the end
 new_flags="$new_flags $arg"

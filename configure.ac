@@ -95,14 +95,11 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS(malloc.h sys/time.h unistd.h windows.h cercs_env.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_BIGENDIAN_CROSS($bigendian_default)
 AC_COMPILE_CHECK_SIZEOF(int)
 AC_COMPILE_CHECK_SIZEOF(short)
 AC_COMPILE_CHECK_SIZEOF(float)
 AC_COMPILE_CHECK_SIZEOF(double)
 AC_C_CONST
-AC_PUTENV_DEFINED
-AC_SSCANF_DEFINED
 
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
