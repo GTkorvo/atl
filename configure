@@ -12269,6 +12269,12 @@ if test -n "$cercs_cv_cercs_env_link_arg"; then
 arg=$cercs_cv_cercs_env_link_arg
 no_dash_arg=`echo $arg | sed 's/^-//g'`
 if test `echo $new_flags | grep -c "$no_dash_arg"` -eq 0; then
+root=`echo libcercs_env.la | sed 's/\..*//'`
+if test ! -r $cercs_cv_cercs_env_link_dir/$root.la; then
+if eval "test \"\${LIBTOOL+set}\" = set"; then
+arg="$cercs_cv_cercs_env_link_arg "`echo $cercs_cv_cercs_env_link_dir | sed "/./ s/^/-R/1"`
+fi
+fi
 if test `echo $arg | grep -c "cercs_env"` -eq 0; then
 # if arg does not includes a project spec add it at the end
 new_flags="$new_flags $arg"
@@ -12307,11 +12313,11 @@ else
 
 search_list="$PWD/../cercs_env $PWD/../../cercs_env $PWD/../../../cercs_env"
 tmp_search_results=""
-echo "configure:12310: searching for $search_list " >&5
+echo "configure:12316: searching for $search_list " >&5
 for tmp_search_value in $search_list; do
    if test -r $tmp_search_value; then
 	tmp_search_results=$tmp_search_value
-	echo "configure:12314: first found $tmp_search_results " >&5
+	echo "configure:12320: first found $tmp_search_results " >&5
 	break
    fi
 done
@@ -12349,11 +12355,11 @@ else
 
 search_list="$PWD/../cercs_env $PWD/../../cercs_env $PWD/../../../cercs_env"
 tmp_search_results=""
-echo "configure:12352: searching for $search_list " >&5
+echo "configure:12358: searching for $search_list " >&5
 for tmp_search_value in $search_list; do
    if test -r $tmp_search_value; then
 	tmp_search_results=$tmp_search_value
-	echo "configure:12356: first found $tmp_search_results " >&5
+	echo "configure:12362: first found $tmp_search_results " >&5
 	break
    fi
 done
@@ -12418,11 +12424,11 @@ fi
 
 search_list="$search_list /usr/lib/$lib_tmp /usr/local/lib/$lib_tmp /opt/cercs_env/lib/$lib_tmp /opt/misc/lib/$lib_tmp /opt/misc/lib/$cercs_cv_archive/$lib_tmp /opt/local/lib/$lib_tmp"
 tmp_search_results=""
-echo "configure:12421: searching for $search_list " >&5
+echo "configure:12427: searching for $search_list " >&5
 for tmp_search_value in $search_list; do
    if test -r $tmp_search_value; then
 	tmp_search_results=$tmp_search_value
-	echo "configure:12425: first found $tmp_search_results " >&5
+	echo "configure:12431: first found $tmp_search_results " >&5
 	break
    fi
 done
@@ -12513,11 +12519,11 @@ fi
 
 search_list="$search_list /usr/lib/$lib_tmp /usr/local/lib/$lib_tmp /opt/cercs_env/lib/$lib_tmp /opt/misc/lib/$lib_tmp /opt/misc/lib/$cercs_cv_archive/$lib_tmp /opt/local/lib/$lib_tmp"
 tmp_search_results=""
-echo "configure:12516: searching for $search_list " >&5
+echo "configure:12522: searching for $search_list " >&5
 for tmp_search_value in $search_list; do
    if test -r $tmp_search_value; then
 	tmp_search_results=$tmp_search_value
-	echo "configure:12520: first found $tmp_search_results " >&5
+	echo "configure:12526: first found $tmp_search_results " >&5
 	break
    fi
 done
@@ -12608,11 +12614,11 @@ fi
 
 search_list="$search_list /usr/lib/$lib_tmp /usr/local/lib/$lib_tmp /opt/cercs_env/lib/$lib_tmp /opt/misc/lib/$lib_tmp /opt/misc/lib/$cercs_cv_archive/$lib_tmp /opt/local/lib/$lib_tmp"
 tmp_search_results=""
-echo "configure:12611: searching for $search_list " >&5
+echo "configure:12617: searching for $search_list " >&5
 for tmp_search_value in $search_list; do
    if test -r $tmp_search_value; then
 	tmp_search_results=$tmp_search_value
-	echo "configure:12615: first found $tmp_search_results " >&5
+	echo "configure:12621: first found $tmp_search_results " >&5
 	break
    fi
 done
@@ -12666,6 +12672,12 @@ if test -n "$cercs_cv_cercs_env_link_arg"; then
 arg=$cercs_cv_cercs_env_link_arg
 no_dash_arg=`echo $arg | sed 's/^-//g'`
 if test `echo $new_flags | grep -c "$no_dash_arg"` -eq 0; then
+root=`echo libcercs_env.la | sed 's/\..*//'`
+if test ! -r $cercs_cv_cercs_env_link_dir/$root.la; then
+if eval "test \"\${LIBTOOL+set}\" = set"; then
+arg="$cercs_cv_cercs_env_link_arg "`echo $cercs_cv_cercs_env_link_dir | sed "/./ s/^/-R/1"`
+fi
+fi
 if test `echo $arg | grep -c "cercs_env"` -eq 0; then
 # if arg does not includes a project spec add it at the end
 new_flags="$new_flags $arg"

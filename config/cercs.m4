@@ -1,4 +1,4 @@
-dnl  Sun Mar 25 01:32:40 EDT 2012
+dnl  Sun Mar 25 14:10:39 EDT 2012
 dnl
 dnl cercs_require_package(package, include_file, library_file)
 dnl   either include file or library_file may be left off if not needed
@@ -130,6 +130,12 @@ translit(if test -n "$cercs_cv_$1_link_arg"; then, `/',`_')
 translit(arg=$cercs_cv_$1_link_arg, `/',`_')
 no_dash_arg=`echo $arg | sed 's/^-//g'`
 [if test `echo $new_flags | grep -c "$no_dash_arg"` -eq 0; then
+root=`echo $3 | sed 's/\..*//'`
+translit(if test ! -r $cercs_cv_$1_link_dir, `/`, `_`)/$root.la; then
+if eval "test \"\${LIBTOOL+set}\" = set"; then
+translit(arg="$cercs_cv_$1_link_arg "`echo $cercs_cv_$1_link_dir, `/',`_') | sed "/./ s/^/-R/1"`
+fi
+fi
 if test `echo $arg | grep -c "$1"` -eq 0; then
 # if arg does not includes a project spec add it at the end
 new_flags="$new_flags $arg"
