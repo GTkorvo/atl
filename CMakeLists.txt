@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 2.6)
-
 project(atl)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 set (SRC_LIST atom.c attr.c lookup3.c tclHash.c)
 
 include(CheckFunctionExists)
 include(CheckIncludeFiles)
 include(CheckTypeSize)
+include(CreateLibtoolFile)
 
 CHECK_TYPE_SIZE(double SIZEOF_DOUBLE)
 CHECK_TYPE_SIZE(float SIZEOF_FLOAT)
@@ -28,6 +31,8 @@ SET_TARGET_PROPERTIES(atl-static PROPERTIES OUTPUT_NAME "atl")
 # This conflicts with the "foo.lib" import library corresponding to "foo.dll",
 # so we add a "lib" prefix (which is default on other platforms anyway):
 SET_TARGET_PROPERTIES(atl-static PROPERTIES PREFIX "lib")
+SET_TARGET_PROPERTIES(atl PROPERTIES STATIC_LIB "libatl.a")
+SET_TARGET_PROPERTIES(atl PROPERTIES LT_SHOULDNOTLINK "no")
 
 target_link_libraries (atl-static ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries (atl ${CMAKE_THREAD_LIBS_INIT})
@@ -45,6 +50,7 @@ IF (NOT DEFINED (ATOM_SERVER_HOST) )
    set (ATOM_SERVER_HOST "atomhost.cercs.gatech.edu")
 ENDIF()
 
+CREATE_LIBTOOL_FILE(atl /lib)
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h )
 
 INSTALL(FILES atl.h DESTINATION include)
