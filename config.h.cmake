@@ -12,6 +12,9 @@
 /* Define to 1 if you have the `fork' function. */
 #cmakedefine HAVE_FORK
 
+/* Define to 1 if you have the <gen_thread.h> header file. */
+#cmakedefine HAVE_GEN_THREAD_H
+
 /* Define to 1 if you have the <malloc.h> header file. */
 #cmakedefine HAVE_MALLOC_H
 
