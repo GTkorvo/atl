@@ -1,17 +1,26 @@
 #
+#  FIND_CERCS_PROJECT -  Thu Apr 12 16:35:09 EDT 2012
+#
 #  Use this macro like this:
-# FIND_CERCS_PROJECT(project_name library
+# FIND_CERCS_PROJECT(project_name 
+#   LIBRARY library
 #   INCLUDES header1 header2 ...
 #   [REQUIRED]
-#   [STATIC]
-#   [DYNAMIC]
+#   [STATIC]	<not implemented yet>
+#   [DYNAMIC]	<not implemented yet>
 #   [USE_INSTALLED]
 #   [VERBOSE]
+#   [QUIET]
 #   )
 #  
 #  the first parameter is the project name.
-#  the second is the name of the library to search for (stripped of 'lib'
+#  LIBRARY is the name of the library to search for (stripped of 'lib'
 #     prefix and any postfix)
+#  INCLUDES is a list of header files search for
+#  REQUIRED fails the build if all not present
+#  VERBOSE includes some output about the search path
+#  QUIET suppresses the 'found' message
+#  USE_INSTALLED avoids searching home and relative-path directories
 #
 #  the project name is used in directory specs for searching.
 #  
@@ -22,6 +31,7 @@
 # <PROJECT>_LIB_DIR (suitable for LINK_DIRECTORY calls)
 # <PROJECT>_INCLUDE_DIR (suitable for INCLUDE_DIRECTORY calls)
 # <PROJECT>_LIBRARIES (full path to a library file)
+# HAVE_<include_file>   for each include file found (UPCASED, dot is underscore)
 #
 include(CMakeParseArguments)
 CMAKE_POLICY(SET CMP0012 NEW) 
