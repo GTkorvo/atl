@@ -5,10 +5,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set (SRC_LIST atom.c attr.c lookup3.c tclHash.c)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 include(CheckFunctionExists)
 include(CheckIncludeFiles)
 include(CheckTypeSize)
 include(CreateLibtoolFile)
+include(FindCERCSProject)
 
 CHECK_TYPE_SIZE(double SIZEOF_DOUBLE)
 CHECK_TYPE_SIZE(float SIZEOF_FLOAT)
@@ -20,6 +23,19 @@ SET( CMAKE_BUILD_TYPE "RelWithDebInfo" )
 ENDIF()
 
 find_package (Threads)
+
+find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h )
+find_CERCS_project(gen_thread LIBRARY gen_thread INCLUDES gen_thread.h )
+
+set (LINK_LIBRARIES)
+if (${GEN_THREAD_FOUND})
+   set (LINK_LIBRARIES -lgen_thread)
+   LINK_DIRECTORIES(${GEN_THREAD_LIB_DIR})
+endif()
+if (${CERCS_ENV_FOUND})
+   set (LINK_LIBRARIES "${LINK_LIBRARIES} -lcercs_env")
+   LINK_DIRECTORIES(${CERCS_ENV_LIB_DIR})
+endif()
 
 add_library(atl SHARED ${SRC_LIST})
 add_library(atl-static STATIC ${SRC_LIST})
@@ -34,8 +50,8 @@ SET_TARGET_PROPERTIES(atl-static PROPERTIES PREFIX "lib")
 SET_TARGET_PROPERTIES(atl PROPERTIES STATIC_LIB "libatl.a")
 SET_TARGET_PROPERTIES(atl PROPERTIES LT_SHOULDNOTLINK "no")
 
-target_link_libraries (atl-static ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (atl ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (atl-static ${CMAKE_THREAD_LIBS_INIT} ${LINK_LIBARIES})
+target_link_libraries (atl ${CMAKE_THREAD_LIBS_INIT} ${LINK_LIBRARIES})
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
