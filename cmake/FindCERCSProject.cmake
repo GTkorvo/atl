@@ -1,5 +1,5 @@
 #
-#  FIND_CERCS_PROJECT -  Thu Apr 12 16:35:09 EDT 2012
+#  FIND_CERCS_PROJECT -  Sat Apr 14 08:37:01 EDT 2012
 #
 #  Use this macro like this:
 # FIND_CERCS_PROJECT(project_name 
@@ -55,7 +55,7 @@ FUNCTION (FIND_CERCS_PROJECT ARG_PROJECT)
     set (LIB_SEARCH_PATH)
     set (INC_SEARCH_PATH)
     if (NOT ${ARG_USE_INSTALLED} )
-      if ( NOT ("${CERCS_ARCH}" STREQUAL ""))
+      if ( NOT ("${CercsArch}" STREQUAL ""))
 	list (APPEND LIB_SEARCH_PATH ../${PROJECT_NAME/${CERCS_ARCH} ../../${PROJECT_NAME/${CERCS_ARCH} $ENV{HOME}/${CercsArch}/lib )
 	list (APPEND INC_SEARCH_PATH ../${PROJECT_NAME/${CERCS_ARCH} ../../${PROJECT_NAME/${CERCS_ARCH} $ENV{HOME}/${CercsArch}/include )
       endif()
