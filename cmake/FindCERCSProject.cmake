@@ -1,5 +1,5 @@
 #
-#  FIND_CERCS_PROJECT -  Sat Apr 14 08:37:01 EDT 2012
+#  FIND_CERCS_PROJECT -  Sat Apr 14 09:22:48 EDT 2012
 #
 #  Use this macro like this:
 # FIND_CERCS_PROJECT(project_name 
@@ -56,14 +56,14 @@ FUNCTION (FIND_CERCS_PROJECT ARG_PROJECT)
     set (INC_SEARCH_PATH)
     if (NOT ${ARG_USE_INSTALLED} )
       if ( NOT ("${CercsArch}" STREQUAL ""))
-	list (APPEND LIB_SEARCH_PATH ../${PROJECT_NAME/${CERCS_ARCH} ../../${PROJECT_NAME/${CERCS_ARCH} $ENV{HOME}/${CercsArch}/lib )
-	list (APPEND INC_SEARCH_PATH ../${PROJECT_NAME/${CERCS_ARCH} ../../${PROJECT_NAME/${CERCS_ARCH} $ENV{HOME}/${CercsArch}/include )
+	list (APPEND LIB_SEARCH_PATH ../${PROJECT_NAME}/${CercsArch} ../../${PROJECT_NAME}/${CercsArch} $ENV{HOME}/${CercsArch}/lib )
+	list (APPEND INC_SEARCH_PATH ../${PROJECT_NAME}/${CercsArch} ../../${PROJECT_NAME}/${CercsArch} $ENV{HOME}/${CercsArch}/include )
       endif()
       list (APPEND LIB_SEARCH_PATH ../${PROJECT_NAME}  ../../${PROJECT_NAME} ../${PROJECT_NAME}/build ../../${PROJECT_NAME}/build  $ENV{HOME}/lib  )
       list (APPEND INC_SEARCH_PATH ../${PROJECT_NAME}  ../../${PROJECT_NAME} ../${PROJECT_NAME}/build ../../${PROJECT_NAME}/build  $ENV{HOME}/include  )
     endif (NOT ${ARG_USE_INSTALLED} )
     IF(EXISTS /users/c/chaos)
-      if ( NOT ("${CERCS_ARCH}" STREQUAL ""))
+      if ( NOT ("${CercsArch}" STREQUAL ""))
 	list (APPEND LIB_SEARCH_PATH /users/c/chaos/${CercsArch}/${PROJECT_NAME}/lib /users/c/chaos/${CercsArch}/lib)
 	list (APPEND INC_SEARCH_PATH /users/c/chaos/${CercsArch}/${PROJECT_NAME}/include /users/c/chaos/${CercsArch}/include)
       endif()
