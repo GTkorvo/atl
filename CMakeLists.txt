@@ -24,8 +24,8 @@ ENDIF()
 
 find_package (Threads)
 
-find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h VERBOSE )
-find_CERCS_project(gen_thread LIBRARY gen_thread INCLUDES gen_thread.h VERBOSE )
+find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h )
+find_CERCS_project(gen_thread LIBRARY gen_thread INCLUDES gen_thread.h )
 
 set (LINK_LIBRARIES)
 if (${GEN_THREAD_FOUND})
