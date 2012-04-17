@@ -486,7 +486,6 @@ char *str;
 	if (as->hash_lock == NULL) {
 	    as->hash_lock = thr_mutex_alloc();
 	}
-	thr_mutex_lock(as->hash_lock);
     }
 
     atom = ATLget_hash(str);
