@@ -12,6 +12,7 @@ include(CheckIncludeFiles)
 include(CheckTypeSize)
 include(CreateLibtoolFile)
 include(FindCERCSProject)
+include(CTest)
 
 CHECK_TYPE_SIZE(double SIZEOF_DOUBLE)
 CHECK_TYPE_SIZE(float SIZEOF_FLOAT)
