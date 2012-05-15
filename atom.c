@@ -237,7 +237,7 @@ atom_t atom;
     Tcl_HashEntry *entry = NULL, *entry2 = NULL;
     int numbytes, len;
     unsigned char buf[MAXDATASIZE];
-    int addr_len = sizeof(struct sockaddr);
+    unsigned int addr_len = sizeof(struct sockaddr);
 
     thr_mutex_lock(as->hash_lock);
     entry = Tcl_FindHashEntry(&as->string_hash_table, str);
