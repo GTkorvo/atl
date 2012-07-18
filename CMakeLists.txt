@@ -23,10 +23,14 @@ IF( NOT CMAKE_BUILD_TYPE )
 SET( CMAKE_BUILD_TYPE "RelWithDebInfo" )
 ENDIF()
 
+if (DEFINED CERCS_USE_INSTALLED) 
+   set (CERCS_USE_INSTALLED "USE_INSTALLED")
+endif(DEFINED CERCS_USE_INSTALLED) 
+
 find_package (Threads)
 
-find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h )
-find_CERCS_project(gen_thread LIBRARY gen_thread INCLUDES gen_thread.h )
+find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h REQUIRED ${CERCS_USE_INSTALLED})
+find_CERCS_project(gen_thread LIBRARY gen_thread INCLUDES gen_thread.h REQUIRED ${CERCS_USE_INSTALLED})
 
 set (LINK_LIBRARIES)
 if (${GEN_THREAD_FOUND})
