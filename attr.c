@@ -1510,8 +1510,11 @@ get_long_attr(attr_list l, atom_t attr_id, long *valp)
 	*valp = v.u.i;
 	break;
     case Attr_Int8:
-	if (sizeof(long) == 8) *valp = v.u.l;
-	*valp = v.u.i;
+	if (sizeof(long) == 8) {
+	    *valp = v.u.l;
+	} else {
+	    *valp = v.u.i;
+	}
 	break;
     case Attr_Float16:
 	if (sizeof(double) == 16) *valp = (long)v.u.d;
