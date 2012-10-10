@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.3)
+cmake_policy(VERSION 2.8.3)
 project(atl)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -13,6 +14,8 @@ include(CheckTypeSize)
 include(CreateLibtoolFile)
 include(FindCERCSProject)
 include(CTest)
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 CHECK_TYPE_SIZE(double SIZEOF_DOUBLE)
 CHECK_TYPE_SIZE(float SIZEOF_FLOAT)
@@ -67,8 +70,6 @@ SET_TARGET_PROPERTIES(atl PROPERTIES LT_DEPENDENCY_LIBS "${DEP_STRING}")
 target_link_libraries (atl-static ${CMAKE_THREAD_LIBS_INIT} ${LINK_LIBARIES})
 target_link_libraries (atl ${CMAKE_THREAD_LIBS_INIT} ${LINK_LIBRARIES})
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-
 CHECK_INCLUDE_FILES(malloc.h HAVE_MALLOC_H)
 CHECK_INCLUDE_FILES(unistd.h HAVE_UNISTD_H)
 CHECK_INCLUDE_FILES(stdlib.h HAVE_STDLIB_H)
@@ -106,7 +107,7 @@ MESSAGE( STATUS "Change a value with: cmake -D<Variable>=<Value>" )
 MESSAGE( STATUS "-------------------------------------------------------------------------------" )
 MESSAGE( STATUS )
 
-set (PROGS attr_test atom_test atom_server attr_dump) 
+set (PROGS attr_test atom_test atom_check2 atom_server attr_dump) 
 foreach (PROG ${PROGS})
     ADD_EXECUTABLE(${PROG} ${PROG}.c)
     TARGET_LINK_LIBRARIES(${PROG} atl)
