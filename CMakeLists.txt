@@ -107,7 +107,7 @@ MESSAGE( STATUS "Change a value with: cmake -D<Variable>=<Value>" )
 MESSAGE( STATUS "-------------------------------------------------------------------------------" )
 MESSAGE( STATUS )
 
-set (PROGS attr_test atom_test atom_check2 atom_server attr_dump) 
+set (PROGS attr_test atom_test atom_check atom_server attr_dump) 
 foreach (PROG ${PROGS})
     ADD_EXECUTABLE(${PROG} ${PROG}.c)
     TARGET_LINK_LIBRARIES(${PROG} atl)
