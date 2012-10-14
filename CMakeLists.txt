@@ -113,7 +113,7 @@ foreach (PROG ${PROGS})
     TARGET_LINK_LIBRARIES(${PROG} atl)
 endforeach()
 
-ADD_EXECUTABLE(atom_check atom_check.c)
+#ADD_EXECUTABLE(atom_check atom_check.c)
 TARGET_LINK_LIBRARIES(atom_check atl )
 
 ENABLE_TESTING()
