@@ -113,6 +113,14 @@ foreach (PROG ${PROGS})
     TARGET_LINK_LIBRARIES(${PROG} atl)
 endforeach()
 
+SET(PROGS_INSTALL)
+# prefix and suffix elements
+foreach(l ${PROGS})
+   list(APPEND PROGS_INSTALL ${CMAKE_CURRENT_BINARY_DIR}/${l} )
+endforeach()
+
+INSTALL(PROGRAMS ${PROGS_INSTALL} DESTINATION bin)
+
 #ADD_EXECUTABLE(atom_check atom_check.c)
 TARGET_LINK_LIBRARIES(atom_check atl )
 
