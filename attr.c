@@ -208,7 +208,8 @@ internal_create_attr_list(int iattr_count, int oattr_count)
 	list->l.list.attributes = malloc(oattr_count * sizeof(attr));
     }
     if (iattr_count == 0) {
-	list->l.list.iattrs = malloc(sizeof(struct int_attr_struct));
+	/* adding 4 here so that we can pad the send structure up to 8 */
+	list->l.list.iattrs = malloc(sizeof(struct int_attr_struct) + 4);
     } else {
 	list->l.list.iattrs = malloc(sizeof(struct int_attr_struct) +
 				     (iattr_count -1) * sizeof(int_attr));
@@ -501,7 +502,7 @@ attr_union value;
 	int count = list->l.list.iattrs->int_attr_count;
 	if (count > 0) {
 	    int size = sizeof(struct int_attr_struct) + 
-		(count+1)* sizeof(int_attr);
+		(count+2)* sizeof(int_attr);
 	    list->l.list.iattrs = realloc(list->l.list.iattrs, size);
 	}
 	
@@ -1992,7 +1993,7 @@ encode_attr_for_xmit(attr_list l, AttrBuffer b, int *length)
     /* then the remaining Attributes */
     recursive_encode(l, b, Attr_Undefined);
     *length = b->tmp_buffer_in_use_size;
-    add_to_tmp_buffer(b, 4);  /* pad at the end */
+    add_to_tmp_buffer(b, 8);  /* pad at the end */
     return b->tmp_buffer;
 }
 
