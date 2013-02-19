@@ -294,7 +294,7 @@ atom_t atom;
 	    return;
 	}
 	buf[buf[0]+1] = 0;
-	handle_unexpected_msg(as, &buf[1]);
+	handle_unexpected_msg(as, (char*) &buf[1]);
     } else {
 	if (as->their_addr.sin_addr.s_addr == 0) return;
 	set_blocking(as, 0);	/* set server fd nonblocking */
@@ -307,7 +307,7 @@ atom_t atom;
 				 (struct sockaddr *) &(as->their_addr), &addr_len)) != -1) {
 	    /* actually got a message back ! */
 	    buf[numbytes+1] = 0;
-	    handle_unexpected_msg(as, &buf[1]);
+	    handle_unexpected_msg(as, (char*) &buf[1]);
 	}
     }
 #endif
