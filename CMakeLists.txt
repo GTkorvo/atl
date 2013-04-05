@@ -13,7 +13,10 @@ include(CheckIncludeFiles)
 include(CheckTypeSize)
 include(CreateLibtoolFile)
 include(FindCERCSProject)
+include(AddLibtoolLibrary)
 include(CTest)
+
+option(BUILD_SHARED_STATIC "enable building the shared or the static library" "BOTH")
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -35,15 +38,16 @@ find_package (Threads)
 find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h REQUIRED ${CERCS_USE_INSTALLED})
 find_CERCS_project(gen_thread LIBRARY gen_thread INCLUDES gen_thread.h REQUIRED ${CERCS_USE_INSTALLED})
 
-set (LINK_LIBRARIES)
+set (LINK_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
+
 if (${GEN_THREAD_FOUND})
-   set (LINK_LIBRARIES -lgen_thread)
+   list (APPEND LINK_LIBRARIES -lgen_thread)
    LINK_DIRECTORIES(${GEN_THREAD_LIB_DIR})
    INCLUDE_DIRECTORIES(${GEN_THREAD_INCLUDE_DIR})
    list (APPEND DEPLIBS "-L${GEN_THREAD_LIB_DIR}" "${GEN_THREAD_LIB_DIR}/libgen_thread.la")
 endif()
 if (${CERCS_ENV_FOUND})
-   set (LINK_LIBRARIES "${LINK_LIBRARIES} -lcercs_env")
+   list (APPEND LINK_LIBRARIES -lcercs_env)
    LINK_DIRECTORIES(${CERCS_ENV_LIB_DIR})
    INCLUDE_DIRECTORIES(${CERCS_ENV_INCLUDE_DIR})
    list (APPEND DEPLIBS "-L${CERCS_ENV_LIB_DIR}" "${CERCS_ENV_LIB_DIR}/libcercs_env.la")
@@ -53,22 +57,9 @@ foreach(arg ${DEPLIBS})
    set(DEP_STRING "${DEP_STRING} ${arg}")
  endforeach(arg ${DEPLIBS})
 
-add_library(atl SHARED ${SRC_LIST})
-add_library(atl-static STATIC ${SRC_LIST})
+list (APPEND LINK_LIBRARIES ${CMAKE_THREADS_LIBS_INIT})
 
-# The library target "atl" already has a default OUTPUT_NAME of "atl", so we don't need to change it.
-# The library target "atl-static" has a default OUTPUT_NAME of "atl-static", so change it.
-SET_TARGET_PROPERTIES(atl-static PROPERTIES OUTPUT_NAME "atl")
-# Now the library target "foo-static" will be named "foo.lib" with MS tools.
-# This conflicts with the "foo.lib" import library corresponding to "foo.dll",
-# so we add a "lib" prefix (which is default on other platforms anyway):
-SET_TARGET_PROPERTIES(atl-static PROPERTIES PREFIX "lib")
-SET_TARGET_PROPERTIES(atl PROPERTIES STATIC_LIB "libatl.a")
-SET_TARGET_PROPERTIES(atl PROPERTIES LT_SHOULDNOTLINK "no")
-SET_TARGET_PROPERTIES(atl PROPERTIES LT_DEPENDENCY_LIBS "${DEP_STRING}")
-
-target_link_libraries (atl-static ${CMAKE_THREAD_LIBS_INIT} ${LINK_LIBARIES})
-target_link_libraries (atl ${CMAKE_THREAD_LIBS_INIT} ${LINK_LIBRARIES})
+add_libtool_library(NAME atl SRC_LIST ${SRC_LIST} DEP_LIBS ${DEPLIBS} LINK_LIBS ${LINK_LIBRARIES})
 
 CHECK_INCLUDE_FILES(malloc.h HAVE_MALLOC_H)
 CHECK_INCLUDE_FILES(unistd.h HAVE_UNISTD_H)
@@ -81,8 +72,6 @@ IF (NOT DEFINED (ATOM_SERVER_HOST) )
    set (ATOM_SERVER_HOST "atomhost.cercs.gatech.edu")
 ENDIF()
 
-CREATE_LIBTOOL_FILE(atl /lib)
-
 if (${CMAKE_C_COMPILER_ID} MATCHES "Intel") 
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -shared-intel")
 endif()
@@ -91,7 +80,7 @@ CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINAR
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.ctest.in ${CMAKE_CURRENT_BINARY_DIR}/CTestCustom.ctest )
 
 INSTALL(FILES atl.h DESTINATION include)
-INSTALL(TARGETS atl atl-static
+INSTALL(TARGETS ${INSTALL_TARGETS}
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -103,6 +92,7 @@ MESSAGE( STATUS )
 MESSAGE( STATUS "-------------------------------------------------------------------------------" )
 MESSAGE( STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}" )
 MESSAGE( STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}" )
+MESSAGE( STATUS "BUILD_SHARED_STATIC = ${BUILD_SHARED_STATIC}")
 MESSAGE( STATUS "ATOM_SERVER_HOST = ${ATOM_SERVER_HOST}" )
 MESSAGE( STATUS "Change a value with: cmake -D<Variable>=<Value>" )
 MESSAGE( STATUS "-------------------------------------------------------------------------------" )
