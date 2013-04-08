@@ -16,7 +16,9 @@ include(FindCERCSProject)
 include(AddLibtoolLibrary)
 include(CTest)
 
-option(BUILD_SHARED_STATIC "enable building the shared or the static library" "BOTH")
+IF(NOT DEFINED BUILD_SHARED_STATIC)
+  SET( BUILD_SHARED_STATIC "BOTH")
+ENDIF(NOT DEFINED BUILD_SHARED_STATIC)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -55,7 +57,7 @@ endif()
 
 foreach(arg ${DEPLIBS})
    set(DEP_STRING "${DEP_STRING} ${arg}")
- endforeach(arg ${DEPLIBS})
+endforeach(arg ${DEPLIBS})
 
 list (APPEND LINK_LIBRARIES ${CMAKE_THREADS_LIBS_INIT})
 
