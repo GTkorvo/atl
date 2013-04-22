@@ -146,6 +146,7 @@ extern int get_float_attr ARGS(( attr_list attrs, atom_t attr_id, float *value_p
 extern int get_string_attr ARGS(( attr_list attrs, atom_t attr_id, char **value_p));
 
 extern void dump_attr_list ARGS(( attr_list attrs ));
+extern void fdump_attr_list ARGS(( void *file, attr_list attrs ));
 
 extern int get_attr_id(attr_list list, int item_no, atom_t *item);
 

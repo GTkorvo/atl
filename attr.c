@@ -893,17 +893,15 @@ attr_union *value_p;
 }
 
 static void
-internal_dump_attr_list ARGS((attr_list list, int indent));
+internal_dump_attr_list ARGS((FILE *out, attr_list list, int indent));
 
 static void
-dump_attr_sublist(list, indent)
-attr_list list;
-int indent;
+dump_attr_sublist(FILE *out, attr_list list, int indent)
 {
     int i;
     init_global_atom_server(&global_as);
     if (list == NULL) {
-        printf("[NULL]\n");
+        fprintf(out, "[NULL]\n");
         return;
     }
     for (i = 0; i < list->l.list.iattrs->int_attr_count; i++) {
@@ -917,13 +915,13 @@ int indent;
         if (attr_name == NULL)
             print_name = "<null attr name>";
         for (j = 0; j < indent; j++) {
-            printf("    ");
+            fprintf(out, "    ");
         }
 	if ((attr_id == ATL_CHAR_CONS('C','P','I','P')) || 
 	    (attr_id == ATL_CHAR_CONS('C','I','P','A'))) {
 	    /* builts we want to format differently */
 	    unsigned int ip = list->l.list.iattrs->iattr[i].value;
-	    printf("    { %s ('%c%c%c%c'), Attr_Int4, %d.%d.%d.%d }\n", print_name,
+	    fprintf(out, "    { %s ('%c%c%c%c'), Attr_Int4, %d.%d.%d.%d }\n", print_name,
 		   c[0], c[1], c[2], c[3],
 		   ((ip & 0xff000000) >> 24), ((ip & 0x00ff0000) >> 16), 
 		   ((ip & 0x0000ff00) >> 8), (ip & 0x000000ff));
@@ -933,7 +931,7 @@ int indent;
 		(!isprint((int)c[3]))) {
 		sprintf(print_id, "0x%x", attr_id);
 	    }
-	    printf("    { %s ('%s'), Attr_Int4, %ld }\n", print_name,
+	    fprintf(out, "    { %s ('%s'), Attr_Int4, %ld }\n", print_name,
 		   print_id, (long) list->l.list.iattrs->iattr[i].value);
 	}
 	if (attr_name) free(attr_name);
@@ -1031,7 +1029,7 @@ int indent;
         case Attr_List:
             printf("    { %s ('%s'), Attr_List, ->\n", print_name,
 		   print_id);
-            internal_dump_attr_list((attr_list) list->l.list.attributes[i].value.u.p,
+            internal_dump_attr_list(out, (attr_list) list->l.list.attributes[i].value.u.p,
                                     indent+1);
             for (j = 0; j< indent; j++) {
                 printf("    ");
@@ -1047,10 +1045,16 @@ extern void
 dump_attr_list(list)           
 attr_list list;
 {
+    fdump_attr_list((void*)stdout, list);
+}
 
+extern void
+fdump_attr_list(void *file, attr_list list)
+{
+    FILE *out = (FILE*)file;
     init_global_atom_server(&global_as);
-    printf("Attribute list %p, ref_count = %d\n", list, list->ref_count);
-    internal_dump_attr_list(list, 0);
+    fprintf(out, "Attribute list %p, ref_count = %d\n", list, list->ref_count);
+    internal_dump_attr_list(out, list, 0);
 }
 
 /*
@@ -1108,31 +1112,32 @@ get_attr_id(attr_list list, int item_no, atom_t *item)
 }
 
 static void
-internal_dump_attr_list (list, indent)
+internal_dump_attr_list (out, list, indent)
+FILE *out;
 attr_list list;
 int indent;
 {
     int i = 0;
     for (i = 0; i< indent; i++) {
-        printf("    ");
+        fprintf(out, "    ");
     }
     if (list == NULL) {
-        printf("[NULL]\n");
+        fprintf(out, "[NULL]\n");
         return;
     }
-    printf("[\n");
+    fprintf(out, "[\n");
     if (!list->list_of_lists) {
-        dump_attr_sublist(list, indent);
+        dump_attr_sublist(out, list, indent);
     } else {
         int i;
         for (i=0; i<list->l.lists.sublist_count; i++) {
-            dump_attr_sublist(list->l.lists.lists[i], indent);
+            dump_attr_sublist(out, list->l.lists.lists[i], indent);
         }
     }
     for (i=0; i< indent; i++) {
-        printf("    ");
+        fprintf(out, "    ");
     }
-    printf("]\n");
+    fprintf(out, "]\n");
 }                   
 
 static char*
