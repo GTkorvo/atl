@@ -295,7 +295,7 @@ process_data(char* buf, char *response)
 	str = atom_to_string(stringhash, valuehash, atom);
 	response[0] = 'S';
 	if (str) {
-	    strncpy(&response[1], str, MAXBUFLEN);
+	    strncpy(&response[1], str, MAXBUFLEN-1);
 	} else {
 	    response[1] = 0;
 	}
