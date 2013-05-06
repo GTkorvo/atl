@@ -899,7 +899,13 @@ static void
 dump_attr_sublist(FILE *out, attr_list list, int indent)
 {
     int i;
+    static atom_t CM_PEER_IP = -1;
+    static atom_t CM_IP_ADDR = -1;
     init_global_atom_server(&global_as);
+    if (CM_IP_ADDR == -1) {
+	CM_PEER_IP = attr_atom_from_string("PEER_IP");
+	CM_IP_ADDR = attr_atom_from_string("IP_ADDR");
+    }
     if (list == NULL) {
         fprintf(out, "[NULL]\n");
         return;
@@ -917,9 +923,9 @@ dump_attr_sublist(FILE *out, attr_list list, int indent)
         for (j = 0; j < indent; j++) {
             fprintf(out, "    ");
         }
-	if ((attr_id == ATL_CHAR_CONS('C','P','I','P')) || 
-	    (attr_id == ATL_CHAR_CONS('C','I','P','A'))) {
-	    /* builts we want to format differently */
+	if ((attr_id == CM_IP_ADDR) || 
+	    (attr_id == CM_PEER_IP)) {
+	    /* built-in's we want to format differently */
 	    unsigned int ip = list->l.list.iattrs->iattr[i].value;
 	    fprintf(out, "    { %s ('%c%c%c%c'), Attr_Int4, %d.%d.%d.%d }\n", print_name,
 		   c[0], c[1], c[2], c[3],
