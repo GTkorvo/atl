@@ -14,24 +14,12 @@
 #include "config.h"
 #include "atl.h"
 
-#ifndef LINUX_KERNEL_MODULE
 #  include <stdlib.h>
 #  ifdef HAVE_MALLOC_H
 #    include <malloc.h>
 #  endif
 #  include <stdio.h>
 #  include <string.h>
-#else
-#  ifndef __KERNEL__
-#    define __KERNEL__
-#  endif
-#  ifndef MODULE
-#    define MODULE
-#  endif
-#  include "kernel/katl.h"
-#  include "kernel/library.h"
-#  include "kernel/kernel_defs.h"
-#endif
 
 #include "tclHash.h"
 

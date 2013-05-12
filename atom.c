@@ -1,18 +1,6 @@
 #include "config.h"
 #include "atl.h"
 
-#ifdef LINUX_KERNEL_MODULE
-#  ifndef MODULE
-#    define MODULE
-#  endif
-#  ifndef __KERNEL__
-#    define __KERNEL__
-#  endif
-#  include <linux/kernel.h>
-#  include <linux/module.h>
-#endif
-
-#ifndef MODULE
 #  include <assert.h>
 #  include <string.h>
 #  include <stdlib.h>
@@ -50,18 +38,6 @@ typedef void *  thr_mutex_t;
 #  else
 #    define cercs_getenv(a) (getenv(a))
 #  endif
-#else
-#  include "kernel/katl.h"
-#  include "kernel/library.h"
-#  include "kernel/kernel_defs.h"
-#  include "assert.h"
-#  include <linux/in.h>
-char * atl_getenv(const char *);
-int    atl_setenv(const char *, const char *, int);
-char * atl_strdup(char *);
-#  define cercs_getenv    atl_getenv
-#  define strdup          atl_strdup
-#endif
 
 #include "atom_internal.h"
 

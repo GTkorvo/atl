@@ -48,9 +48,6 @@
 /* Define to 1 if you have the <windows.h> header file. */
 #cmakedefine HAVE_WINDOWS_H
 
-/* Define if compiling for linux kernel */
-#cmakedefine LINUX_KERNEL_MODULE
-
 /* The number of bytes in type double */
 #cmakedefine SIZEOF_DOUBLE @SIZEOF_DOUBLE@
 

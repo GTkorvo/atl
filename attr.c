@@ -2,7 +2,6 @@
 #include "stdio.h"
 #include "atl.h"
 
-#ifndef LINUX_KERNEL_MODULE
 #  include "config.h"
 #  ifdef HAVE_WINDOWS_H
 #    include <windows.h>
@@ -16,28 +15,13 @@
 #    endif
 #    include <unix_defs.h>
 #  endif
-#else
-#  ifndef __KERNEL__
-#    define __KERNEL__
-#  endif
-#  ifndef MODULE
-#    define MODULE
-#  endif
-
-#  include "kernel/katl.h"
-#  include "kernel/library.h"
-#  include <linux/ctype.h>
-#  include "kernel/kernel_defs.h"
-#endif
 
 #include "assert.h"
-#ifndef LINUX_KERNEL_MODULE
 #  ifdef HAVE_CERCS_ENV_H
 #    include "cercs_env.h"
 #  else
 #    define cercs_getenv(a) ((char *)0)
 #  endif
-#endif
 
 #if defined(_MSC_VER)
 #define strdup _strdup
@@ -103,7 +87,9 @@ static char * base64_encode ARGS((char *binStr, unsigned int len));
 static int base64_decode ARGS((unsigned char *input, unsigned char *output));
 
 atom_server global_as = NULL;
-static int use_base64_string_encoding = 1;
+atl_lock_func global_as_lock = NULL;
+atl_lock_func global_as_unlock = NULL;
+void* global_as_lock_data = NULL;
 
 #ifdef MODULE
 char * atl_getenv(const char *);
@@ -133,13 +119,6 @@ void
 init_global_atom_server(asp)
 atom_server *asp;
 {
-    char *addr_str = NULL;
-    char var_str[60];
-    char *base64;
-
-    if ((base64 = cercs_getenv("ATL_BASE64_STRINGS")) != NULL) {
-        use_base64_string_encoding = strtol(base64, NULL, 10);
-    }
     if (*asp != NULL) return;
 
     *asp = init_atom_server(prefill_atom_cache);
@@ -1146,272 +1125,26 @@ int indent;
     fprintf(out, "]\n");
 }                   
 
-static char*
-strdqcat(str, size_p, str2)
-char *str;
-int *size_p;
-char *str2;
-{
-    int str2_len = strlen(str2);
-    str = realloc(str, *size_p + str2_len + 1);
-    strcpy(str + *size_p, str2);
-    (*size_p) += str2_len;
-    return str;
-}
-
-static char*
-strdcat(str, size_p, str2)
-char *str;
-int *size_p;
-char *str2;
-{
-    return strdqcat(str, size_p, str2);
-}
-
 static const char xchars [] = "0123456789abcdef";
 
-#define nibble2hex(val) (xchars[val & 0x0f])
-
-static
-unsigned char
-hex2byte (char c)
-{
-    if (isdigit ((int)c))
-	return (unsigned char) (c - '0');
-    else if (islower ((int)c))
-	return (unsigned char) (10 + c - 'a');
-    else
-	return (unsigned char) (10 + c - 'A');
-}
-
 #define roundup4(a) ((a + 3) & ~3)
-
-static char *
-add_list_to_string(str, size_p, list)
-char *str;
-int *size_p;
-attr_list list;
-{
-    int i;
-    init_global_atom_server(&global_as);
-    
-    for (i = 0; i < list->l.list.iattrs->int_attr_count; i++) {
-        char str_tmp[128];
-        char *atom_string;
-        memset(str_tmp, 0, sizeof(str_tmp));
-#ifdef SHARED_ATTR_NUMS
-        sprintf(str_tmp, "{%d", tmp.attr_id);
-#else
-	
-	atom_string =string_from_atom(global_as, 
-				      list->l.list.iattrs->iattr[i].attr_id);
-	if (atom_string == NULL) {
-	    static int warned = 0;
-	    if (warned == 0) {
-		printf("Attribute has no name.  Set one with set_attr_string_and_atom();\n");
-		printf("See http://www.cc.gatech.edu/systems/projects/CM/attributes.html\n");
-		warned++;
-	    }
-	    atom_string = strdup("NO-NAME");
-	}
-	sprintf(str_tmp, "{%s", atom_string);
-        free(atom_string);
-#endif
-        str = strdcat(str, size_p, str_tmp);
-	sprintf(str_tmp, ",4,%d},", (int) (long)list->l.list.iattrs->iattr[i].value);
-	str = strdcat(str, size_p, str_tmp);
-    }
-	
-    for (i = 0; i < list->l.list.iattrs->other_attr_count; i++) {
-        attr_p tmp;
-        char str_tmp[128];
-        char *atom_string;
-	tmp = &list->l.list.attributes[i];
-
-        memset(str_tmp, 0, sizeof(str_tmp));
-        if (tmp->val_type == Attr_List) continue;
-#ifdef SHARED_ATTR_NUMS
-        sprintf(str_tmp, "{%d", tmp->attr_id);
-#else
-	atom_string = string_from_atom(global_as, tmp->attr_id);
-	if (atom_string == NULL) {
-	    static int warned = 0;
-	    if (warned == 0) {
-		printf("Attribute has no name.  Set one with set_attr_string_and_atom();\n");
-		printf("See http://www.cc.gatech.edu/systems/projects/CM/attributes.html\n");
-		warned++;
-	    }
-	    atom_string = strdup("NO-NAME");
-	}
-        sprintf(str_tmp, "{%s", atom_string);
-        free(atom_string);
-#endif
-        str = strdcat(str, size_p, str_tmp);
-        switch(tmp->val_type) {
-        case Attr_Undefined:
-            str = strdcat(str, size_p, ",U,");
-            break;
-        case Attr_Int4:
-	    assert(0);
-            break;
-        case Attr_Int8:
-            sprintf(str_tmp, ",8,%ld", (long) tmp->value.u.l);
-            str = strdcat(str, size_p, str_tmp);
-            break;
-        case Attr_String:
-            {
-                char tmp_str[24];
-                sprintf(tmp_str, ",S%d,", (int)strlen(tmp->value.u.p));
-                str = strdcat(str, size_p, tmp_str);
-                str = strdcat(str, size_p, (char*)tmp->value.u.p);
-            }
-            break;
-        case Attr_Opaque: {
-            attr_opaque_p o = (attr_opaque_p) tmp->value.u.p;
-           if (o == NULL) {
-                str = strdcat(str, size_p, ",O0,");
-            } else {
-                char tmp3[3];
-                int i;
-                sprintf(str_tmp, ",O%d,", o->length);
-                str = strdcat(str, size_p, str_tmp);
-                tmp3[2] = 0;
-                for (i=0; i<o->length; i++) {
-                    tmp3[0] = nibble2hex(((char*)o->buffer)[i] >> 4);
-                    tmp3[1] = nibble2hex(((char*)o->buffer)[i]);
-                    str = strdcat(str, size_p, tmp3);
-                }
-            }
-            break;
-        }
-        case Attr_Atom:
-            sprintf(str_tmp, ",A,%d", (int) (long)tmp->value.u.i);
-            str = strdcat(str, size_p, str_tmp);
-            break;
-        case Attr_List:
-        default:
-            assert(0);
-        }
-        str = strdqcat(str, size_p, "},");
-    }
-    return str;
-}                 
-
-static int
-add_list_from_string(str, list)
-const char *str;
-attr_list list;
-{
-    while (1) {
-	char *first_comma = strchr(str, ',');
-	char *value = first_comma ? strchr(first_comma+1, ',') : NULL;
-	char *end = NULL;
-	int attr_id, length;
-	attr_value_type val_type = Attr_Undefined;
-	attr_value val = 0;
-	long long_value;
-
-	if (*str == 0) return 1;   /* success */
-	if (value == NULL) return 0;
-#ifdef SHARED_ATTR_NUMS
-	if (sscanf(str, "{%d,", &attr_id) != 1) return 0;
-#else
-	
-	{ 
-	    int len = first_comma - str - 1;
-	    char * atom_name = malloc(len + 1);
-	    strncpy(atom_name, (str+1), len);
-	    atom_name[len] = 0;
-	    attr_id = attr_atom_from_string(atom_name);
-	    free(atom_name);
-	}
-#endif
-	switch(*(first_comma+1)) {
-	case 'U':
-	    val_type = Attr_Undefined;
-	    end = value + 2;
-	    break;
-	case '4':
-	    val_type = Attr_Int4;
-            val = (attr_value) (long) atoi(value+1);
-            end = strchr(value+1, ',') + 1;
- 	    if (end == (char*)1) end = value + strlen(value);
-	    break;
-	case '8':
-	    val_type = Attr_Int8;
-            long_value = atoi(value+1);
-	    val = (attr_value)long_value;
-	    end = strchr(value+1, ',') + 1;
-	    if (end == (char*)1) end = value + strlen(value);
-	    break;
-	case 'A':
-	    val_type = Attr_Atom;
-	    val = (attr_value)(long)atoi(value+1);
-	    end = strchr(value+1, ',') + 1;
-	    if (end == (char*)1) end = value + strlen(value);
-	    break;
-	case 'S':
-	    val_type = Attr_String;
-	    length = atoi(first_comma+2);
-	    end = value+1+length;
-	    val = malloc(length+1);
-	    strncpy(val, value+1, length);
-	    ((char*)val)[length] = 0; /* terminate string */
-	    end += 2;
-	    break;
-	case 'O': {
-	    int len;
-	    len = atoi(first_comma+2);
-	    while (*value != ',') value++; /* skip to start of buffer */
-	    value++;
-	    val_type = Attr_Opaque;
-	    if (len == 0) {
-		val = (attr_value) NULL;
-	    } else {
-		attr_opaque_p o = malloc(sizeof(attr_opaque));
-		int i;
-		val = (attr_value)o;
-		o->length = len;
-		o->buffer = malloc(len);
-		for (i=0 ; i < len; i++) {
-		    unsigned char	byte;
-		    byte = (unsigned char) (hex2byte (value[0]) << 4);
-		    byte |= hex2byte (value [1]);
-		    ((char*)o->buffer)[i] = byte;
-		    value += 2;
-		}
-	    }
-	    end = value + 2;
-	    break;
-	}    
-	default:
-	    assert(0);
-	}
-	add_attr(list, attr_id, val_type, val);
-	str = end;
-    }
-}
 
 extern
 char *
 attr_list_to_string(attrs)
 attr_list attrs;
 {
-    int size = 0;
+    char * result;
+    void *encoded;
+    int len;
+    AttrBuffer tmp;
     if (attrs == NULL) return NULL;
-    if (use_base64_string_encoding) {
-	char * result;
-	void *encoded;
-	int len;
-	AttrBuffer tmp = create_AttrBuffer();
+    tmp = create_AttrBuffer();
 
-	encoded = encode_attr_for_xmit(attrs, tmp, &len);
-	result = base64_encode(encoded, len);
-	free_AttrBuffer(tmp);
-	return result;
-    } else {
-	return(add_list_to_string(malloc(1), &size, attrs));
-    }
+    encoded = encode_attr_for_xmit(attrs, tmp, &len);
+    result = base64_encode(encoded, len);
+    free_AttrBuffer(tmp);
+    return result;
 }
 
 extern
@@ -1419,22 +1152,23 @@ attr_list
 attr_list_from_string(str)
 const char * str;
 {
+    attr_list ret_val;
+    unsigned char *output;
     if (str == NULL) return NULL;
-    if ((*str == ' ') || (*str == '\t') || (*str == '{')) {
-	attr_list ret_val = create_attr_list();
-	if (add_list_from_string(str, ret_val) != 1) {
-	    free_attr_list(ret_val);
-	    return NULL;
-	} 
-	return ret_val;
-    } else {
-	attr_list ret_val;
-	unsigned char *output = (unsigned char *)strdup(str);
-	base64_decode((unsigned char *)str, output);
-	ret_val = decode_attr_from_xmit(output);
-	free(output);
-	return ret_val;
-    }
+
+    output = (unsigned char *)strdup(str);
+    base64_decode((unsigned char *)str, output);
+    ret_val = decode_attr_from_xmit(output);
+    free(output);
+    return ret_val;
+}
+
+extern void
+atl_install_mutex_funcs(atl_lock_func lock, atl_lock_func unlock, void *client_data)
+{
+    global_as_lock = lock;
+    global_as_unlock = unlock;
+    global_as_lock_data = client_data;
 }
 
 extern
@@ -1442,8 +1176,12 @@ extern
 attr_atom_from_string(str)
 const char *str;
 {
+    atom_t tmp;
     init_global_atom_server(&global_as);
-    return atom_from_string(global_as, (char*)str);
+    if (global_as_lock) (global_as_lock)(global_as_lock_data);
+    tmp = atom_from_string(global_as, (char*)str);
+    if (global_as_unlock) (global_as_unlock)(global_as_lock_data);
+    return tmp;
 }
 
 extern
@@ -1451,8 +1189,12 @@ char *
 attr_string_from_atom(atom)
 atom_t atom;
 {
+    char *tmp;
     init_global_atom_server(&global_as);
-    return string_from_atom(global_as, atom);
+    if (global_as_lock) (global_as_lock)(global_as_lock_data);
+    tmp = string_from_atom(global_as, atom);
+    if (global_as_unlock) (global_as_unlock)(global_as_lock_data);
+    return tmp;
 }
 
 extern

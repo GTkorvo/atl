@@ -153,6 +153,10 @@ extern int get_attr_id(attr_list list, int item_no, atom_t *item);
 extern int get_attr ARGS((attr_list list,int index, atom_t *name,
 			  attr_value_type *val_type, attr_value *value));
 
+typedef void (*atl_lock_func)(void *client_data);
+extern void
+atl_install_mutex_funcs(atl_lock_func lock, atl_lock_func unlock, void *client_data);
+
 extern
 atom_t
 attr_atom_from_string ARGS((const char *str));
