@@ -7,15 +7,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#ifdef HAVE_GEN_THREAD_H
-#include <gen_thread.h>
-#else
-#define gen_pthread_init()
-#define gen_thr_initialized()  0
-#define thr_mutex_lock(m)
-#define thr_mutel_unlock(m)
-#endif
-
 extern
 void
 set_string_and_atom(atom_server as, char *str, atom_t atom);
@@ -37,7 +28,6 @@ int
 main()
 {
     atom_server as;
-    gen_pthread_init();
     as = init_atom_server(prefill_atom_cache);
     printf("Connected to server \"%s\"\n", get_server_id(as));
     printf("Usage:   D<number> to translate a decimal value to a string\n");

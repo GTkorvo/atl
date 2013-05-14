@@ -24,15 +24,6 @@
 #  include <fcntl.h>
 
 #  include "unix_defs.h"
-#  ifdef HAVE_GEN_THREAD_H
-#    include <gen_thread.h>
-#  else
-typedef void *  thr_mutex_t;
-#    define thr_mutex_lock(a)
-#    define thr_mutex_unlock(b)
-#    define thr_mutex_alloc() NULL
-#    define gen_thr_initialized() 0
-#  endif
 #  ifdef HAVE_CERCS_ENV_H
 #    include "cercs_env.h"
 #  else
@@ -53,7 +44,6 @@ typedef struct _atom_server {
     struct sockaddr_in their_addr;
     int flags;
     char *server_id;
-    thr_mutex_t hash_lock;
     Tcl_HashTable string_hash_table;
     Tcl_HashTable value_hash_table;
 } atom_server_struct;
@@ -109,7 +99,6 @@ char *msg;
 	    int atom;
 	    atom = strtol(&msg[1], &str, 10);
 	    str++;
-	    thr_mutex_lock(as->hash_lock);
 	    entry = Tcl_FindHashEntry(&as->string_hash_table, str);
 	    if (entry != NULL) {
 		send_get_atom_msg_ptr atom_entry =
@@ -148,7 +137,6 @@ char *msg;
 		       atom, atom, ((char*)&atom)[0], ((char*)&atom)[1], 
 		       ((char*)&atom)[2], ((char*)&atom)[3], str, atom_entry->atom_string);
 	    }
-	    thr_mutex_unlock(as->hash_lock);
 	    break;
 	}
     default:
@@ -175,18 +163,11 @@ send_get_atom_msg_ptr msg;
     stored->atom = msg->atom;
 
     /* enter into string hash table */
-    if (gen_thr_initialized()) {
-	if (as->hash_lock == NULL) {
-	    as->hash_lock = thr_mutex_alloc();
-	}
-	thr_mutex_lock(as->hash_lock);
-    }
     entry = Tcl_CreateHashEntry(&as->string_hash_table, str, &new);
     if (!new) {
 	/* already inserted by someone else */
 	free(stored);
 	free(str);
-	thr_mutex_unlock(as->hash_lock);
 	return (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
     }
     Tcl_SetHashValue(entry, stored);
@@ -195,11 +176,9 @@ send_get_atom_msg_ptr msg;
 				(char *) (long) stored->atom, &new);
     if (!new) {
 	printf("Serious internal error in atom cache.  Duplicate value hash entry.\n");
-	thr_mutex_unlock(as->hash_lock);
 	exit(1);
     }
     Tcl_SetHashValue(entry, stored);
-    thr_mutex_unlock(as->hash_lock);
     return (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
 }
 
@@ -215,7 +194,6 @@ atom_t atom;
     unsigned char buf[MAXDATASIZE];
     unsigned int addr_len = sizeof(struct sockaddr);
 
-    thr_mutex_lock(as->hash_lock);
     entry = Tcl_FindHashEntry(&as->string_hash_table, str);
     if (entry != NULL) {
 	send_get_atom_msg_ptr atom_entry =
@@ -229,12 +207,10 @@ atom_t atom;
 		   ((char*)&atom_entry->atom)[1],
 		   ((char*)&atom_entry->atom)[2],
 		   ((char*)&atom_entry->atom)[3]);
-	    thr_mutex_unlock(as->hash_lock);
 	    return;
 	}
     }
     entry2 = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long) atom);
-    thr_mutex_unlock(as->hash_lock); 
    if (entry2 != NULL) {
 	send_get_atom_msg_ptr atom_entry =
 	(send_get_atom_msg_ptr) Tcl_GetHashValue(entry2);
@@ -458,12 +434,6 @@ char *str;
 {
     atom_t atom;
 
-    if (gen_thr_initialized()) {
-	if (as->hash_lock == NULL) {
-	    as->hash_lock = thr_mutex_alloc();
-	}
-    }
-
     atom = ATLget_hash(str);
 
     set_string_and_atom(as, str, atom);
@@ -483,14 +453,7 @@ atom_t atom;
     int numbytes;
     char buf[MAXDATASIZE];
 
-    if (gen_thr_initialized()) {
-	if (as->hash_lock == NULL) {
-	    as->hash_lock = thr_mutex_alloc();
-	}
-	thr_mutex_lock(as->hash_lock);
-    }
     entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long) atom);
-    thr_mutex_unlock(as->hash_lock);
 
     if (entry == NULL) {
 #ifndef MODULE
@@ -584,7 +547,6 @@ atom_cache_type cache_style;
 
     Tcl_InitHashTable(&as->string_hash_table, TCL_STRING_KEYS);
     Tcl_InitHashTable(&as->value_hash_table, TCL_ONE_WORD_KEYS);
-    as->hash_lock = thr_mutex_alloc();
 
 #ifndef MODULE
     if ((as->he = gethostbyname(atom_server_host)) == NULL) {

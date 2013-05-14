@@ -38,16 +38,9 @@ endif(DEFINED CERCS_USE_INSTALLED)
 find_package (Threads)
 
 find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h REQUIRED ${CERCS_USE_INSTALLED})
-find_CERCS_project(gen_thread LIBRARY gen_thread INCLUDES gen_thread.h REQUIRED ${CERCS_USE_INSTALLED})
 
 set (LINK_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
 
-if (${GEN_THREAD_FOUND})
-   list (APPEND LINK_LIBRARIES -lgen_thread)
-   LINK_DIRECTORIES(${GEN_THREAD_LIB_DIR})
-   INCLUDE_DIRECTORIES(${GEN_THREAD_INCLUDE_DIR})
-   list (APPEND DEPLIBS "-L${GEN_THREAD_LIB_DIR}" "${GEN_THREAD_LIB_DIR}/libgen_thread.la")
-endif()
 if (${CERCS_ENV_FOUND})
    list (APPEND LINK_LIBRARIES -lcercs_env)
    LINK_DIRECTORIES(${CERCS_ENV_LIB_DIR})
