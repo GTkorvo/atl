@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include "config.h"
 
-static char *ATL_version = "ATL Version 2.0.4 rev. 14778  -- 2013-06-10 14:10:25 -0400 (Mon, 10 Jun 2013)\n";
+static char *ATL_version = "ATL Version 2.0.5 rev. 14951  -- 2013-07-08 13:52:14 -0400 (Mon, 08 Jul 2013)\n";
 
 #if defined (__INTEL_COMPILER)
 //  Allow extern declarations with no prior decl
