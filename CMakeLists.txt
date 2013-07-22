@@ -8,6 +8,11 @@ set (SRC_LIST atom.c attr.c lookup3.c tclHash.c)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+IF(CMAKE_COMPILER_IS_GNUCC)
+    MESSAGE(STATUS "GCC detected - Adding compiler flags")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+ENDIF(CMAKE_COMPILER_IS_GNUCC)
+
 include(CheckFunctionExists)
 include(CheckIncludeFiles)
 include(CheckTypeSize)
@@ -35,7 +40,9 @@ if (DEFINED CERCS_USE_INSTALLED)
    set (CERCS_USE_INSTALLED "USE_INSTALLED")
 endif(DEFINED CERCS_USE_INSTALLED) 
 
-find_package (Threads)
+if(NOT ANDROID)
+  find_package (Threads)
+endif (NOT ANDROID)
 
 find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h REQUIRED ${CERCS_USE_INSTALLED})
 

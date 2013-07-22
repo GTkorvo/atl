@@ -110,32 +110,6 @@ Initialize(void)
     Tcl_InitHashTable(valuehash, TCL_ONE_WORD_KEYS);
 }
 
-#ifndef O_NONBLOCK
-#define O_NONBLOCK 0x80
-#endif
-static void
-set_blocking(fd, block)
-int fd;
-int block;
-{
-    int flags = 0;
-    if (block) {
-	flags &= (~O_NONBLOCK);
-    } else {
-	flags |= O_NONBLOCK;
-    }
-#ifndef HAVE_WINDOWS_H
-    if (fcntl(fd, F_SETFL, flags) < 0) {
-	perror("fcntl");
-	exit(1);
-    }
-#else
-    if (ioctlsocket(fd, FIONBIO, (unsigned long*)!block) != 0) {
-	perror("ioctlsocket");
-	exit(1);
-    }
-#endif
-}
 
 extern int
 establish_server_connection()
