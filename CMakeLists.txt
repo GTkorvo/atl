@@ -8,11 +8,6 @@ set (SRC_LIST atom.c attr.c lookup3.c tclHash.c)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-IF(CMAKE_COMPILER_IS_GNUCC)
-    MESSAGE(STATUS "GCC detected - Adding compiler flags")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
-
 include(CheckFunctionExists)
 include(CheckIncludeFiles)
 include(CheckTypeSize)
