@@ -161,7 +161,7 @@ and these came close:
   c ^= b; c -= rot(b,24); \
 }
 
-#ifndef HASHWORD_USED
+#ifdef HASHWORD_USED
 /*
 --------------------------------------------------------------------
  This works on all machines.  To be useful, it requires
@@ -212,7 +212,7 @@ uint32_t        initval)         /* the previous hash, or an arbitrary value */
 }
 #endif
 
-#ifndef HASHWORD2_USED
+#ifdef HASHWORD2_USED
 extern
 void hashword2(
 const uint32_t *k,                   /* the key, an array of uint32_t values */
@@ -451,7 +451,7 @@ uint32_t hashlittle( const void *key, size_t length, uint32_t initval)
 }
 
 
-#ifndef HASH_LITTLE_USED
+#ifdef HASH_LITTLE_USED
 /*
  * hashlittle2: return 2 32-bit hash values
  *
@@ -641,7 +641,7 @@ void hashlittle2(
 #endif
 
 
-#ifndef HASHBIG_USED
+#ifdef HASHBIG_USED
 /*
  * hashbig():
  * This is the same as hashword() on big-endian machines.  It is different
