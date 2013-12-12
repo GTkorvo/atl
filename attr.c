@@ -129,28 +129,33 @@ attr_copy_list(attr_list orig)
 {
     attr_list list = malloc(sizeof(attr_list_struct));
     memcpy(list, orig, sizeof(attr_list_struct));
-    if (orig->l.list.iattrs->int_attr_count != 0) {
-	int iattr_count = orig->l.list.iattrs->int_attr_count;
-	list->l.list.iattrs = malloc(sizeof(struct int_attr_struct) +
-				     (iattr_count -1) * sizeof(int_attr));
-	memcpy(list->l.list.iattrs, orig->l.list.iattrs, 
-	       sizeof(struct int_attr_struct) +
-	       (iattr_count -1) * sizeof(int_attr));
-    }
-    if (orig->l.list.iattrs->other_attr_count != 0) {
-	int i;
-	attr *a, *b;
-	int oattr_count = orig->l.list.iattrs->other_attr_count;
-	a = list->l.list.attributes = malloc(oattr_count * sizeof(attr));
-	b = orig->l.list.attributes;
-	memcpy(a, b, oattr_count * sizeof(attr));
-	for (i=0; i < oattr_count; i++) {
-	    if (a[i].val_type == Attr_String) {
-		char *s = strdup((char *) b[i].value.u.p);
-		a[i].value.u.p = s;
+    if (orig->list_of_lists == 0 ) {
+	if (orig->l.list.iattrs != NULL) {
+	    int iattr_count = orig->l.list.iattrs->int_attr_count;
+	    list->l.list.iattrs = malloc(sizeof(struct int_attr_struct) +
+					 (iattr_count -1) * sizeof(int_attr));
+	    memcpy(list->l.list.iattrs, orig->l.list.iattrs, 
+		   sizeof(struct int_attr_struct) +
+		   (iattr_count -1) * sizeof(int_attr));
+	}
+	if (orig->l.list.iattrs->other_attr_count != 0) {
+	    int i;
+	    attr *a, *b;
+	    int oattr_count = orig->l.list.iattrs->other_attr_count;
+	    a = list->l.list.attributes = malloc(oattr_count * sizeof(attr));
+	    b = orig->l.list.attributes;
+	    memcpy(a, b, oattr_count * sizeof(attr));
+	    for (i=0; i < oattr_count; i++) {
+		if (a[i].val_type == Attr_String) {
+		    char *s = strdup((char *) b[i].value.u.p);
+		    a[i].value.u.p = s;
+		}
 	    }
 	}
+    } else {
+	assert(0);
     }
+    list->ref_count = 1;
     return list;
 }
 
