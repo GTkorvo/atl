@@ -16,7 +16,7 @@
  * @(#) tcl.h 1.153 95/06/27 15:42:31
  */
 
-#ifndef _TCL_HASN
+#ifndef _TCL_HASH
 #define _TCL_HASH
 
 

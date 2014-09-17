@@ -883,12 +883,16 @@ static void
 dump_attr_sublist(FILE *out, attr_list list, int indent)
 {
     int i;
-    static atom_t CM_PEER_IP = -1;
-    static atom_t CM_IP_ADDR = -1;
+    static atom_t CM_ENET_ADDR = -1;
+    static atom_t IP_ADDR = -1;
+    static atom_t NNTI_ADDR = -1;
+    static atom_t PEER_IP = -1;
     init_global_atom_server(&global_as);
-    if (CM_IP_ADDR == -1) {
-	CM_PEER_IP = attr_atom_from_string("PEER_IP");
-	CM_IP_ADDR = attr_atom_from_string("IP_ADDR");
+    if (IP_ADDR == -1) {
+	CM_ENET_ADDR = attr_atom_from_string("CM_ENET_ADDR");
+	IP_ADDR  = attr_atom_from_string("IP_ADDR");
+	NNTI_ADDR = attr_atom_from_string("NNTI_ADDR");
+	PEER_IP = attr_atom_from_string("PEER_IP");
     }
     if (list == NULL) {
         fprintf(out, "[NULL]\n");
@@ -907,8 +911,8 @@ dump_attr_sublist(FILE *out, attr_list list, int indent)
         for (j = 0; j < indent; j++) {
             fprintf(out, "    ");
         }
-	if ((attr_id == CM_IP_ADDR) || 
-	    (attr_id == CM_PEER_IP)) {
+	if ((attr_id == CM_ENET_ADDR) || (attr_id == IP_ADDR) ||
+	     (attr_id == NNTI_ADDR) || (attr_id == PEER_IP)) {
 	    /* built-in's we want to format differently */
 	    unsigned int ip = list->l.list.iattrs->iattr[i].value;
 	    fprintf(out, "    { %s ('%c%c%c%c'), Attr_Int4, %d.%d.%d.%d }\n", print_name,
@@ -1588,10 +1592,6 @@ attr_list_subset (attr_list l1, attr_list l2)
   return keep_going;
 }
 	
-extern
-void
-set_string_and_atom(atom_server as, char *str, atom_t atom);
-
 typedef struct Attr_tmp_buffer {
     void *tmp_buffer;
     int tmp_buffer_size;

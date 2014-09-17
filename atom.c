@@ -40,6 +40,7 @@ typedef struct _atom_server {
     int sockfd;
     int tcp_fd;
     int use_tcp;
+    int no_server;
     struct hostent *he;
     struct sockaddr_in their_addr;
     int flags;
@@ -145,7 +146,7 @@ char *msg;
 }
 
 static
- send_get_atom_msg_ptr
+int
 enter_atom_into_cache(as, msg)
 atom_server as;
 send_get_atom_msg_ptr msg;
@@ -156,7 +157,7 @@ send_get_atom_msg_ptr msg;
     Tcl_HashEntry *entry = NULL;
 
     if ((msg->atom_string == NULL) || (msg->atom == -1))
-	return msg;
+	return 0;
     str = strdup(msg->atom_string);
     stored = (send_get_atom_msg_ptr) malloc(sizeof(send_get_atom_msg));
     stored->atom_string = str;
@@ -168,7 +169,7 @@ send_get_atom_msg_ptr msg;
 	/* already inserted by someone else */
 	free(stored);
 	free(str);
-	return (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
+	return 0;
     }
     Tcl_SetHashValue(entry, stored);
     /* enter into value hash table */
@@ -179,7 +180,7 @@ send_get_atom_msg_ptr msg;
 	exit(1);
     }
     Tcl_SetHashValue(entry, stored);
-    return (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
+    return 1;
 }
 
 void
@@ -193,6 +194,7 @@ atom_t atom;
     int numbytes, len;
     unsigned char buf[MAXDATASIZE];
     unsigned int addr_len = sizeof(struct sockaddr);
+    int new;
 
     entry = Tcl_FindHashEntry(&as->string_hash_table, str);
     if (entry != NULL) {
@@ -225,8 +227,9 @@ atom_t atom;
     }
     tmp_value.atom = atom;
     tmp_value.atom_string = str;
-    enter_atom_into_cache(as, &tmp_value);
-
+    new = enter_atom_into_cache(as, &tmp_value);
+    if (as->no_server) return;
+    if (!new) return;
 #ifndef MODULE
     sprintf((char *)&buf[1], "A%d %s", atom, str);
     len = strlen((char*)&buf[1]);
@@ -486,7 +489,7 @@ atom_t atom;
 	tmp_rec.atom_string = &buf[2];
 	tmp_rec.atom = atom;
 
-	stored = enter_atom_into_cache(as, &tmp_rec);
+	(void) enter_atom_into_cache(as, &tmp_rec);
 #else
 	return NULL;
 #endif	
@@ -528,6 +531,94 @@ nt_socket_init_func()
 static void nt_socket_init_func(){}
 #endif
 
+
+static char *in_use_values[] = {
+"CM_BW_MEASURED_COF",
+"CM_BW_MEASURED_VALUE",
+"CM_BW_MEASURE_INTERVAL",
+"CM_BW_MEASURE_SIZE",
+"CM_BW_MEASURE_SIZEINC",
+"CM_BW_MEASURE_TASK",
+"CM_CONN_BLOCKING",
+"CM_ENET_ADDR",
+"CM_ENET_HOST",
+"CM_ENET_PORT",
+"CM_EVENT_SIZE",
+"CM_FD",
+"CM_INCOMING_CONNECTION",
+"CM_NETWORK_POSTFIX",
+"CM_NNTI_TRANSPORT",
+"CM_REBWM_REPT",
+"CM_REBWM_RLEN",
+"CM_REG_BW_REPEAT_CNT",
+"CM_REG_BW_RUN_LEN",
+"CM_SHM_MAX_PAYLOAD",
+"CM_SHM_NUM_SLOTS",
+"CM_TRANSPORT",
+"CM_TRANSPORT_RELIABLE",
+"CM_TRANS_MEGABITS_SEC",
+"CM_TRANS_TEST_DURATION_SECS",
+"CM_TRANS_TEST_RECEIVED_COUNT",
+"CM_TRANS_TEST_REPEAT",
+"CM_TRANS_TEST_REUSE_WRITE_BUFFER",
+"CM_TRANS_TEST_SIZE",
+"CM_TRANS_TEST_TAKEN_CORRUPT",
+"CM_TRANS_TEST_TAKE_RECEIVE_BUFFER",
+"CM_TRANS_TEST_VECS",
+"CM_TRANS_TEST_VERBOSE",
+"CMdemo_test_atom",
+"CONNECTION_FILE_DESCRIPTOR",
+"DoReconfig",
+"ECHO_EVENT_NETWORK",
+"ECHO_EVENT_TRANSPORT",
+"ECHO_USE_EVENT_TRANSPORT",
+"ECho_attr_test_atom",
+"EV_BACKPRESSURE_HIGH",
+"EV_BACKPRESSURE_LOW",
+"EV_EVENT_COUNT",
+"EV_EVENT_LSUM",
+"EventCount",
+"IP_ADDR",
+"IP_HOST",
+"IP_PORT",
+"MCAST_ADDR",
+"MCAST_PORT",
+"NNTI_ADDR",
+"NNTI_ENET_CONTROL",
+"NNTI_IMMEDIATE_PULL_WAIT",
+"NNTI_PARAMS",
+"NNTI_PORT",
+"NNTI_SHM",
+"PEER_CONN_PORT",
+"PEER_HOSTNAME",
+"PEER_IP",
+"PEER_LISTEN_PORT",
+"SSL_PORT",
+"THIS_CONN_PORT",
+"UDP_ADDR",
+"UDP_PORT",
+"application_reconfiguration_atom",
+"fp_dst_condition",
+"fp_dst_rank",
+"fp_flush_id",
+"fp_size",
+"fp_starttime",
+"hop_count_atom",
+"index_atom",
+"iteration",
+"level",
+"mpisize",
+"test_value",
+NULL};
+
+static void
+preload_in_use_atoms(atom_server as)
+{
+    int i=0;
+    while (in_use_values[i] != NULL) {
+	(void) atom_from_string(as, in_use_values[i++]);
+    }
+}
 atom_server
 init_atom_server(cache_style)
 atom_cache_type cache_style;
@@ -544,6 +635,7 @@ atom_cache_type cache_style;
     as->server_id = atom_server_host;
     as->tcp_fd = -1;
     as->use_tcp = (cercs_getenv("ATL_USE_TCP") != NULL);
+    as->no_server = 1;
 
     Tcl_InitHashTable(&as->string_hash_table, TCL_STRING_KEYS);
     Tcl_InitHashTable(&as->value_hash_table, TCL_ONE_WORD_KEYS);
@@ -568,6 +660,7 @@ atom_cache_type cache_style;
     as->their_addr.sin_port = htons(UDP_PORT);
     memset(&(as->their_addr.sin_zero), '\0', 8);
 #endif
-
+    preload_in_use_atoms(as);
+    as->no_server = 0;
     return as;
 }
