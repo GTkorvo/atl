@@ -1,10 +1,14 @@
+if (POLICY CMP0026)
+   cmake_policy(SET CMP0026 OLD)
+endif (POLICY CMP0026)
+
 MACRO(GET_TARGET_PROPERTY_WITH_DEFAULT _variable _target _property _default_value)
    GET_TARGET_PROPERTY (${_variable} ${_target} ${_property})
    IF (${_variable} MATCHES NOTFOUND)
      SET (${_variable} ${_default_value})
    ENDIF (${_variable} MATCHES NOTFOUND)
  ENDMACRO (GET_TARGET_PROPERTY_WITH_DEFAULT)
-
+ 
  MACRO(CREATE_LIBTOOL_FILE _target _install_DIR)
    GET_TARGET_PROPERTY(_target_location ${_target} LOCATION)
    GET_TARGET_PROPERTY_WITH_DEFAULT(_target_static_lib ${_target} STATIC_LIB "")
@@ -47,5 +51,5 @@ MACRO(GET_TARGET_PROPERTY_WITH_DEFAULT _variable _target _property _default_valu
    FILE(APPEND ${_laname} "dlpreopen='${_target_dlpreopen}'\n\n")
    FILE(APPEND ${_laname} "# Directory that this library needs to be installed in:\n")
    FILE(APPEND ${_laname} "libdir='${CMAKE_INSTALL_PREFIX}${_install_DIR}'\n")
-   INSTALL( FILES ${_laname} DESTINATION ${CMAKE_INSTALL_PREFIX}${_install_DIR})
+   INSTALL( FILES ${_laname} DESTINATION lib)
  ENDMACRO(CREATE_LIBTOOL_FILE)
