@@ -1,6 +1,7 @@
 #include "config.h"
 #include "atl.h"
 
+#undef NDEBUG
 #  include <assert.h>
 #  include <string.h>
 #  include <stdlib.h>

@@ -16,6 +16,7 @@
 #    include <unix_defs.h>
 #  endif
 
+#undef NDEBUG
 #include "assert.h"
 #  ifdef HAVE_CERCS_ENV_H
 #    include "cercs_env.h"
