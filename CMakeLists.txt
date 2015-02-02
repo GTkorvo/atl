@@ -15,6 +15,7 @@ include(CreateLibtoolFile)
 include(FindCERCSProject)
 include(AddLibtoolLibrary)
 include(CTest)
+include(CERCS_package)
 
 IF(NOT DEFINED BUILD_SHARED_STATIC)
   SET( BUILD_SHARED_STATIC "BOTH")
