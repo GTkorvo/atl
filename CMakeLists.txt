@@ -4,6 +4,7 @@ project(atl)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "cercs_env")
+set(CPACK_RPM_PACKAGE_REQUIRES "cercs_env")
 set (SRC_LIST atom.c attr.c lookup3.c tclHash.c)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
