@@ -256,8 +256,9 @@ atom_t atom;
 	set_blocking(as, 0);	/* set server fd nonblocking */
 	if ((numbytes = sendto(as->sockfd, &buf[1], len, 0,
 			       (struct sockaddr *) &(as->their_addr), sizeof(struct sockaddr))) == -1) {
-	    perror("sendto");
-	    exit(1);
+	    /* don't try that again... */
+	    as->their_addr.sin_addr.s_addr = 0;
+	    return;
 	}
 	if ((numbytes = recvfrom(as->sockfd, &buf[1], MAXDATASIZE - 1, 0,
 				 (struct sockaddr *) &(as->their_addr), &addr_len)) != -1) {
