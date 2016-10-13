@@ -179,23 +179,23 @@ extern
 AttrBuffer create_AttrBuffer(void);
 
 void
-free_AttrBuffer ARGS((AttrBuffer buf));
+free_AttrBuffer(AttrBuffer buf);
 
 extern
 int
-attr_list_subset ARGS((attr_list l1, attr_list l2));
+attr_list_subset(attr_list l1, attr_list l2);
 
 extern void *
-encode_attr_for_xmit ARGS((attr_list l, AttrBuffer b, int *length));
+encode_attr_for_xmit(attr_list l, AttrBuffer b, int *length);
 
 extern attr_list 
-decode_attr_from_xmit ARGS((void * buf));
+decode_attr_from_xmit(void * buf);
 
 extern int 
-atl_base64_decode ARGS((unsigned char *input, unsigned char *output));
+atl_base64_decode(unsigned char *input, unsigned char *output);
 
 extern char *
-atl_base64_encode ARGS((char *buffer, unsigned int len));
+atl_base64_encode(char *buffer, unsigned int len);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 	   }

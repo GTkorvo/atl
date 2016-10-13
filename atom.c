@@ -492,6 +492,7 @@ atom_t atom;
 	tmp_rec.atom = atom;
 
 	(void) enter_atom_into_cache(as, &tmp_rec);
+	stored = &tmp_rec;
 #else
 	return NULL;
 #endif	
