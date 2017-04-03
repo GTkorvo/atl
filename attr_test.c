@@ -29,6 +29,9 @@ main()
     atom_t carta_blanca_atom = -1;
     atom_t miller_lite_atom = -1;
     atom_t urquel_atom = -1;
+    atom_t tecate_atom = -1;
+    char buffer[48];
+    int i;
 
     attr_list al = create_attr_list();
     attr_list al2 = create_attr_list();
@@ -42,6 +45,9 @@ main()
     free_attr_list(al);
     free_attr_list(al2);
     
+    for (i=0; i < sizeof(buffer); i++) {
+        buffer[i] = 0x30 + i;
+    }
     fosters_atom = attr_atom_from_string("Fosters");
     ip_atom = attr_atom_from_string("IP_ADDR");
     red_stripe_atom = attr_atom_from_string("Red Stripe");
@@ -50,12 +56,14 @@ main()
     carta_blanca_atom = attr_atom_from_string("Carta Blanca");
     miller_lite_atom = attr_atom_from_string("Miller Lite");
     urquel_atom = attr_atom_from_string("Pilsner Urquel");
+    tecate_atom = attr_atom_from_string("Tecate");
 
     add_attr(list, ip_atom, Attr_Int4, (attr_value) 
 	     (((unsigned int)130<<24) + ((unsigned int) 207<<16) +((unsigned int)5 << 8) + 68));
     add_attr(list, fosters_atom, Attr_Int4, (attr_value) 2);
     add_attr(list, red_stripe_atom, Attr_String, (attr_value) strdup("Uno mas"));
     add_double_attr(list, urquel_atom, 3.14159);
+    add_opaque_attr(list, tecate_atom, 48, &buffer[0]);
     dump_attr_list(list);
 /*    add_attr(list2, FOSTERS_ATOM, Attr_Int4, (attr_value) 4);*/
     attr_add_list(list, list2);
