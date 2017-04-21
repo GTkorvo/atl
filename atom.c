@@ -25,11 +25,6 @@
 #  include <fcntl.h>
 
 #  include "unix_defs.h"
-#  ifdef HAVE_CERCS_ENV_H
-#    include "cercs_env.h"
-#  else
-#    define cercs_getenv(a) (getenv(a))
-#  endif
 
 #include "atom_internal.h"
 
@@ -53,6 +48,8 @@ typedef struct _atom_server {
 static char *atom_server_host = NULL;
 static int establish_server_connection(atom_server as, int do_fallback);
 
+#include <sys/time.h>
+
 #ifndef O_NONBLOCK
 #define O_NONBLOCK 0x80
 #endif
@@ -72,20 +69,22 @@ int block;
     } else {
 	as->flags |= O_NONBLOCK;
     }
-#ifndef MODULE
 #ifndef HAVE_WINDOWS_H
     if (fcntl(as->sockfd, F_SETFL, as->flags) < 0) {
 	perror("fcntl");
 	exit(1);
     }
-    fcntl(as->tcp_fd, F_SETFL, as->flags);
+    if (as->tcp_fd > 0) {
+	if (fcntl(as->tcp_fd, F_SETFL, as->flags) < 0) {
+	    perror("TCP_FD fcntl");
+	}
+    }
 #else
     if (ioctlsocket(as->sockfd, FIONBIO, (unsigned long*)!block) != 0) {
 	perror("ioctlsocket");
 	exit(1);
     }
     ioctlsocket(as->tcp_fd, FIONBIO, (unsigned long*)!block);
-#endif
 #endif
 }
 
@@ -231,7 +230,6 @@ atom_t atom;
     new = enter_atom_into_cache(as, &tmp_value);
     if (as->no_server) return;
     if (!new) return;
-#ifndef MODULE
     sprintf((char *)&buf[1], "A%d %s", atom, str);
     len = strlen((char*)&buf[1]);
     if (as->use_tcp) {
@@ -267,7 +265,6 @@ atom_t atom;
 	    handle_unexpected_msg(as, (char*) &buf[1]);
 	}
     }
-#endif
 }
 
 static int atom_server_verbose = -1;
@@ -275,22 +272,12 @@ static int atom_server_verbose = -1;
 static int
 fill_hostaddr(void *addr, char *hostname)
 {
-#ifdef MODULE
-    struct hostent *host_addr;
-
-    if ((host_addr = lookup_name(hostname)) == NULL) {
-	return 0;
-    }
-    memcpy(addr, host_addr->h_addr, host_addr->h_length);
-    DFreeMM((addrs_t)host_addr->h_name);
-    DFreeMM((addrs_t)host_addr);
-    return 1;
-#else
     struct hostent *host_addr;
     
     host_addr = gethostbyname(hostname);
     if (host_addr == NULL) {
-	int address = inet_addr(hostname);
+	int address;
+	address = inet_addr(hostname);
 	if (address == -1) {
 	    /* 
 	     *  not translatable as a hostname or 
@@ -304,7 +291,6 @@ fill_hostaddr(void *addr, char *hostname)
 	memcpy(addr, host_addr->h_addr, host_addr->h_length);
     }
     return 1;
-#endif
 }
 
 static int
@@ -313,16 +299,11 @@ atom_server as;
 int do_fallback;
 {
     int sock;
-#ifndef MODULE
     int delay_value = 1;
-#else
-    struct socket *socket;	
-#endif
     char ping_char = 0;
 
-
     if (atom_server_verbose == -1) {
-	if (cercs_getenv("ATOM_SERVER_VERBOSE") == NULL) {
+	if (getenv("ATOM_SERVER_VERBOSE") == NULL) {
 	    atom_server_verbose = 0;
 	} else {
 	    atom_server_verbose = 1;
@@ -334,17 +315,10 @@ int do_fallback;
 	/* reestablish connection, name_str is the machine name */
 	struct sockaddr_in sock_addr;
 
-#ifdef MODULE
-        if ((sock = sock_create(AF_INET, SOCK_STREAM, 0, &socket)) < 0) {
-	    printk("Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
-	    return 0;
-	}
-#else
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 	    fprintf(stderr, "Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
 	    return 0;
 	}
-#endif
 	
 	sock_addr.sin_family = AF_INET;
 		
@@ -360,13 +334,8 @@ int do_fallback;
 	    printf("Trying connection to atom server on %s ...  ",
 		   atom_server_host);
 	}
-#ifdef MODULE
-        if (socket->ops->connect(socket, (struct sockaddr *) &sock_addr,
-		    sizeof sock_addr, O_RDWR ) < 0) {
-#else
 	if (connect(sock, (struct sockaddr *) &sock_addr,
 		    sizeof sock_addr) < 0) {
-#endif
 
 	    if (atom_server_verbose) {
 		printf("failed\n");
@@ -374,17 +343,10 @@ int do_fallback;
 	    if (!do_fallback) return 0;
 
 	    /* fallback */
-#ifdef MODULE
-            if ((sock = sock_create(AF_INET, SOCK_STREAM, 0, &socket)) < 0) {
-		printk("Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
-	       return 0;
-	    }
-#else
 	    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		fprintf(stderr, "Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
 	       return 0;
 	    }
-#endif
 	    atom_server_host = "atomhost.cercs.gatech.edu";
 	    sock_addr.sin_family = AF_INET;
 	    if (fill_hostaddr(&sock_addr.sin_addr, atom_server_host) == 0){
@@ -398,13 +360,8 @@ int do_fallback;
 		printf("Trying fallback connection to atom server on %s ...  ",
 		       atom_server_host);
 	    }
-#ifdef MODULE
-            if (socket->ops->connect(socket, (struct sockaddr *) &sock_addr,
-			sizeof sock_addr, O_RDWR) < 0) {
-#else
 	    if (connect(sock, (struct sockaddr *) &sock_addr,
 			sizeof sock_addr) < 0) {
-#endif
 		fprintf(stderr, "Failed to connect to primary or fallback atom servers.\n");
 		as->tcp_fd = -2;
 	        return 0;
@@ -413,10 +370,8 @@ int do_fallback;
 	if (atom_server_verbose) {
 	    printf("succeeded\n");
 	}
-#ifndef MODULE
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *) &delay_value,
 		   sizeof(delay_value));
-#endif
 	as->tcp_fd = sock;
 	/* 
 	 * ignore SIGPIPE's  (these pop up when ports die.  we catch the 
@@ -461,7 +416,6 @@ atom_t atom;
     entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long) atom);
 
     if (entry == NULL) {
-#ifndef MODULE
 	sprintf(&buf[1], "N%d", atom);
 	if (establish_server_connection(as, 1) == 0) return NULL;
 	buf[0] = strlen(&buf[1]);
@@ -493,9 +447,6 @@ atom_t atom;
 
 	(void) enter_atom_into_cache(as, &tmp_rec);
 	stored = &tmp_rec;
-#else
-	return NULL;
-#endif	
     } else {
 	stored = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
     }
@@ -630,20 +581,19 @@ atom_cache_type cache_style;
 
     nt_socket_init_func();
     if (atom_server_host == NULL) {	/* environment override */
-	atom_server_host = cercs_getenv("ATOM_SERVER_HOST");
+	atom_server_host = getenv("ATOM_SERVER_HOST");
     }
     if (atom_server_host == NULL) {
 	atom_server_host = ATOM_SERVER_HOST;	/* from configure */
     }
     as->server_id = atom_server_host;
     as->tcp_fd = -1;
-    as->use_tcp = (cercs_getenv("ATL_USE_TCP") != NULL);
+    as->use_tcp = (getenv("ATL_USE_TCP") != NULL);
     as->no_server = 1;
 
     Tcl_InitHashTable(&as->string_hash_table, TCL_STRING_KEYS);
     Tcl_InitHashTable(&as->value_hash_table, TCL_ONE_WORD_KEYS);
 
-#ifndef MODULE
     if ((as->he = gethostbyname(atom_server_host)) == NULL) {
 	as->he = NULL;
 	as->their_addr.sin_addr.s_addr = 0;
@@ -662,7 +612,7 @@ atom_cache_type cache_style;
     as->their_addr.sin_family = AF_INET;
     as->their_addr.sin_port = htons(UDP_PORT);
     memset(&(as->their_addr.sin_zero), '\0', 8);
-#endif
+
     preload_in_use_atoms(as);
     as->no_server = 0;
     return as;
