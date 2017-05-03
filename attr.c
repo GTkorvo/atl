@@ -134,8 +134,13 @@ attr_copy_list(attr_list orig)
     if (orig->list_of_lists == 0 ) {
 	if (orig->l.list.iattrs != NULL) {
 	    int iattr_count = orig->l.list.iattrs->int_attr_count;
-	    list->l.list.iattrs = malloc(sizeof(struct int_attr_struct) +
-					 (iattr_count -1) * sizeof(int_attr));
+	    if (iattr_count == 0) {
+		/* adding 4 here so that we can pad the send structure up to 8 */
+		list->l.list.iattrs = malloc(sizeof(struct int_attr_struct) + 4);
+	    } else {
+		list->l.list.iattrs = malloc(sizeof(struct int_attr_struct) +
+					     (iattr_count -1) * sizeof(int_attr));
+	    }
 	    memcpy(list->l.list.iattrs, orig->l.list.iattrs, 
 		   sizeof(struct int_attr_struct) +
 		   (iattr_count -1) * sizeof(int_attr));
