@@ -67,13 +67,6 @@ find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h REQUIRED ${C
 
 set (LINK_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
 
-if (${CERCS_ENV_FOUND})
-   list (APPEND LINK_LIBRARIES -lcercs_env)
-   LINK_DIRECTORIES(${CERCS_ENV_LIB_DIR})
-   INCLUDE_DIRECTORIES(${CERCS_ENV_INCLUDE_DIR})
-   list (APPEND DEPLIBS "-L${CERCS_ENV_LIB_DIR}" "${CERCS_ENV_LIB_DIR}/libcercs_env.la")
-endif()
-
 foreach(arg ${DEPLIBS})
    set(DEP_STRING "${DEP_STRING} ${arg}")
 endforeach(arg ${DEPLIBS})
@@ -118,7 +111,7 @@ MESSAGE( STATUS "Change a value with: cmake -D<Variable>=<Value>" )
 MESSAGE( STATUS "-------------------------------------------------------------------------------" )
 MESSAGE( STATUS )
 
-set (PROGS attr_test atom_test atom_check atom_server attr_dump) 
+set (PROGS attr_test atom_test atom_check atom_server attr_dump)
 foreach (PROG ${PROGS})
     ADD_EXECUTABLE(${PROG} ${PROG}.c)
     TARGET_LINK_LIBRARIES(${PROG} atl)
