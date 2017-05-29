@@ -18,15 +18,9 @@
 
 #undef NDEBUG
 #include "assert.h"
-#  ifdef HAVE_CERCS_ENV_H
-#    include "cercs_env.h"
-#  else
-#    define cercs_getenv(a) ((char *)0)
-#  endif
 
-#if defined(_MSC_VER)
-#define strdup _strdup
-#endif
+#include "sys/time.h"
+#include "atom_internal.h"
 
 #if SIZEOF_INT == 4
 typedef int int4;
@@ -92,15 +86,6 @@ atom_server global_as = NULL;
 atl_lock_func global_as_lock = NULL;
 atl_lock_func global_as_unlock = NULL;
 void* global_as_lock_data = NULL;
-
-#ifdef MODULE
-char * atl_getenv(const char *);
-int    atl_setenv(const char *, const char *, int);
-char * atl_strdup(char *);
-#define cercs_getenv(x) atl_getenv(x)
-#define getenv atl_getenv
-#define strdup  atl_strdup
-#endif
 
 int
 get_pattr(attr_list list,int index, atom_t *name,
@@ -1091,8 +1076,6 @@ internal_dump_attr_list (FILE *out, attr_list list, int indent)
     }
     fprintf(out, "]\n");
 }                   
-
-static const char xchars [] = "0123456789abcdef";
 
 #define roundup4(a) ((a + 3) & ~3)
 
