@@ -3,8 +3,6 @@ cmake_policy(VERSION 2.8.3)
 project(atl)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "cercs_env")
-set(CPACK_RPM_PACKAGE_REQUIRES "cercs_env")
 set (SRC_LIST atom.c attr.c lookup3.c tclHash.c)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -62,8 +60,6 @@ endif(DEFINED CERCS_USE_INSTALLED)
 if(NOT ANDROID)
   find_package (Threads)
 endif (NOT ANDROID)
-
-find_CERCS_project(cercs_env LIBRARY cercs_env INCLUDES cercs_env.h REQUIRED ${CERCS_USE_INSTALLED})
 
 set (LINK_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
 

@@ -6,9 +6,6 @@
 /* Define with the name of the domain which the atom server will service */
 #cmakedefine ATOM_SERVICE_DOMAIN
 
-/* Define to 1 if you have the <cercs_env.h> header file. */
-#cmakedefine HAVE_CERCS_ENV_H
-
 /* Define to 1 if you have the `fork' function. */
 #cmakedefine HAVE_FORK
 
