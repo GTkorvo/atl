@@ -6,7 +6,7 @@
  
 # Compute paths
 get_filename_component(ATL_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set(ATL_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+set(ATL_INCLUDE_DIRS "@INSTALL_INCLUDE_DIR@")
  
 # Our library dependencies (contains definitions for IMPORTED targets)
 if(NOT TARGET atl AND NOT atl_BINARY_DIR)
