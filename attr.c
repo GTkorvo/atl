@@ -82,6 +82,21 @@ typedef struct _attr_list_struct {
 static char * base64_encode (char *binStr, unsigned int len);
 static int base64_decode (unsigned char *input, unsigned char *output);
 
+static char *ATL_version = "ATL Version "ATL_VERSION"\n";
+
+#if defined (__INTEL_COMPILER)
+//  Allow extern declarations with no prior decl
+#  pragma warning (disable: 1418)
+#endif
+void ATLprint_version()
+{
+    printf("%s",ATL_version);
+}
+void ATLfprint_version(FILE*out)
+{
+    fprintf(out, "%s",ATL_version);
+}
+
 atom_server global_as = NULL;
 atl_lock_func global_as_lock = NULL;
 atl_lock_func global_as_unlock = NULL;

@@ -1,0 +1,17 @@
+# - Config file for the Atl package
+# It defines the following variables
+#  ATL_INCLUDE_DIRS - include directories for Atl
+#  ATL_LIBRARIES    - libraries to link against
+#  ATL_EXECUTABLE   - the bar executable
+ 
+# Compute paths
+get_filename_component(ATL_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(ATL_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+ 
+# Our library dependencies (contains definitions for IMPORTED targets)
+if(NOT TARGET atl AND NOT atl_BINARY_DIR)
+  include("${ATL_CMAKE_DIR}/atlTargets.cmake")
+endif()
+ 
+# These are IMPORTED targets created by AtlTargets.cmake
+set(ATL_LIBRARIES atl)
