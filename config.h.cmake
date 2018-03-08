@@ -1,10 +1,10 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define with the build version of atl */
-#cmakedefine ATL_VERSION "@ATL_VERSION@"
+#cmakedefine ATL_VERSION
 
 /* Define with the name of the host which will run the atom server */
-#cmakedefine ATOM_SERVER_HOST "@ATOM_SERVER_HOST@"
+#define ATOM_SERVER_HOST "@ATL_ATOM_SERVER_HOST@"
 
 /* Define with the name of the domain which the atom server will service */
 #cmakedefine ATOM_SERVICE_DOMAIN
