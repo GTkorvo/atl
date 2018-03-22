@@ -1,17 +1,24 @@
 # - Config file for the Atl package
+#
 # It defines the following variables
 #  ATL_INCLUDE_DIRS - include directories for Atl
 #  ATL_LIBRARIES    - libraries to link against
+#
+# And the following imported targets:
+#   atl::atl
+#
 
-
-include("${CMAKE_CURRENT_LIST_DIR}/ATLConfigVersion.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/atl-config-version.cmake")
 
 include(FindPackageHandleStandardArgs)
 set(ATL_CONFIG "${CMAKE_CURRENT_LIST_FILE}")
 find_package_handle_standard_args(ATL CONFIG_MODE)
 
-if(NOT DEFINED ATL_BINARY_DIR)
-  include("${CMAKE_CURRENT_LIST_DIR}/ATLTargets.cmake")
+if(NOT TARGET atl::atl)
+  include("${CMAKE_CURRENT_LIST_DIR}/atl-targets.cmake")
 endif()
-set(ATL_LIBRARIES ATL::atl)
-set(ATL_INCLUDE_DIRS $<TARGET_PROPERTY:ATL::atl,INTERFACE_INCLUDE_DIRECTORIES>)
+
+set(ATL_LIBRARIES atl::atl)
+set(ATL_INCLUDE_DIRS
+  $<TARGET_PROPERTY:atl::atl,INTERFACE_INCLUDE_DIRECTORIES>
+)
