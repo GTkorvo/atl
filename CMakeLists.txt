@@ -5,9 +5,9 @@ cmake_minimum_required(VERSION 2.8.3)
 # raised to > 3.0
 if(POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
-  project(ATL VERSION 2.2.0)
+  project(ATL VERSION 2.2.0 LANGUAGES C)
 else()
-  project(ATL)
+  project(ATL C)
   set(ATL_MAJOR_VERSION 2)
   set(ATL_MINOR_VERSION 2)
   set(ATL_PATCH_VERSION 0)
@@ -20,7 +20,7 @@ set(CMAKE_INSTALL_BINDIR bin CACHE STRING "Installation runtime subdirectory")
 set(CMAKE_INSTALL_LIBDIR lib CACHE STRING "Installation library subdirectory")
 set(CMAKE_INSTALL_INCLUDEDIR include
   CACHE STRING "Installation include subdirectory")
-set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/atl
+set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake
   CACHE STRING "Installation CMake subdirectory")
 mark_as_advanced(CMAKE_INSTALL_BINDIR)
 mark_as_advanced(CMAKE_INSTALL_LIBDIR)
@@ -164,7 +164,6 @@ if(BUILD_TESTING)
 
   add_executable(atom_test atom_test.c)
   target_link_libraries(atom_test atl)
-  add_test(NAME atl_atom_test COMMAND atom_test)
 
   add_executable(atom_check atom_check.c)
   target_link_libraries(atom_check atl)
@@ -185,11 +184,11 @@ configure_file(atl-config-version.cmake.in
 install(FILES
   "${PROJECT_BINARY_DIR}/atl-config.cmake"
   "${PROJECT_BINARY_DIR}/atl-config-version.cmake"
-  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}" COMPONENT dev)
+  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/atl" COMPONENT dev)
  
 # Install the export set for use with the install-tree
-install(EXPORT atl-targets NAMESPACE ATL::
-  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}" COMPONENT dev)
+install(EXPORT atl-targets NAMESPACE atl::
+  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/atl" COMPONENT dev)
 
 set(CTEST_MEMORYCHECK_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/atl.supp)
 
