@@ -118,7 +118,7 @@ if(ATL_LIBRARY_PREFIX)
     LIBRARY_OUTPUT_NAME ${ATL_LIBRARY_PREFIX}atl)
 endif()
 
-add_library(ATL::atl ALIAS atl)
+add_library(atl::atl ALIAS atl)
 if(NOT ANDROID)
   find_package(Threads)
   target_link_libraries(atl ${CMAKE_THREADS_LIBS_INIT})
@@ -132,7 +132,7 @@ set_target_properties(atl PROPERTIES
 install(FILES atl.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(TARGETS atl
   # IMPORTANT: Add the foo library to the "export-set"
-  EXPORT ATLTargets
+  EXPORT atl-targets
   RUNTIME       DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
   LIBRARY       DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
   ARCHIVE       DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
@@ -174,21 +174,21 @@ endif()
 # Setup packaging and configs
  
 # Add all targets to the build-tree export set
-export(TARGETS atl NAMESPACE ATL::
-  FILE "${PROJECT_BINARY_DIR}/ATLTargets.cmake")
-configure_file(ATLConfig.cmake.in
-  "${PROJECT_BINARY_DIR}/ATLConfig.cmake" @ONLY)
-configure_file(ATLConfigVersion.cmake.in
-  "${PROJECT_BINARY_DIR}/ATLConfigVersion.cmake" @ONLY)
+export(TARGETS atl NAMESPACE atl::
+  FILE "${PROJECT_BINARY_DIR}/atl-targets.cmake")
+configure_file(atl-config.cmake.in
+  "${PROJECT_BINARY_DIR}/atl-config.cmake" @ONLY)
+configure_file(atl-config-version.cmake.in
+  "${PROJECT_BINARY_DIR}/atl-config-version.cmake" @ONLY)
  
-# Install the ATLConfig.cmake and ATLConfigVersion.cmake
+# Install the atl-config.cmake and atl-config-version.cmake
 install(FILES
-  "${PROJECT_BINARY_DIR}/ATLConfig.cmake"
-  "${PROJECT_BINARY_DIR}/ATLConfigVersion.cmake"
+  "${PROJECT_BINARY_DIR}/atl-config.cmake"
+  "${PROJECT_BINARY_DIR}/atl-config-version.cmake"
   DESTINATION "${CMAKE_INSTALL_CMAKEDIR}" COMPONENT dev)
  
 # Install the export set for use with the install-tree
-install(EXPORT ATLTargets NAMESPACE ATL::
+install(EXPORT atl-targets NAMESPACE ATL::
   DESTINATION "${CMAKE_INSTALL_CMAKEDIR}" COMPONENT dev)
 
 set(CTEST_MEMORYCHECK_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/atl.supp)
