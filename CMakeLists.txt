@@ -113,21 +113,17 @@ set(ATL_LIBRARY_PREFIX "" CACHE STRING
 mark_as_advanced(ATL_LIBRARY_PREFIX)
 
 add_library(atl atom.c attr.c lookup3.c tclHash.c)
-if(ATL_LIBRARY_PREFIX)
-  set_target_properties(atl PROPERTIES
-    LIBRARY_OUTPUT_NAME ${ATL_LIBRARY_PREFIX}atl)
-endif()
-
+set_target_properties(atl PROPERTIES
+  OUTPUT_NAME ${ATL_LIBRARY_PREFIX}atl
+  VERSION ${ATL_VERSION}
+  SOVERSION ${ATL_VERSION_MAJOR}
+  PUBLIC_HEADER atl.h)
 add_library(atl::atl ALIAS atl)
+
 if(NOT ANDROID)
   find_package(Threads)
   target_link_libraries(atl ${CMAKE_THREADS_LIBS_INIT})
 endif()
-
-set_target_properties(atl PROPERTIES
-  VERSION ${ATL_VERSION}
-  SOVERSION ${ATL_VERSION_MAJOR}
-  PUBLIC_HEADER atl.h)
  
 install(FILES atl.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(TARGETS atl
