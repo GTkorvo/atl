@@ -20,7 +20,7 @@ set(CMAKE_INSTALL_BINDIR bin CACHE STRING "Installation runtime subdirectory")
 set(CMAKE_INSTALL_LIBDIR lib CACHE STRING "Installation library subdirectory")
 set(CMAKE_INSTALL_INCLUDEDIR include
   CACHE STRING "Installation include subdirectory")
-set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake
+set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/atl
   CACHE STRING "Installation CMake subdirectory")
 mark_as_advanced(CMAKE_INSTALL_BINDIR)
 mark_as_advanced(CMAKE_INSTALL_LIBDIR)
@@ -180,11 +180,11 @@ configure_file(atl-config-version.cmake.in
 install(FILES
   "${PROJECT_BINARY_DIR}/atl-config.cmake"
   "${PROJECT_BINARY_DIR}/atl-config-version.cmake"
-  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/atl" COMPONENT dev)
+  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}" COMPONENT dev)
  
 # Install the export set for use with the install-tree
 install(EXPORT atl-targets NAMESPACE atl::
-  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/atl" COMPONENT dev)
+  DESTINATION "${CMAKE_INSTALL_CMAKEDIR}" COMPONENT dev)
 
 set(CTEST_MEMORYCHECK_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/atl.supp)
 
