@@ -6,6 +6,7 @@
 #endif
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 #include <sys/types.h>
 #ifndef HAVE_WINDOWS_H
 #include <sys/socket.h>
