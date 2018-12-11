@@ -34,7 +34,7 @@ endif()
 
 include(CMakeDependentOption)
 
-# Setup shared library defaults.  If explicitly specified somehow, then default 
+# Setup shared library defaults.  If explicitly specified somehow, then default
 # to that.  Otherwise base the default on whether or not shared libs are even
 # supported.
 get_property(SHARED_LIBS_SUPPORTED GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS)
@@ -43,24 +43,6 @@ cmake_dependent_option(BUILD_SHARED_LIBS
   "SHARED_LIBS_SUPPORTED" OFF
 )
 mark_as_advanced(BUILD_SHARED_LIBS)
-
-# Setup PIC defaults.  If explicitly specified somehow, then default 
-# to that.  Otherwise base the default on whether or not shared libs are even
-# supported.
-if(DEFINED ATL_ENABLE_PIC)
-  set(ATL_ENABLE_PIC_DEFAULT ${ATL_ENABLE_PIC})
-elseif(DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
-  set(ATL_ENABLE_PIC_DEFAULT ${CMAKE_POSITION_INDEPENDENT_CODE})
-else()
-  set(ATL_ENABLE_PIC_DEFAULT ${SHARED_LIBS_SUPPORTED})
-endif()
-cmake_dependent_option(ATL_ENABLE_PIC
-  "Build with Position Independent Code" ${ATL_ENABLE_PIC_DEFAULT}
-  "SHARED_LIBS_SUPPORTED" OFF
-)
-mark_as_advanced(ATL_ENABLE_PIC)
-set(CMAKE_POSITION_INDEPENDENT_CODE ${ATL_ENABLE_PIC})
-mark_as_advanced(CMAKE_POSITION_INDEPENDENT_CODE)
 
 include(CheckTypeSize)
 CHECK_TYPE_SIZE(double SIZEOF_DOUBLE)
@@ -198,6 +180,7 @@ if(NOT ATL_QUIET)
   message( STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}" )
   message( STATUS "ATL_ATOM_SERVER_HOST = ${ATL_ATOM_SERVER_HOST}" )
   message( STATUS "ATL_LIBRARIES_ONLY = ${ATL_LIBRARIES_ONLY}" )
+  message( STATUS "BUILD_SHARED_LIBS = ${BUILD_SHARED_LIBS}" )
   message( STATUS "BUILD_TESTING = ${BUILD_TESTING}" )
   message( STATUS "Change a value with: cmake -D<Variable>=<Value>" )
   message( STATUS "----------------------------------------------------------------------------" )
