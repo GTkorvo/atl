@@ -106,11 +106,6 @@ target_include_directories(atl PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-if(NOT ANDROID)
-  find_package(Threads)
-  target_link_libraries(atl PRIVATE ${CMAKE_THREADS_LIBS_INIT})
-endif()
-
 # Setup pkgconfig
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/atl.pc.in
