@@ -195,6 +195,12 @@ install(
 
 set(CTEST_MEMORYCHECK_SUPPRESSIONS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/atl.supp)
 
+configure_file(
+  ${PROJECT_SOURCE_DIR}/CTestCustom.cmake.in
+  ${PROJECT_BINARY_DIR}/CTestCustom.cmake
+  @ONLY
+)
+
 # Display status message for important variables
 option(ATL_QUIET "Suppress info output at the end of configure" OFF)
 mark_as_advanced(ATL_QUIET)
