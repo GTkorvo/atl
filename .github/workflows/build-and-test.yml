@@ -30,8 +30,8 @@ jobs:
           centos7-gcc,
           centos7-clang,
           centos7-pgi,
-          ubuntu2004-gcc,
-          ubuntu2004-clang,
+          #ubuntu2004-gcc,
+          #ubuntu2004-clang,
           ubuntu2004-pgi,
           ubuntu1804-gcc,
           ubuntu1804-clang,
@@ -56,12 +56,12 @@ jobs:
           container: nvcr.io/nvidia/nvhpc:20.9-devel-centos7
           cc: pgcc
           ctest: ctest3
-        - jobname: ubuntu2004-gcc
-          container: ubuntu:20.04
-          cc: gcc
-        - jobname: ubuntu2004-clang
-          container: ubuntu:20.04
-          cc: clang
+        #- jobname: ubuntu2004-gcc
+        #  container: ubuntu:20.04
+        #  cc: gcc
+        #- jobname: ubuntu2004-clang
+        #  container: ubuntu:20.04
+        #  cc: clang
         - jobname: ubuntu2004-pgi
           container: nvcr.io/nvidia/nvhpc:20.9-devel-ubuntu20.04
           cc: pgcc
@@ -115,11 +115,11 @@ jobs:
         - jobname: windows-msvc
           vm: windows-latest
           os: Windows
-          ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16"
+          ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64
         - jobname: windows-clang
           vm: windows-latest
           os: Windows
-          ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_TOOLSET=llvm
+          ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64 -DCTEST_CMAKE_GENERATOR_TOOLSET=clang-cl
         - jobname: macos-gcc
           vm: macos-latest
           os: macOS
