@@ -92,3 +92,58 @@ jobs:
       run: scripts/ci/gh-actions/run.sh build
     - name: Test
       run: scripts/ci/gh-actions/run.sh test
+
+  mac_and_windows:
+    # The jobs should run pretty quick; anything over 30m essentially means
+    # someting is stuck somewhere
+    timeout-minutes: 30
+    runs-on: ${{ matrix.vm }}
+    env:
+      GH_YML_JOBNAME: ${{ matrix.jobname }}
+      GH_YML_OS: ${{ matrix.os }}
+      CC: ${{ matrix.cc }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        jobname: [
+          windows-msvc,
+          windows-clang,
+          macos-gcc,
+          macos-clang ]
+        include:
+        - jobname: windows-msvc
+          vm: windows-latest
+          os: Windows
+          ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16"
+        - jobname: windows-clang
+          vm: windows-latest
+          os: Windows
+          ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_TOOLSET=llvm
+        - jobname: macos-gcc
+          vm: macos-latest
+          os: macOS
+          cc: gcc
+        - jobname: macos-clang
+          vm: macos-latest
+          os: macOS
+          cc: clang
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+      env:
+        GIT_SSL_NO_VERIFY: true
+    - name: Setup
+      run: scripts/ci/gh-actions/run.sh setup
+      shell: bash
+    - name: Configure
+      run: scripts/ci/gh-actions/run.sh configure ${{ matrix.ctest_args }}
+      shell: bash
+    - name: Build
+      run: scripts/ci/gh-actions/run.sh build
+      shell: bash
+    - name: Test
+      run: scripts/ci/gh-actions/run.sh test
+      shell: bash
