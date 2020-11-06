@@ -1,2 +1,2 @@
-apt update
-apt install -y make cmake
+apt-get update
+apt-get install -y make cmake git

@@ -1,2 +1,2 @@
-yum makecache -y
-yum install -y make cmake
+dnf makecache -y
+dnf install -y make cmake git

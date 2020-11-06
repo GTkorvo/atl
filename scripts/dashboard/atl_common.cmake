@@ -103,3 +103,9 @@ endif()
 
 list(APPEND CTEST_UPDATE_NOTES_FILES "${CMAKE_CURRENT_LIST_FILE}")
 include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
+
+if(CTEST_BUILD_WARNINGS_AS_ERRORS)
+  if(ctest_build_num_warnings GREATER 0)
+    message(FATAL_ERROR "Found ${ctest_build_num_warnings} build warnings.")
+  endif()
+endif()

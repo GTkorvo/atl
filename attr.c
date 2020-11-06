@@ -588,7 +588,6 @@ add_attr(attr_list list, atom_t attr_id, attr_value_type val_type, attr_value va
 	    value.u.f = *(float*)&val;
 	    break;
 	}
-	break;
     case Attr_Opaque:
 	value.u.o = *(attr_opaque_p)&val;
 	break;
@@ -725,7 +724,6 @@ replace_attr(attr_list list, atom_t attr_id, attr_value_type val_type, attr_valu
             value.u.f = *(float*)&val;
             break;
         }
-        break;
     case Attr_Opaque:
         value.u.o = *(attr_opaque_p)&val;
         break;

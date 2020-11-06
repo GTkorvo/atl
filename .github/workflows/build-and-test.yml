@@ -10,6 +10,9 @@ on:
 
 jobs:
   linux:
+    # The jobs should run pretty quick; anything over 30m essentially means
+    # someting is stuck somewhere
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
     env:
@@ -27,11 +30,13 @@ jobs:
           centos7-gcc,
           centos7-clang,
           centos7-pgi,
-          ubuntu2004-gcc,
-          ubuntu2004-clang,
+          #ubuntu2004-gcc,
+          #ubuntu2004-clang,
           ubuntu2004-pgi,
           ubuntu1804-gcc,
-          ubuntu1804-clang ]
+          ubuntu1804-clang,
+          ubuntu1604-gcc,
+          ubuntu1604-clang ]
         include:
         - jobname: centos8-gcc
           container: centos:8
@@ -51,15 +56,21 @@ jobs:
           container: nvcr.io/nvidia/nvhpc:20.9-devel-centos7
           cc: pgcc
           ctest: ctest3
+        #- jobname: ubuntu2004-gcc
+        #  container: ubuntu:20.04
+        #  cc: gcc
+        #- jobname: ubuntu2004-clang
+        #  container: ubuntu:20.04
+        #  cc: clang
+        - jobname: ubuntu2004-pgi
+          container: nvcr.io/nvidia/nvhpc:20.9-devel-ubuntu20.04
+          cc: pgcc
         - jobname: ubuntu1804-gcc
           container: ubuntu:18.04
           cc: gcc
         - jobname: ubuntu1804-clang
           container: ubuntu:18.04
           cc: clang
-        - jobname: ubuntu2004-pgi
-          container: nvcr.io/nvidia/nvhpc:20.9-devel-ubuntu20.04
-          cc: pgcc
         - jobname: ubuntu1604-gcc
           container: ubuntu:16.04
           cc: gcc
@@ -71,6 +82,8 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.sha }}
+      env:
+        GIT_SSL_NO_VERIFY: true
     - name: Setup
       run: scripts/ci/gh-actions/run.sh setup
     - name: Configure
@@ -79,3 +92,53 @@ jobs:
       run: scripts/ci/gh-actions/run.sh build
     - name: Test
       run: scripts/ci/gh-actions/run.sh test
+
+  mac_and_windows:
+    # The jobs should run pretty quick; anything over 30m essentially means
+    # someting is stuck somewhere
+    timeout-minutes: 30
+    runs-on: ${{ matrix.vm }}
+    env:
+      GH_YML_JOBNAME: ${{ matrix.jobname }}
+      GH_YML_OS: ${{ matrix.os }}
+      CC: ${{ matrix.cc }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        jobname: [
+          #windows-msvc,
+          #windows-clang,
+          macos-clang ]
+        include:
+        #- jobname: windows-msvc
+        #  vm: windows-latest
+        #  os: Windows
+        #  ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64
+        #- jobname: windows-clang
+        #  vm: windows-latest
+        #  os: Windows
+        #  ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64 -DCTEST_CMAKE_GENERATOR_TOOLSET=clang_cl_x64
+        - jobname: macos-clang
+          vm: macos-latest
+          os: macOS
+          cc: clang
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+      env:
+        GIT_SSL_NO_VERIFY: true
+    - name: Setup
+      run: scripts/ci/gh-actions/run.sh setup
+      shell: bash
+    - name: Configure
+      run: scripts/ci/gh-actions/run.sh configure ${{ matrix.ctest_args }}
+      shell: bash
+    - name: Build
+      run: scripts/ci/gh-actions/run.sh build
+      shell: bash
+    - name: Test
+      run: scripts/ci/gh-actions/run.sh test
+      shell: bash
