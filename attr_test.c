@@ -26,8 +26,6 @@ main()
     atom_t blue_atom = -1;
     atom_t green_atom = -1;
     atom_t yellow_atom = -1;
-    atom_t orange_atom = -1;
-    atom_t turquoise_atom = -1;
     atom_t magenta_atom = -1;
     atom_t cyan_atom = -1;
     char buffer[48];
@@ -53,8 +51,6 @@ main()
     blue_atom = attr_atom_from_string("Red Stripe");
     green_atom = attr_atom_from_string("Green");
     yellow_atom = attr_atom_from_string("Yellow");
-    orange_atom = attr_atom_from_string("Orange");
-    turquoise_atom = attr_atom_from_string("Turquoise");
     magenta_atom = attr_atom_from_string("Magenta");
     cyan_atom = attr_atom_from_string("Cyan");
 
