@@ -107,18 +107,18 @@ jobs:
       fail-fast: false
       matrix:
         jobname: [
-          #windows-msvc,
+          windows-msvc,
           #windows-clang,
           macos-clang ]
         include:
-        #- jobname: windows-msvc
-        #  vm: windows-latest
-        #  os: Windows
-        #  ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64
-        #- jobname: windows-clang
-        #  vm: windows-latest
-        #  os: Windows
-        #  ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64 -DCTEST_CMAKE_GENERATOR_TOOLSET=clang_cl_x64
+        - jobname: windows-msvc
+          vm: windows-latest
+       #   os: Windows
+       #   ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64
+       # - jobname: windows-clang
+       #   vm: windows-latest
+       #   os: Windows
+       #   ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64 -DCTEST_CMAKE_GENERATOR_TOOLSET=clang_cl_x64
         - jobname: macos-clang
           vm: macos-latest
           os: macOS

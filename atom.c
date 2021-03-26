@@ -1,5 +1,4 @@
 #include "config.h"
-#include "atl.h"
 
 #undef NDEBUG
 #  include <assert.h>
@@ -9,6 +8,7 @@
 #    include <malloc.h>
 #  endif
 #  include <stdio.h>
+#  include <stdint.h>
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -26,8 +26,7 @@
 #  endif
 #  include <fcntl.h>
 
-#  include "unix_defs.h"
-
+#include "atl.h"
 #include "atom_internal.h"
 
 #define MAXDATASIZE 100
@@ -82,12 +81,14 @@ int block;
 	}
     }
 #else
-    if (ioctlsocket(as->sockfd, FIONBIO, (unsigned long*)!block) != 0) {
+    u_long block_val = !block;
+    if (ioctlsocket(as->sockfd, FIONBIO, &block_val) != 0) {
 	perror("ioctlsocket");
 	exit(1);
     }
-    ioctlsocket(as->tcp_fd, FIONBIO, (unsigned long*)!block);
+    ioctlsocket(as->tcp_fd, FIONBIO, &block_val);
 #endif
+
 }
 
 static void
@@ -120,7 +121,7 @@ char *msg;
 			);
 		}
 	    }
-	    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long)atom);
+	    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (int64_t)atom);
 	    if (entry != NULL) {
 		send_get_atom_msg_ptr atom_entry =
 		(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
@@ -176,7 +177,7 @@ send_get_atom_msg_ptr msg;
     Tcl_SetHashValue(entry, stored);
     /* enter into value hash table */
     entry = Tcl_CreateHashEntry(&as->value_hash_table,
-				(char *) (long) stored->atom, &new);
+				(char *) (int64_t) stored->atom, &new);
     if (!new) {
 	printf("Serious internal error in atom cache.  Duplicate value hash entry.\n");
 	exit(1);
@@ -214,7 +215,7 @@ atom_t atom;
 	    return;
 	}
     }
-    entry2 = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long) atom);
+    entry2 = Tcl_FindHashEntry(&as->value_hash_table, (char *) (int64_t) atom);
    if (entry2 != NULL) {
 	send_get_atom_msg_ptr atom_entry =
 	(send_get_atom_msg_ptr) Tcl_GetHashValue(entry2);
@@ -415,7 +416,7 @@ atom_t atom;
     int numbytes;
     char buf[MAXDATASIZE];
 
-    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (long) atom);
+    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (int64_t) atom);
 
     if (entry == NULL) {
 	sprintf(&buf[1], "N%d", atom);
