@@ -113,8 +113,8 @@ jobs:
         include:
         - jobname: windows-msvc
           vm: windows-latest
-       #   os: Windows
-       #   ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64
+          os: Windows
+          ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64
        # - jobname: windows-clang
        #   vm: windows-latest
        #   os: Windows
