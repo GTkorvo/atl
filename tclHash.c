@@ -12,7 +12,6 @@
  */
 
 #include "config.h"
-#include "atl.h"
 
 #  include <stdlib.h>
 #  ifdef HAVE_MALLOC_H
@@ -20,7 +19,9 @@
 #  endif
 #  include <stdio.h>
 #  include <string.h>
+#  include <stdint.h>
 
+#include "atl.h"
 #include "tclHash.h"
 
 /* 
@@ -40,7 +41,7 @@
  */
 
 #define RANDOM_INDEX(tablePtr, i) \
-    (((((long) (i))*1103515245) >> (tablePtr)->downShift) & (tablePtr)->mask)
+    (((((int64_t) (i))*1103515245) >> (tablePtr)->downShift) & (tablePtr)->mask)
 
 /* 
  * Procedure prototypes for static procedures in this file:

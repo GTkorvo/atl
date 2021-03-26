@@ -17,11 +17,14 @@
 #else
 #include <windows.h>
 #include <winsock.h>
+#ifndef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
 #endif
 #include <fcntl.h>
 #include <tclHash.h>
 typedef int atom_t;
+#include <stdint.h>
 #include "atom_internal.h"
 
 #define MAXBUFLEN 100
@@ -52,7 +55,7 @@ atom_to_string(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_hash_tab
     if (verbose)
 	printf("Doing a atom_to_string\n");
 
-    entry = Tcl_FindHashEntry(value_hash_table, (char *) (long) value);
+    entry = Tcl_FindHashEntry(value_hash_table, (char *) (int64_t)value);
 
     if (entry) {
 	value_string = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
@@ -96,7 +99,7 @@ set_string_and_atom(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_has
     stored->atom = set_atom;
     entry = Tcl_CreateHashEntry(string_hash_table, a, &new);
     Tcl_SetHashValue(entry, stored);
-    entry = Tcl_CreateHashEntry(value_hash_table, (char *) (long) stored->atom,
+    entry = Tcl_CreateHashEntry(value_hash_table, (char *) (int64_t)stored->atom,
 				&new);
     Tcl_SetHashValue(entry, stored);
     return_msg = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
@@ -313,7 +316,7 @@ process_data(char* buf, char *response)
 		return;
 	    }
 	}
-	entry = Tcl_FindHashEntry(valuehash, (char *) (long) atom);
+	entry = Tcl_FindHashEntry(valuehash, (char *) (int64_t) atom);
 	if (entry != NULL) {
 	    send_get_atom_msg_ptr atom_entry =
 		(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);

@@ -1,6 +1,5 @@
 #include "config.h"
 #include "stdio.h"
-#include "atl.h"
 
 #  include "config.h"
 #  ifdef HAVE_WINDOWS_H
@@ -15,7 +14,9 @@
 #    endif
 #    include <unix_defs.h>
 #  endif
+#include <stdint.h>
 
+#include "atl.h"
 #undef NDEBUG
 #include "assert.h"
 
@@ -593,7 +594,7 @@ add_attr(attr_list list, atom_t attr_id, attr_value_type val_type, attr_value va
 	break;
     case Attr_String:
     case Attr_List:
-	value.u.p = val;
+	value.u.p = (void*)val;
 	break;
     case Attr_Undefined:
 	break;
@@ -729,7 +730,7 @@ replace_attr(attr_list list, atom_t attr_id, attr_value_type val_type, attr_valu
         break;
     case Attr_String:
     case Attr_List:
-        value.u.p = val;
+        value.u.p = (void*)val;
         break;
     case Attr_Undefined:
         break;
@@ -823,7 +824,7 @@ query_attr(attr_list list, atom_t attr_id, attr_value_type *val_type_p, attr_val
 			(list->l.list.attributes[index].val_type == Attr_Int4)){
 			*((int*)value_p) = (int)(long)list->l.list.attributes[index].value.u.i;
 		    } else {
-			*value_p = (void*)list->l.list.attributes[index].value.u.l;
+			*value_p = list->l.list.attributes[index].value.u.l;
 		    }
 		}
 		return 1;
@@ -1405,7 +1406,7 @@ get_attr(attr_list list,int index, atom_t *name,
 	if (index < list->l.list.iattrs->other_attr_count) {
 	    *name = list->l.list.attributes[index].attr_id;
 	    *val_type = list->l.list.attributes[index].val_type;
-	    *value = (void*)list->l.list.attributes[index].value.u.l;
+	    *value = (int64_t)list->l.list.attributes[index].value.u.l;
 	    return 1;
 	}
 	return 0;
@@ -1857,7 +1858,7 @@ decode_attr_from_xmit(void * buf)
 	    if (l->l.list.attributes[i].val_type == Attr_String) {
 		char *value = malloc(len);
 		memcpy(value, optr, len);
-		l->l.list.attributes[i].value.u.p = (attr_value) value;
+		l->l.list.attributes[i].value.u.p = value;
 	    } else {
 		attr_opaque op;
 		op.length = len;

@@ -12,6 +12,8 @@
 #include <malloc.h>
 #endif
 #include <stdio.h>
+#include <stdint.h>
+
 #include "atl.h"
 
 int
@@ -34,7 +36,7 @@ main()
     attr_list al = create_attr_list();
     attr_list al2 = create_attr_list();
 
-    set_attr (al, 2000, Attr_String, "test string");
+    set_attr (al, 2000, Attr_String, (attr_value)"test string");
     set_attr (al, 2001, Attr_Int4, (attr_value)2001);
 
     attr_add_list (al, al2);

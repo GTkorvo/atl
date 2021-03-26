@@ -84,6 +84,9 @@ set(ATL_LIBRARY_PREFIX "" CACHE STRING
 mark_as_advanced(ATL_LIBRARY_PREFIX)
 
 add_library(atl atom.c attr.c lookup3.c tclHash.c)
+if(WIN32)
+  target_link_libraries(atl wsock32 ws2_32)
+endif()
 add_library(atl::atl ALIAS atl)
 option(ATL_INSTALL_HEADERS "Install ATL header files" ON)
 mark_as_advanced(ATL_INSTALL_HEADERS)
@@ -141,9 +144,14 @@ option(ATL_LIBRARIES_ONLY "Don't built the ATL utility executables" OFF)
 if(NOT ATL_LIBRARIES_ONLY)
   add_executable(atom_server atom_server.c)
   target_link_libraries(atom_server atl)
-
+  if(WIN32)
+    target_link_libraries(atom_server wsock32 ws2_32)
+  endif()
   add_executable(attr_dump attr_dump.c)
   target_link_libraries(attr_dump atl)
+  if(WIN32)
+    target_link_libraries(attr_dump wsock32 ws2_32)
+  endif()
 
   install(TARGETS atom_server attr_dump
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT ${ATL_RUNTIME_COMPONENT})
