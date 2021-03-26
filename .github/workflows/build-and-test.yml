@@ -14,7 +14,7 @@ jobs:
     # someting is stuck somewhere
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container: ${{ matrix.vm }}
     env:
       GH_YML_JOBNAME: ${{ matrix.jobname }}
       GH_YML_OS: Linux
