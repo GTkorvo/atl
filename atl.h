@@ -13,6 +13,10 @@ extern "C" {
 #endif
 #endif
 
+#ifndef _STDINT_H
+#include <stdint.h>
+#endif
+
 typedef int atom_t;
 
 /* opaque type for atom server handle */
