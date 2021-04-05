@@ -171,7 +171,7 @@ mark_as_advanced(BUILD_TESTING)
 if(BUILD_TESTING)
   add_executable(attr_test attr_test.c)
   target_link_libraries(attr_test atl)
-  add_test(NAME atl_attr_test COMMAND attr_test)
+  #  add_test(NAME atl_attr_test COMMAND attr_test)
 
   add_executable(atom_test atom_test.c)
   target_link_libraries(atom_test atl)
