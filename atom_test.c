@@ -42,7 +42,7 @@ main()
 
 	if (fgets(line, sizeof(line), stdin) == NULL)
 	    return 0;
-	len = strlen(line);
+	len = (int) strlen(line);
 	if (len > 0)
 	    line[len - 1] = 0;	/* truncate \n */
 	if (line[0] == 0)

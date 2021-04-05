@@ -26,6 +26,12 @@
 #  endif
 #  include <fcntl.h>
 
+#ifdef _MSC_VER
+    #define strdup _strdup
+    #include <io.h>
+#pragma warning(disable: 4996)
+#endif
+
 #include "atl.h"
 #include "atom_internal.h"
 
@@ -49,7 +55,9 @@ typedef struct _atom_server {
 static char *atom_server_host = NULL;
 static int establish_server_connection(atom_server as, int do_fallback);
 
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 
 #ifndef O_NONBLOCK
 #define O_NONBLOCK 0x80
@@ -194,7 +202,7 @@ atom_t atom;
 {
     send_get_atom_msg tmp_value;
     Tcl_HashEntry *entry = NULL, *entry2 = NULL;
-    int numbytes, len;
+    long numbytes, len;
     unsigned char buf[MAXDATASIZE];
     unsigned int addr_len = sizeof(struct sockaddr);
     int new;
@@ -234,10 +242,10 @@ atom_t atom;
     if (as->no_server) return;
     if (!new) return;
     sprintf((char *)&buf[1], "A%d %s", atom, str);
-    len = strlen((char*)&buf[1]);
+    len = (long) strlen((char*)&buf[1]);
     if (as->use_tcp) {
 	set_blocking(as, 1);
-	buf[0] = len;
+	buf[0] = (unsigned char) len;
 	if (establish_server_connection(as, 1) == 0) return;
 	if ((numbytes = write(as->tcp_fd, buf, len+1)) != len +1) {
 	    close(as->tcp_fd);
@@ -318,7 +326,7 @@ int do_fallback;
 	/* reestablish connection, name_str is the machine name */
 	struct sockaddr_in sock_addr;
 
-	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	if ((sock = (int) socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 	    fprintf(stderr, "Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
 	    return 0;
 	}
@@ -346,7 +354,7 @@ int do_fallback;
 	    if (!do_fallback) return 0;
 
 	    /* fallback */
-	    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	    if ((sock = (int) socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		fprintf(stderr, "Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
 	       return 0;
 	    }
@@ -421,7 +429,7 @@ atom_t atom;
     if (entry == NULL) {
 	sprintf(&buf[1], "N%d", atom);
 	if (establish_server_connection(as, 1) == 0) return NULL;
-	buf[0] = strlen(&buf[1]);
+	buf[0] = (char) strlen(&buf[1]);
 	if (write(as->tcp_fd, buf, buf[0]+1) != buf[0] + 1) {
 	    perror("write");
 	    return NULL;
@@ -584,7 +592,7 @@ free_atom_server(atom_server as)
   Tcl_HashEntry * entry = Tcl_FirstHashEntry(&as->string_hash_table, &search);
   while (entry) {
     send_get_atom_msg_ptr stored;
-    stored = Tcl_GetHashValue(entry);
+    stored = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
     free(stored->atom_string);
     free(stored);
     entry = Tcl_NextHashEntry(&search);
@@ -621,7 +629,7 @@ atom_cache_type cache_style;
     } else {
 	as->their_addr.sin_addr = *((struct in_addr *) as->he->h_addr);
     }
-    if ((as->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+    if ((as->sockfd = (int) socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 	perror("socket");
 	exit(1);
     }

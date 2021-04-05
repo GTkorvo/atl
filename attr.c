@@ -15,12 +15,19 @@
 #    include <unix_defs.h>
 #  endif
 #include <stdint.h>
+#ifdef _MSC_VER
+    #define strdup _strdup
+    #include <io.h>
+#pragma warning(disable: 4996)
+#endif
 
 #include "atl.h"
 #undef NDEBUG
 #include "assert.h"
 
+#ifdef HAVE_SYS_TIME_H
 #include "sys/time.h"
+#endif
 #include "atom_internal.h"
 
 #if SIZEOF_INT == 4
@@ -371,7 +378,7 @@ add_float_attr(attr_list list, atom_t attr_id, double fvalue)
 {
     attr_value_type t = Attr_Float4;
     attr_union tmp;
-    tmp.u.f = fvalue;
+    tmp.u.f = (float) fvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
     return add_pattr(list, attr_id, t, tmp);
@@ -432,7 +439,7 @@ set_float_attr(attr_list list, atom_t attr_id, double fvalue)
 {
     attr_value_type t = Attr_Float4;
     attr_union tmp;
-    tmp.u.f = fvalue;
+    tmp.u.f = (float) fvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
     return set_pattr(list, attr_id, t, tmp);
@@ -475,7 +482,7 @@ replace_float_attr(attr_list list, atom_t attr_id, double fvalue)
 {
     attr_value_type t = Attr_Float4;
     attr_union tmp;
-    tmp.u.f = fvalue;
+    tmp.u.f = (float) fvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
     return replace_pattr(list, attr_id, t, tmp);
@@ -1489,8 +1496,7 @@ free_attr_list(attr_list list)
                 free((char *)list->l.list.attributes[i].value.u.p);
                 break;
             case Attr_Opaque: {
-                attr_opaque o =
-                    (attr_opaque) list->l.list.attributes[i].value.u.o;
+                attr_opaque o = list->l.list.attributes[i].value.u.o;
                 if (o.buffer) {
                     free(o.buffer);
                 }
@@ -1645,7 +1651,7 @@ add_to_tmp_buffer(AttrBuffer buf, unsigned int size)
 	buf->tmp_buffer = malloc(tmp_size * sizeof(char));
 	if(buf->tmp_buffer) memset(buf->tmp_buffer, 0, tmp_size * sizeof(char));
     }
-    if (size > buf->tmp_buffer_size) {
+    if ((long)size > (long)buf->tmp_buffer_size) {
 	buf->tmp_buffer = realloc(buf->tmp_buffer, size);
 	memset (((char*)buf->tmp_buffer) + buf->tmp_buffer_size, 0, size - buf->tmp_buffer_size);
 	buf->tmp_buffer_size = size;

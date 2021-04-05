@@ -15,6 +15,11 @@
 #include <stdint.h>
 
 #include "atl.h"
+#ifdef _MSC_VER
+    #define strdup _strdup
+    #include <io.h>
+#pragma warning(disable: 4996)
+#endif
 
 int
 main()
