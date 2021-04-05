@@ -34,6 +34,15 @@ if(NOT DEFINED ATL_HEADER_COMPONENT)
   set(ATL_HEADER_COMPONENT dev)
 endif()
 
+# Silence MSVC warnings
+if(MSVC)
+  add_definitions(
+    -D_CRT_SECURE_NO_DEPRECATE
+    -D_CRT_SECURE_NO_WARNINGS
+    -D_SCL_SECURE_NO_DEPRECATE)
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+endif()
+
 # Default to a RelWithDebInfo build if not specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY VALUE RelWithDebInfo)

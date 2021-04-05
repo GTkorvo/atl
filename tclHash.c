@@ -21,8 +21,16 @@
 #  include <string.h>
 #  include <stdint.h>
 
+#  ifdef HAVE_WINDOWS_H
+#  endif
 #include "atl.h"
 #include "tclHash.h"
+
+#ifdef _MSC_VER
+    #define strdup _strdup
+    #include <io.h>
+#pragma warning(disable: 4996)
+#endif
 
 /* 
  * When there are this many entries per bucket, on average, rebuild

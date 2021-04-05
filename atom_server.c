@@ -26,6 +26,11 @@
 typedef int atom_t;
 #include <stdint.h>
 #include "atom_internal.h"
+#ifdef _MSC_VER
+    #define strdup _strdup
+    #include <io.h>
+#pragma warning(disable: 4996)
+#endif
 
 #define MAXBUFLEN 100
 
@@ -127,7 +132,7 @@ establish_server_connection()
     struct sockaddr_in sock_addr;
 
 
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((sock = (int) socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 	fprintf(stderr, "Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
 	return 0;
     }
@@ -173,7 +178,7 @@ char **argv;
 	}
     }
 
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+    if ((sockfd = (int) socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 	perror("socket");
 	exit(1);
     }
@@ -213,7 +218,7 @@ char **argv;
 	exit(1);
     }
 
-    tcpfd = socket(AF_INET, SOCK_STREAM, 0);
+    tcpfd = (int) socket(AF_INET, SOCK_STREAM, 0);
     if (tcpfd < 0) {
 	fprintf(stderr, "Cannot open INET socket %d\n", tcpfd);
 	return -1;
@@ -361,7 +366,7 @@ int sockfd;
     process_data(buf, response);
 
     if (response[0] != 0) {
-	int len = strlen(response);
+	int len = (int)strlen(response);
 	if ((numbytes = sendto(sockfd, &response[0], len, 0,
 			       (struct sockaddr *) &their_addr,
 			       sizeof(struct sockaddr))) == -1) {
@@ -400,7 +405,7 @@ int sockfd;
     process_data(buf, &response[1]);
 
     if (response[1] != 0) {
-	unsigned len = strlen(&response[1]);
+	unsigned len = (unsigned) strlen(&response[1]);
 	response[0] = len;
 	if ((numbytes = write(sockfd, &response[0], len +1) != len + 1)) {
 	    perror("write - handle_tcp_data");
@@ -410,8 +415,8 @@ int sockfd;
 }
 
 typedef struct _ASClient {
-    long created;
-    long timestamp;
+    time_t created;
+    time_t timestamp;
 } *ASClient;
 
 #define Max(i,j) ((i<j) ? j : i)
@@ -453,7 +458,7 @@ server_init(int udp_socket, int tcp_socket)
 static void
 timeout_old_conns()
 {
-    static int last_timeout_time = 0;
+    static time_t last_timeout_time = 0;
     time_t now = time(NULL);
     int i;
 
@@ -478,7 +483,7 @@ timeout_old_conns()
 static void
 timeout_oldest_conn()
 {
-    int oldest_time = 0;
+    time_t oldest_time = 0;
     int oldest_index = 0;
     int i;
 
@@ -510,12 +515,12 @@ accept_conn_sock(int conn_sock)
     linger_val.l_onoff = 1;
     linger_val.l_linger = 60;
 
-    if ((sock = accept(conn_sock, (struct sockaddr *) 0, (unsigned int *) 0)) < 0) {
+    if ((sock = (int) accept(conn_sock, (struct sockaddr *) 0, (unsigned int *) 0)) < 0) {
 	LOG("accept failed");
 
 	timeout_oldest_conn();
 
-	if ((sock = accept(conn_sock, (struct sockaddr *) 0, (unsigned int *) 0)) < 0) {
+	if ((sock = (int) accept(conn_sock, (struct sockaddr *) 0, (unsigned int *) 0)) < 0) {
 	    LOG("accept failed twice");
 	    fprintf(stderr, "Cannot accept socket connection\n");
 	    return;
