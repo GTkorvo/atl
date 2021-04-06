@@ -1,7 +1,7 @@
-dnf makecache -y
-dnf install -y make git curl perl
+dnf install -y epel-release make curl perl
 
-curl https://cmake.org/files/LatestRelease/$(curl https://cmake.org/files/LatestRelease/cmake-latest-files-v1.json 2>/dev/null | grep 'cmake.*sh' | sed -n 's|.*"\(cmake.*x86_64.sh\).*|\1|p') > cmake.sh
-chmod +x cmake.sh
-./cmake.sh --skip-license --exclude-subdir --prefix=/usr/local
-rm -f cmake.sh
+curl -L https://copr.fedorainfracloud.org/coprs/g/git-maint/git/repo/epel-8/group_git-maint-git-epel-8.repo > /etc/yum.repos.d/group_git-maint-git-epel-8.repo
+
+dnf install -y git
+
+source "${SETUP_DIR}/linux-cmake.sh"
