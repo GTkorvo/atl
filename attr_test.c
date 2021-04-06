@@ -46,6 +46,7 @@ main()
 
     attr_add_list (al, al2);
     attr_list_to_string (al);
+
     dump_attr_list (al);
     free_attr_list(al);
     free_attr_list(al2);
