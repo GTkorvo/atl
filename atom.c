@@ -256,6 +256,7 @@ atom_t atom;
 	set_blocking(as, 1);
 	buf[0] = (unsigned char) len;
 	if (establish_server_connection(as, 1) == 0) return;
+	
 	if ((numbytes = write(as->tcp_fd, (char*)buf, len+1)) != len +1) {
 	    close(as->tcp_fd);
 	    return;
@@ -322,7 +323,6 @@ int do_fallback;
     int delay_value = 1;
     char ping_char = 0;
 
-    fprintf(stderr, "Enter establish server connection\n");
     if (atom_server_verbose == -1) {
 	if (getenv("ATOM_SERVER_VERBOSE") == NULL) {
 	    atom_server_verbose = 0;
@@ -462,9 +462,9 @@ atom_t atom;
 		handle_unexpected_msg(as, &buf[1]);
 	}
 
-	if (buf[2] == 0)
+	if (buf[2] == 0) {
 	    return NULL;
-
+	}
 	tmp_rec.atom_string = &buf[2];
 	tmp_rec.atom = atom;
 
