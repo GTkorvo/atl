@@ -77,13 +77,13 @@ jobs:
         buildtype: [ release, debug ]
         jobname: [
           windows-vs2019-msvc,
-          #windows-vs2019-clang,
+          windows-vs2019-clang,
           macos-clang ]
         include:
         - jobname: windows-vs2019-msvc
           vm: windows-latest
-        #- jobname: windows-vs2019-clang
-        #  vm: windows-latest
+        - jobname: windows-vs2019-clang
+          vm: windows-latest
         - jobname: macos-clang
           vm: macos-latest
 

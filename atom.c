@@ -21,8 +21,9 @@
 #    include <netinet/tcp.h>
 #    include <arpa/inet.h>
 #  else
-#    include <windows.h>
-#    include <winsock.h>
+#    include <winsock2.h>
+#    include <ws2tcpip.h>
+#    pragma comment(lib, "Ws2_32.lib")
 #  endif
 #  include <fcntl.h>
 
@@ -38,10 +39,18 @@
 #define MAXDATASIZE 100
 #include "tclHash.h"
 
+#ifndef HAVE_WINDOWS_H
+typedef int SOCKET;
+#else
+#define write(fs, addr, len) send(fs, addr, len, 0)
+#define read(fs, addr, len) recv(fs, addr, len, 0)
+#define close(fs) closesocket(fs);
+#endif
+
 /* opaque type for atom server handle */
 typedef struct _atom_server {
     int sockfd;
-    int tcp_fd;
+    SOCKET tcp_fd;
     int use_tcp;
     int no_server;
     struct hostent *he;
@@ -204,7 +213,7 @@ atom_t atom;
     Tcl_HashEntry *entry = NULL, *entry2 = NULL;
     long numbytes, len;
     unsigned char buf[MAXDATASIZE];
-    unsigned int addr_len = sizeof(struct sockaddr);
+    socklen_t addr_len = sizeof(struct sockaddr);
     int new;
 
     entry = Tcl_FindHashEntry(&as->string_hash_table, str);
@@ -247,15 +256,16 @@ atom_t atom;
 	set_blocking(as, 1);
 	buf[0] = (unsigned char) len;
 	if (establish_server_connection(as, 1) == 0) return;
-	if ((numbytes = write(as->tcp_fd, buf, len+1)) != len +1) {
+	
+	if ((numbytes = write(as->tcp_fd, (char*)buf, len+1)) != len +1) {
 	    close(as->tcp_fd);
 	    return;
 	}
 	set_blocking(as, 0);
-	if (read(as->tcp_fd, buf, 1) != 1) {
+	if (read(as->tcp_fd, (char*)buf, 1) != 1) {
 	    return;
 	}
-	if (read(as->tcp_fd, &buf[1], buf[0]) != buf[0]) {
+	if (read(as->tcp_fd, (char*)&buf[1], buf[0]) != buf[0]) {
 	    return;
 	}
 	buf[buf[0]+1] = 0;
@@ -263,13 +273,13 @@ atom_t atom;
     } else {
 	if (as->their_addr.sin_addr.s_addr == 0) return;
 	set_blocking(as, 0);	/* set server fd nonblocking */
-	if ((numbytes = sendto(as->sockfd, &buf[1], len, 0,
+	if ((numbytes = sendto(as->sockfd, (char*)&buf[1], len, 0,
 			       (struct sockaddr *) &(as->their_addr), sizeof(struct sockaddr))) == -1) {
 	    /* don't try that again... */
 	    as->their_addr.sin_addr.s_addr = 0;
 	    return;
 	}
-	if ((numbytes = recvfrom(as->sockfd, &buf[1], MAXDATASIZE - 1, 0,
+	if ((numbytes = recvfrom(as->sockfd, (char*)&buf[1], MAXDATASIZE - 1, 0,
 				 (struct sockaddr *) &(as->their_addr), &addr_len)) != -1) {
 	    /* actually got a message back ! */
 	    buf[numbytes+1] = 0;
@@ -278,7 +288,7 @@ atom_t atom;
     }
 }
 
-static int atom_server_verbose = -1;
+static int atom_server_verbose = 1;
 
 static int
 fill_hostaddr(void *addr, char *hostname)
@@ -309,7 +319,7 @@ establish_server_connection(as, do_fallback)
 atom_server as;
 int do_fallback;
 {
-    int sock;
+    SOCKET sock;
     int delay_value = 1;
     char ping_char = 0;
 
@@ -326,13 +336,15 @@ int do_fallback;
 	/* reestablish connection, name_str is the machine name */
 	struct sockaddr_in sock_addr;
 
-	if ((sock = (int) socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	fprintf(stderr, "Establish server connection, write failed, creating socket\n");
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 	    fprintf(stderr, "Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
 	    return 0;
 	}
 	
 	sock_addr.sin_family = AF_INET;
 		
+	fprintf(stderr, "Establish server connection, fill_host_addr\n");
 	if (fill_hostaddr(&sock_addr.sin_addr, atom_server_host) == 0) {
 	    fprintf(stderr, "Unknown Host \"%s\" specified as ATL atom server.\n",
 		    atom_server_host);
@@ -354,7 +366,7 @@ int do_fallback;
 	    if (!do_fallback) return 0;
 
 	    /* fallback */
-	    if ((sock = (int) socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		fprintf(stderr, "Failed to create socket for ATL atom server connection.  Not enough File Descriptors?\n");
 	       return 0;
 	    }
@@ -450,9 +462,9 @@ atom_t atom;
 		handle_unexpected_msg(as, &buf[1]);
 	}
 
-	if (buf[2] == 0)
+	if (buf[2] == 0) {
 	    return NULL;
-
+	}
 	tmp_rec.atom_string = &buf[2];
 	tmp_rec.atom = atom;
 

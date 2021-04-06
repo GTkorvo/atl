@@ -348,7 +348,7 @@ handle_udp_data(sockfd)
 int sockfd;
 {
     int numbytes;
-    unsigned int addr_len = sizeof(struct sockaddr);
+    socklen_t addr_len = sizeof(struct sockaddr);
     char buf[MAXBUFLEN];
     char response[MAXBUFLEN];
     struct sockaddr_in their_addr;	/* connector's address information */
@@ -515,12 +515,12 @@ accept_conn_sock(int conn_sock)
     linger_val.l_onoff = 1;
     linger_val.l_linger = 60;
 
-    if ((sock = (int) accept(conn_sock, (struct sockaddr *) 0, (unsigned int *) 0)) < 0) {
+    if ((sock = (int) accept(conn_sock, (struct sockaddr *) 0, (socklen_t *) 0)) < 0) {
 	LOG("accept failed");
 
 	timeout_oldest_conn();
 
-	if ((sock = (int) accept(conn_sock, (struct sockaddr *) 0, (unsigned int *) 0)) < 0) {
+	if ((sock = (int) accept(conn_sock, (struct sockaddr *) 0, (socklen_t *) 0)) < 0) {
 	    LOG("accept failed twice");
 	    fprintf(stderr, "Cannot accept socket connection\n");
 	    return;

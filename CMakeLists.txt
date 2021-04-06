@@ -45,6 +45,7 @@ if(WIN32)
       -D_CRT_SECURE_NO_DEPRECATE
       -D_CRT_SECURE_NO_WARNINGS
       -D_SCL_SECURE_NO_DEPRECATE
+      -D_WINSOCK_DEPRECATED_NO_WARNINGS
       -D_CRT_NONSTDC_NO_DEPRECATE)
   endif()
 endif()
@@ -157,10 +158,12 @@ install(TARGETS atl
 
 option(ATL_LIBRARIES_ONLY "Don't built the ATL utility executables" OFF)
 if(NOT ATL_LIBRARIES_ONLY)
-  add_executable(atom_server atom_server.c)
-  target_link_libraries(atom_server atl)
-  if(WIN32)
-    target_link_libraries(atom_server wsock32 ws2_32)
+  if(NOT WIN32)
+    # Atom server not ported to windows
+    add_executable(atom_server atom_server.c)
+    target_link_libraries(atom_server atl)
+    install(TARGETS atom_server
+      RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT ${ATL_RUNTIME_COMPONENT})
   endif()
   add_executable(attr_dump attr_dump.c)
   target_link_libraries(attr_dump atl)
@@ -168,7 +171,7 @@ if(NOT ATL_LIBRARIES_ONLY)
     target_link_libraries(attr_dump wsock32 ws2_32)
   endif()
 
-  install(TARGETS atom_server attr_dump
+  install(TARGETS attr_dump
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT ${ATL_RUNTIME_COMPONENT})
 endif()
 
