@@ -34,13 +34,19 @@ if(NOT DEFINED ATL_HEADER_COMPONENT)
   set(ATL_HEADER_COMPONENT dev)
 endif()
 
-# Silence MSVC warnings
-if(MSVC)
-  add_definitions(
-    -D_CRT_SECURE_NO_DEPRECATE
-    -D_CRT_SECURE_NO_WARNINGS
-    -D_SCL_SECURE_NO_DEPRECATE)
+if(WIN32)
+  # Automagic to do the DLL / LIB song and dance
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+
+  # Silence MSVC warnings
+  if(CMAKE_C_COMPILER_ID MATCHES "MSVC" OR
+     CMAKE_C_SIMULATE_ID MATCHES "MSVC")
+    add_definitions(
+      -D_CRT_SECURE_NO_DEPRECATE
+      -D_CRT_SECURE_NO_WARNINGS
+      -D_SCL_SECURE_NO_DEPRECATE
+      -D_CRT_NONSTDC_NO_DEPRECATE)
+  endif()
 endif()
 
 # Default to a RelWithDebInfo build if not specified
@@ -171,7 +177,7 @@ mark_as_advanced(BUILD_TESTING)
 if(BUILD_TESTING)
   add_executable(attr_test attr_test.c)
   target_link_libraries(attr_test atl)
-  #  add_test(NAME atl_attr_test COMMAND attr_test)
+  add_test(NAME atl_attr_test COMMAND attr_test)
 
   add_executable(atom_test atom_test.c)
   target_link_libraries(atom_test atl)

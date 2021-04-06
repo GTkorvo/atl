@@ -16,67 +16,36 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
     env:
-      GH_YML_JOBNAME: ${{ matrix.jobname }}
-      GH_YML_OS: Linux
-      CC: ${{ matrix.cc }}
-      CTEST: ${{ matrix.ctest }}
+      GH_YML_JOBNAME: ${{ matrix.os }}-${{ matrix.compiler }}
+      GH_YML_BUILDTYPE: ${{ matrix.buildtype }}
 
     strategy:
       fail-fast: false
       matrix:
-        jobname: [
-          centos8-gcc,
-          centos8-clang,
-          centos7-gcc,
-          centos7-clang,
-          centos7-pgi,
-          #ubuntu2004-gcc,
-          #ubuntu2004-clang,
-          ubuntu2004-pgi,
-          ubuntu1804-gcc,
-          ubuntu1804-clang,
-          ubuntu1604-gcc,
-          ubuntu1604-clang ]
+        buildtype: [ release, debug ]
+        os: [ centos7, centos8, ubuntu1604, ubuntu1804, ubuntu2004 ]
+        compiler: [ clang, gcc, nvhpc ]
+        exclude:
+          - { os: centos8, compiler: nvhpc }
+          - { os: ubuntu1604, compiler: nvhpc }
+          - { os: ubuntu1804, compiler: nvhpc }
         include:
-        - jobname: centos8-gcc
-          container: centos:8
-          cc: gcc
-        - jobname: centos8-clang
-          container: centos:8
-          cc: clang
-        - jobname: centos7-gcc
+        - os: centos7
           container: centos:7
-          cc: gcc
-          ctest: ctest3
-        - jobname: centos7-clang
-          container: centos:7
-          cc: clang
-          ctest: ctest3
-        - jobname: centos7-pgi
-          container: nvcr.io/nvidia/nvhpc:20.9-devel-centos7
-          cc: pgcc
-          ctest: ctest3
-        #- jobname: ubuntu2004-gcc
-        #  container: ubuntu:20.04
-        #  cc: gcc
-        #- jobname: ubuntu2004-clang
-        #  container: ubuntu:20.04
-        #  cc: clang
-        - jobname: ubuntu2004-pgi
-          container: nvcr.io/nvidia/nvhpc:20.9-devel-ubuntu20.04
-          cc: pgcc
-        - jobname: ubuntu1804-gcc
-          container: ubuntu:18.04
-          cc: gcc
-        - jobname: ubuntu1804-clang
-          container: ubuntu:18.04
-          cc: clang
-        - jobname: ubuntu1604-gcc
+        - os: centos8
+          container: centos:8
+        - os: ubuntu1604
           container: ubuntu:16.04
-          cc: gcc
-        - jobname: ubuntu1604-clang
-          container: ubuntu:16.04
-          cc: clang
+        - os: ubuntu1804
+          container: ubuntu:18.04
+        - os: ubuntu2004
+          container: ubuntu:20.04
+        - os: centos7
+          compiler: nvhpc
+          container: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-centos7
+        - os: ubuntu2004
+          compiler: nvhpc
+          container: nvcr.io/nvidia/nvhpc:21.2-devel-cuda11.2-ubuntu20.04
 
     steps:
     - uses: actions/checkout@v2
@@ -100,29 +69,23 @@ jobs:
     runs-on: ${{ matrix.vm }}
     env:
       GH_YML_JOBNAME: ${{ matrix.jobname }}
-      GH_YML_OS: ${{ matrix.os }}
-      CC: ${{ matrix.cc }}
+      GH_YML_BUILDTYPE: ${{ matrix.buildtype }}
 
     strategy:
       fail-fast: false
       matrix:
+        buildtype: [ release, debug ]
         jobname: [
-          windows-msvc,
-          #windows-clang,
+          windows-vs2019-msvc,
+          #windows-vs2019-clang,
           macos-clang ]
         include:
-        - jobname: windows-msvc
+        - jobname: windows-vs2019-msvc
           vm: windows-latest
-          os: Windows
-          ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64
-       # - jobname: windows-clang
-       #   vm: windows-latest
-       #   os: Windows
-       #   ctest_args: -DCTEST_CMAKE_GENERATOR="Visual Studio 16" -DCTEST_CMAKE_GENERATOR_PLATFORM=x64 -DCTEST_CMAKE_GENERATOR_TOOLSET=clang_cl_x64
+        #- jobname: windows-vs2019-clang
+        #  vm: windows-latest
         - jobname: macos-clang
           vm: macos-latest
-          os: macOS
-          cc: clang
 
     steps:
     - uses: actions/checkout@v2
@@ -134,10 +97,10 @@ jobs:
       run: scripts/ci/gh-actions/run.sh setup
       shell: bash
     - name: Configure
-      run: scripts/ci/gh-actions/run.sh configure ${{ matrix.ctest_args }}
+      run: scripts/ci/gh-actions/run.sh configure
       shell: bash
     - name: Build
-      run: scripts/ci/gh-actions/run.sh build ${{ matrix.ctest_args }}
+      run: scripts/ci/gh-actions/run.sh build
       shell: bash
     - name: Test
       run: scripts/ci/gh-actions/run.sh test
