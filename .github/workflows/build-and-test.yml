@@ -54,7 +54,7 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         path: source
     - name: Setup
-      run: source/scripts/ci/gh-actions/run.sh setup
+      run: source/scripts/ci/setup/linux.sh
     - name: Update
       run: source/scripts/ci/gh-actions/run.sh update
     - name: Configure
@@ -100,7 +100,11 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         path: source
     - name: Setup
-      run: source/scripts/ci/gh-actions/run.sh setup
+      if: ${{ runner.os == 'Windows' }}
+      run: source/scripts/ci/setup/windows.sh
+    - name: Setup
+      if: ${{ runner.os == 'macOS' }}
+      run: source/scripts/ci/setup/macos.sh
     - name: Update
       run: source/scripts/ci/gh-actions/run.sh update
     - name: Configure
