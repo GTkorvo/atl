@@ -25,15 +25,6 @@ else
 fi
 export CI_BIN_DIR="${CI_ROOT_DIR}/build"
 
-if [ "${STEP}" = "setup" ]
-then
-  if [ -e ${CI_SOURCE_DIR}/scripts/ci/setup/${GH_YML_JOBNAME}.sh ]
-  then
-    source ${CI_SOURCE_DIR}/scripts/ci/setup/${GH_YML_JOBNAME}.sh
-  fi
-  exit 0
-fi
-
 export CI_COMMIT_SHA=${GH_YML_SHA}
 
 if command -v ctest3 >/dev/null
@@ -63,3 +54,4 @@ ${CTEST} -VV \
   -Ddashboard_full=OFF \
   ${CTEST_STEP_ARGS} \
   "$@"
+
