@@ -12,5 +12,10 @@
 #include <malloc.h>
 #endif
 
+#ifdef _MSC_VER
+#define getpid() _getpid()
+#else
 extern pid_t getpid();
+#endif
+#define strdup(s) _strdup(s)
 extern char *getlogin();

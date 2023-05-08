@@ -5,6 +5,10 @@
 #  include "config.h"
 #  ifdef HAVE_WINDOWS_H
 #    include <windows.h>
+#    include <winsock.h>
+
+#    pragma comment(lib,"ws2_32.lib") //Winsock Library
+
 #  else
 #    include <ctype.h>
 #    include <stdio.h>
@@ -15,11 +19,14 @@
 #    endif
 #    include <unix_defs.h>
 #  endif
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
 
 #undef NDEBUG
 #include "assert.h"
 
-#include "sys/time.h"
 #include "atom_internal.h"
 
 #if SIZEOF_INT == 4
@@ -34,7 +41,7 @@ typedef struct attr_union {
 	double d;
 	float f;
 	int i;
-	long l;
+	size_t l;
 	void *p;
         attr_opaque o;
     }u;
@@ -170,7 +177,7 @@ attr_copy_list(attr_list orig)
 	    memcpy(a, b, oattr_count * sizeof(attr));
 	    for (i=0; i < oattr_count; i++) {
 		if (a[i].val_type == Attr_String) {
-		    char *s = strdup((char *) b[i].value.u.p);
+		    char *s = _strdup((char *) b[i].value.u.p);
 		    a[i].value.u.p = s;
 		} else if (a[i].val_type == Attr_Opaque) {
                     int len = b[i].value.u.o.length;
@@ -312,7 +319,7 @@ attr_merge_lists(attr_list list1, attr_list list2)
 	get_pattr(list2, i, &attr_guy.attr_id, &attr_guy.val_type,
 		  &attr_guy.value);
 	if (attr_guy.val_type == Attr_String) {
-	    char *s = strdup((char *) attr_guy.value.u.p);
+	    char *s = _strdup((char *) attr_guy.value.u.p);
 	    set_string_attr(list1, attr_guy.attr_id, s);
         } else if (attr_guy.val_type == Attr_Opaque) {
             char *b = malloc(attr_guy.value.u.o.length);
@@ -341,7 +348,7 @@ add_float_attr(attr_list list, atom_t attr_id, double fvalue)
 {
     attr_value_type t = Attr_Float4;
     attr_union tmp;
-    tmp.u.f = fvalue;
+    tmp.u.f = (float) fvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
     return add_pattr(list, attr_id, t, tmp);
@@ -402,7 +409,7 @@ set_float_attr(attr_list list, atom_t attr_id, double fvalue)
 {
     attr_value_type t = Attr_Float4;
     attr_union tmp;
-    tmp.u.f = fvalue;
+    tmp.u.f = (float) fvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
     return set_pattr(list, attr_id, t, tmp);
@@ -445,7 +452,7 @@ replace_float_attr(attr_list list, atom_t attr_id, double fvalue)
 {
     attr_value_type t = Attr_Float4;
     attr_union tmp;
-    tmp.u.f = fvalue;
+    tmp.u.f = (float) fvalue;
     if (sizeof(float) == 8) t = Attr_Float8;
     if (sizeof(float) == 16) t = Attr_Float16;
     return replace_pattr(list, attr_id, t, tmp);
@@ -529,13 +536,13 @@ add_attr(attr_list list, atom_t attr_id, attr_value_type val_type, attr_value va
     attr_union value;
     switch(val_type) {
     case Attr_Int8:
-	if (sizeof(long) == 8) {
-	    value.u.l = (long) val;
+	if (sizeof(size_t) == 8) {
+	    value.u.l = (size_t) val;
 	}
     case Attr_Int4:
     case Attr_Atom:
       if (sizeof(int) == 4) {
-	  value.u.i = (long)val;
+	  value.u.i = (int)(intptr_t)val;
       }
       break;
     case Attr_Float16:
@@ -588,7 +595,7 @@ add_attr(attr_list list, atom_t attr_id, attr_value_type val_type, attr_value va
 	}
 	
 	list->l.list.iattrs->iattr[i+1].attr_id = attr_id;
-	list->l.list.iattrs->iattr[i+1].value = (int4) (long) val;
+	list->l.list.iattrs->iattr[i+1].value = (int4) (size_t) val;
 	list->l.list.iattrs->int_attr_count++;
     } else {
 	int count = list->l.list.iattrs->other_attr_count;
@@ -666,13 +673,13 @@ replace_attr(attr_list list, atom_t attr_id, attr_value_type val_type, attr_valu
     assert(list->list_of_lists == 0);
     switch(val_type) {
     case Attr_Int8:
-        if (sizeof(long) == 8) {
-            value.u.l = (long) val;
+        if (sizeof(size_t) == 8) {
+            value.u.l = (size_t) val;
         }
     case Attr_Int4:
     case Attr_Atom:
         if (sizeof(int) == 4) {
-            value.u.i = (long)val;
+            value.u.i = (int)(size_t)val;
         }
         break;
     case Attr_Float16:
@@ -901,7 +908,7 @@ dump_attr_sublist(FILE *out, attr_list list, int indent)
 	    char *print_id = &c[0];
 	    if ((!isprint((int)c[0])) || (!isprint((int)c[1])) || (!isprint((int)c[2])) || 
 		(!isprint((int)c[3]))) {
-		sprintf(print_id, "0x%x", attr_id);
+		sprintf_s(print_id, sizeof(c), "0x%x", attr_id);
 	    }
 	    fprintf(out, "    { %s ('%s'), Attr_Int4, %ld }\n", print_name,
 		   print_id, (long) list->l.list.iattrs->iattr[i].value);
@@ -920,7 +927,7 @@ dump_attr_sublist(FILE *out, attr_list list, int indent)
 	memcpy(&c[0], &attr_id, 4);
 	c[4] = 0;
 	if (!isprint((int)c[0]) || !isprint((int)c[1]) || !isprint((int)c[2]) || !isprint((int)c[3])) {
-	    sprintf(print_id, "0x%x", attr_id);
+	    sprintf_s(print_id, sizeof(c), "0x%x", attr_id);
 	}
         if (attr_name == NULL)
             print_name = "<null attr name>";
@@ -1116,7 +1123,7 @@ attr_list_to_string(attr_list attrs)
 {
     char * result;
     void *encoded;
-    int len;
+    size_t len;
     AttrBuffer tmp;
     if (attrs == NULL) return NULL;
     tmp = create_AttrBuffer();
@@ -1135,7 +1142,7 @@ attr_list_from_string(const char * str)
     unsigned char *output;
     if (str == NULL) return NULL;
 
-    output = (unsigned char *)strdup(str);
+    output = (unsigned char *)_strdup(str);
     base64_decode((unsigned char *)str, output);
     ret_val = decode_attr_from_xmit(output);
     free(output);
@@ -1206,7 +1213,7 @@ get_int_attr(attr_list l, atom_t attr_id, int *valp)
 	*valp = v.u.i;
 	break;
     case Attr_Int8:
-	if (sizeof(long) == 8) *valp = v.u.l;
+	if (sizeof(long) == 8) *valp = (int) v.u.l;
 	*valp = v.u.i;
 	break;
     case Attr_Float16:
@@ -1241,7 +1248,7 @@ get_long_attr(attr_list l, atom_t attr_id, long *valp)
 	break;
     case Attr_Int8:
 	if (sizeof(long) == 8) {
-	    *valp = v.u.l;
+	    *valp = (long) v.u.l;
 	} else {
 	    *valp = v.u.i;
 	}
@@ -1277,8 +1284,8 @@ get_double_attr(attr_list l, atom_t attr_id, double *valp)
 	*valp = v.u.i;
 	break;
     case Attr_Int8:
-	if (sizeof(long) == 8) *valp = v.u.l;
-	*valp = v.u.i;
+	if (sizeof(long) == 8) *valp = (double) v.u.l;
+	*valp = (double) v.u.i;
 	break;
     case Attr_Float16:
 	if (sizeof(double) == 16) *valp = v.u.d;
@@ -1375,7 +1382,7 @@ get_attr(attr_list list,int index, atom_t *name,
 	if (index < list->l.list.iattrs->int_attr_count) {
 	    *name = list->l.list.iattrs->iattr[index].attr_id;
 	    *val_type = Attr_Int4;
-	    *value = (attr_value) (long) list->l.list.iattrs->iattr[index].value;
+	    *value = (attr_value) (size_t) list->l.list.iattrs->iattr[index].value;
 	    return 1;
 	}
 	index -= list->l.list.iattrs->int_attr_count;
@@ -1465,8 +1472,7 @@ free_attr_list(attr_list list)
                 free((char *)list->l.list.attributes[i].value.u.p);
                 break;
             case Attr_Opaque: {
-                attr_opaque o =
-                    (attr_opaque) list->l.list.attributes[i].value.u.o;
+                attr_opaque o = list->l.list.attributes[i].value.u.o;
                 if (o.buffer) {
                     free(o.buffer);
                 }
@@ -1583,8 +1589,8 @@ attr_list_subset (attr_list l1, attr_list l2)
 	
 typedef struct Attr_tmp_buffer {
     void *tmp_buffer;
-    int tmp_buffer_size;
-    int tmp_buffer_in_use_size;
+    ssize_t tmp_buffer_size;
+    ssize_t tmp_buffer_in_use_size;
 } Attr_tmp_buffer;
 
 AttrBuffer
@@ -1611,17 +1617,17 @@ free_AttrBuffer(AttrBuffer buf)
 
 static
 void *
-add_to_tmp_buffer(AttrBuffer buf, unsigned int size)
+add_to_tmp_buffer(AttrBuffer buf, size_t size)
 {
-    int old_size = buf->tmp_buffer_in_use_size;
+    ssize_t old_size = buf->tmp_buffer_in_use_size;
     size += old_size;
 
     if (buf->tmp_buffer_size == 0) {
-	int tmp_size = Max(size, TMP_BUFFER_INIT_SIZE);
+	size_t tmp_size = Max(size, TMP_BUFFER_INIT_SIZE);
 	buf->tmp_buffer = malloc(tmp_size * sizeof(char));
 	if(buf->tmp_buffer) memset(buf->tmp_buffer, 0, tmp_size * sizeof(char));
     }
-    if (size > buf->tmp_buffer_size) {
+    if (size > (size_t)buf->tmp_buffer_size) {
 	buf->tmp_buffer = realloc(buf->tmp_buffer, size);
 	memset (((char*)buf->tmp_buffer) + buf->tmp_buffer_size, 0, size - buf->tmp_buffer_size);
 	buf->tmp_buffer_size = size;
@@ -1714,7 +1720,7 @@ recursive_encode(attr_list l, AttrBuffer b, attr_value_type t)
 
 	
 extern void *
-encode_attr_for_xmit(attr_list l, AttrBuffer b, int *length)
+encode_attr_for_xmit(attr_list l, AttrBuffer b, size_t *length)
 {
     if (l->list_of_lists == 0) {
 	if (l->l.list.iattrs->other_attr_count == 0) {

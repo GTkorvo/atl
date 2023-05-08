@@ -58,10 +58,10 @@ main()
     urquel_atom = attr_atom_from_string("Pilsner Urquel");
     tecate_atom = attr_atom_from_string("Tecate");
 
-    add_attr(list, ip_atom, Attr_Int4, (attr_value) 
+    add_attr(list, ip_atom, Attr_Int4, (attr_value) (uintptr_t)
 	     (((unsigned int)130<<24) + ((unsigned int) 207<<16) +((unsigned int)5 << 8) + 68));
     add_attr(list, fosters_atom, Attr_Int4, (attr_value) 2);
-    add_attr(list, red_stripe_atom, Attr_String, (attr_value) strdup("Uno mas"));
+    add_attr(list, red_stripe_atom, Attr_String, (attr_value) _strdup("Test String1"));
     add_double_attr(list, urquel_atom, 3.14159);
     add_opaque_attr(list, tecate_atom, 48, &buffer[0]);
     dump_attr_list(list);
@@ -69,7 +69,7 @@ main()
     attr_add_list(list, list2);
     dump_attr_list(list);
     printf("stringified is %s\n", attr_list_to_string(list2));
-    putenv("ATL_BASE64_STRINGS=1");
+    _putenv("ATL_BASE64_STRINGS=1");
     string = attr_list_to_string(list);
     printf("stringified version is >%s<\n", string);
     free_attr_list(list);
@@ -88,13 +88,13 @@ main()
 
     add_attr(list, fosters_atom, Attr_Int4, (attr_value) 2);
     add_attr(list, moosehead_atom, Attr_Int4, (attr_value) 20);
-    add_attr(list, red_stripe_atom, Attr_String, (attr_value) strdup("Uno mas"));
-    add_attr(list, yuengling_atom, Attr_String, (attr_value) strdup("Cervezas frias, por favor"));
+    add_attr(list, red_stripe_atom, Attr_String, (attr_value) _strdup("Test String1"));
+    add_attr(list, yuengling_atom, Attr_String, (attr_value) _strdup("Longer Test String 2"));
 
     add_attr(list2, moosehead_atom, Attr_Int4, (attr_value) 20);
     add_attr(list2, fosters_atom, Attr_Int4, (attr_value) 2);
-    add_attr(list2, yuengling_atom, Attr_String, (attr_value) strdup("Cervezas frias, por favor"));
-    add_attr(list2, red_stripe_atom, Attr_String, (attr_value) strdup("Uno mas"));
+    add_attr(list2, yuengling_atom, Attr_String, (attr_value) _strdup("Longer Test String 2"));
+    add_attr(list2, red_stripe_atom, Attr_String, (attr_value) _strdup("Test String1"));
 
     dump_attr_list(list);
     printf("\n");
@@ -118,17 +118,17 @@ main()
     add_attr(list, 130, Attr_Int4, (attr_value) 130);
     add_attr(list, 120, Attr_Int4, (attr_value) 120);
     add_attr(list, 110, Attr_Int4, (attr_value) 110);
-    add_attr(list, 230, Attr_String, (attr_value) strdup("Uno mas"));
-    add_attr(list, 220, Attr_String, (attr_value) strdup("Cervezas frias, por favor"));
-    add_attr(list, 210, Attr_String, (attr_value) strdup("Mas tequila!"));
+    add_attr(list, 230, Attr_String, (attr_value) _strdup("Test String1"));
+    add_attr(list, 220, Attr_String, (attr_value) _strdup("Longer Test String 2"));
+    add_attr(list, 210, Attr_String, (attr_value) _strdup("Test String 3"));
 
     add_attr(list2, 130, Attr_Int4, (attr_value) 130);
     add_attr(list2, 110, Attr_Int4, (attr_value) 110);
     add_attr(list2, 120, Attr_Int4, (attr_value) 120);
 
-    add_attr(list2, 230, Attr_String, (attr_value) strdup("Uno mas"));
-    add_attr(list2, 210, Attr_String, (attr_value) strdup("Mas tequila!"));
-    add_attr(list2, 220, Attr_String, (attr_value) strdup("Cervezas frias, por favor"));
+    add_attr(list2, 230, Attr_String, (attr_value) _strdup("Test String1"));
+    add_attr(list2, 210, Attr_String, (attr_value) _strdup("Test String 3"));
+    add_attr(list2, 220, Attr_String, (attr_value) _strdup("Longer Test String 2"));
 
     dump_attr_list(list);
     printf("\n");

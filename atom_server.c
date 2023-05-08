@@ -17,7 +17,11 @@
 #else
 #include <windows.h>
 #include <winsock.h>
+#ifndef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
+#    pragma comment(lib,"ws2_32.lib") //Winsock Library
+
 #endif
 #include <fcntl.h>
 #include <tclHash.h>
@@ -32,7 +36,7 @@ extern char *atom_to_string(Tcl_HashTable *, Tcl_HashTable *, int);
 extern int string_to_atom(Tcl_HashTable *, Tcl_HashTable *, char *);
 extern int set_string_and_atom(Tcl_HashTable *, Tcl_HashTable *, char *, int);
 static void close_client(int client);
-static void server_init(int udp_socket, int tcp_socket);
+static void server_init(SOCKET udp_socket, SOCKET tcp_socket);
 static int poll_and_handle();
 
 
@@ -52,7 +56,7 @@ atom_to_string(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_hash_tab
     if (verbose)
 	printf("Doing a atom_to_string\n");
 
-    entry = Tcl_FindHashEntry(value_hash_table, (char *) (long) value);
+    entry = Tcl_FindHashEntry(value_hash_table, (char *) (intptr_t) value);
 
     if (entry) {
 	value_string = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
@@ -91,12 +95,12 @@ set_string_and_atom(Tcl_HashTable * string_hash_table, Tcl_HashTable * value_has
     send_get_atom_msg_ptr stored;
 
     stored = (send_get_atom_msg_ptr) malloc(sizeof(send_get_atom_msg));
-    stored->atom_string = strdup(a);
+    stored->atom_string = _strdup(a);
 
     stored->atom = set_atom;
     entry = Tcl_CreateHashEntry(string_hash_table, a, &new);
     Tcl_SetHashValue(entry, stored);
-    entry = Tcl_CreateHashEntry(value_hash_table, (char *) (long) stored->atom,
+    entry = Tcl_CreateHashEntry(value_hash_table, (char *) (intptr_t) stored->atom,
 				&new);
     Tcl_SetHashValue(entry, stored);
     return_msg = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
@@ -117,7 +121,7 @@ Initialize(void)
 extern int
 establish_server_connection()
 {
-    int sock;
+    SOCKET sock;
 #ifdef MODULE
     struct socket *socket;	
 #endif
@@ -145,7 +149,7 @@ main(argc, argv)
 int argc;
 char **argv;
 {
-    int sockfd, tcpfd;
+    SOCKET sockfd, tcpfd;
     int quiet = 0;
     int run = 1;
     int no_fork = 0;
@@ -212,7 +216,7 @@ char **argv;
 
     tcpfd = socket(AF_INET, SOCK_STREAM, 0);
     if (tcpfd < 0) {
-	fprintf(stderr, "Cannot open INET socket %d\n", tcpfd);
+	fprintf(stderr, "Cannot open INET socket %zd\n", tcpfd);
 	return -1;
     }
     sock_addr.sin_family = AF_INET;
@@ -267,12 +271,12 @@ process_data(char* buf, char *response)
 	/* request translation of numeric value to a string */
 	char *str;
 	int atom = 0;
-	if (sscanf(&buf[1], "%d", &atom) != 1)
+	if (sscanf_s(&buf[1], "%d", &atom) != 1)
 	    break;
 	str = atom_to_string(stringhash, valuehash, atom);
 	response[0] = 'S';
 	if (str) {
-	    strncpy(&response[1], str, MAXBUFLEN-1);
+	    strcpy_s(&response[1], MAXBUFLEN-1, str);
 	} else {
 	    response[1] = 0;
 	}
@@ -284,7 +288,7 @@ process_data(char* buf, char *response)
 	/* request translation of string to a numeric value */
 	int value = string_to_atom(stringhash, valuehash, &buf[1]);
 
-	sprintf(response, "N%d", value);
+	sprintf_s(response, MAXBUFLEN, "N%d", value);
 	if (verbose)
 	    printf("Sending %s\n", response);
 	return;
@@ -305,7 +309,7 @@ process_data(char* buf, char *response)
 		if (verbose)
 		    printf("Atom cache inconsistency, tried to associate string \"%s\" with value %d\n	Previous association was value %d\n",
 			   str, atom, atom_entry->atom);
-		sprintf(response, "E%d %s", atom_entry->atom,
+		sprintf_s(response, MAXBUFLEN, "E%d %s", atom_entry->atom,
 			atom_entry->atom_string);
 		if (verbose)
 		    printf("Sending %s\n", response);
@@ -313,7 +317,7 @@ process_data(char* buf, char *response)
 		return;
 	    }
 	}
-	entry = Tcl_FindHashEntry(valuehash, (char *) (long) atom);
+	entry = Tcl_FindHashEntry(valuehash, (char *) (intptr_t) atom);
 	if (entry != NULL) {
 	    send_get_atom_msg_ptr atom_entry =
 		(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
@@ -322,7 +326,7 @@ process_data(char* buf, char *response)
 		if (verbose)
 		    printf("Atom cache inconsistency, tried to associate value %d with string \"%s\"\n	Previous association was string \"%s\"\n",
 			   atom, str, atom_entry->atom_string);
-		sprintf(response, "E%d %s", atom_entry->atom,
+		sprintf_s(response, MAXBUFLEN, "E%d %s", atom_entry->atom,
 			atom_entry->atom_string);
 		if (verbose)
 		    printf("Sending %s\n", response);
@@ -358,8 +362,8 @@ int sockfd;
     process_data(buf, response);
 
     if (response[0] != 0) {
-	int len = strlen(response);
-	if ((numbytes = sendto(sockfd, &response[0], len, 0,
+	size_t len = strlen(response);
+	if ((numbytes = sendto(sockfd, &response[0], (int)len, 0,
 			       (struct sockaddr *) &their_addr,
 			       sizeof(struct sockaddr))) == -1) {
 	    perror("sendto");
@@ -397,8 +401,8 @@ int sockfd;
     process_data(buf, &response[1]);
 
     if (response[1] != 0) {
-	unsigned len = strlen(&response[1]);
-	response[0] = len;
+	size_t len = strlen(&response[1]);
+	response[0] = (char) len;
 	if ((numbytes = write(sockfd, &response[0], len +1) != len + 1)) {
 	    perror("write - handle_tcp_data");
 	    close_client(sockfd);
@@ -407,16 +411,16 @@ int sockfd;
 }
 
 typedef struct _ASClient {
-    long created;
-    long timestamp;
+    time_t created;
+    time_t timestamp;
 } *ASClient;
 
 #define Max(i,j) ((i<j) ? j : i)
 
 static fd_set server_fdset;
 static ASClient clients = NULL;
-static int conn_sock_inet = -1;
-static int udp_sock = -1;
+static SOCKET conn_sock_inet = -1;
+static SOCKET udp_sock = -1;
 
 static void
 close_client(int client)
@@ -430,7 +434,7 @@ close_client(int client)
 }
 
 static void
-server_init(int udp_socket, int tcp_socket)
+server_init(SOCKET udp_socket, SOCKET tcp_socket)
 {
     int max_fd = FD_SETSIZE;	/* returns process fd table size */
     int i;
@@ -450,7 +454,7 @@ server_init(int udp_socket, int tcp_socket)
 static void
 timeout_old_conns()
 {
-    static int last_timeout_time = 0;
+    static time_t last_timeout_time = 0;
     time_t now = time(NULL);
     int i;
 
@@ -475,7 +479,7 @@ timeout_old_conns()
 static void
 timeout_oldest_conn()
 {
-    int oldest_time = 0;
+    time_t oldest_time = 0;
     int oldest_index = 0;
     int i;
 
@@ -499,7 +503,7 @@ timeout_oldest_conn()
 extern void
 accept_conn_sock(int conn_sock)
 {
-    int sock;
+    SOCKET sock;
     int delay_value = 1;
 
     struct linger linger_val;
@@ -518,7 +522,7 @@ accept_conn_sock(int conn_sock)
 	    return;
 	}
     }
-    if (verbose) LOG("\nAccepting fd %d\n", sock);
+    if (verbose) LOG("\nAccepting fd %zd\n", sock);
     if (setsockopt(sock, SOL_SOCKET, SO_LINGER, (char *) &linger_val,
 		   sizeof(struct linger)) != 0) {
 	perror("set SO_LINGER");

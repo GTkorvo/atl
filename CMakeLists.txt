@@ -8,10 +8,14 @@ set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/atl
   CACHE STRING "Installation CMake subdirectory")
 mark_as_advanced(CMAKE_INSTALL_CMAKEDIR)
 
+list(INSERT CMAKE_PREFIX_PATH 0 ${CMAKE_INSTALL_PREFIX})
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 if(NOT CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
     ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 endif()
+message(STATUS "CMAKE_LIB_OUTPUT_DIRECTORY is ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR} ")
 if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
     ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
@@ -50,6 +54,11 @@ cmake_dependent_option(BUILD_SHARED_LIBS
   "SHARED_LIBS_SUPPORTED" OFF
 )
 mark_as_advanced(BUILD_SHARED_LIBS)
+
+set(TARGET_DEP_INC)
+set(TARGET_DEP_LIBS)
+set(PKG_DEP_PKG)
+set(PKG_DEP_LIBS)
 
 include(CheckTypeSize)
 CHECK_TYPE_SIZE(double SIZEOF_DOUBLE)
@@ -140,7 +149,7 @@ install(TARGETS atl
 option(ATL_LIBRARIES_ONLY "Don't built the ATL utility executables" OFF)
 if(NOT ATL_LIBRARIES_ONLY)
   add_executable(atom_server atom_server.c)
-  target_link_libraries(atom_server atl)
+  target_link_libraries(atom_server atl ${TARGET_DEP_TGT} ${TARGET_DEP_LIBS})
 
   add_executable(attr_dump attr_dump.c)
   target_link_libraries(attr_dump atl)
@@ -207,6 +216,8 @@ if(NOT ATL_QUIET)
   message( STATUS "ATL_LIBRARIES_ONLY = ${ATL_LIBRARIES_ONLY}" )
   message( STATUS "BUILD_SHARED_LIBS = ${BUILD_SHARED_LIBS}" )
   message( STATUS "BUILD_TESTING = ${BUILD_TESTING}" )
+  message(STATUS "CMAKE_LIB_OUTPUT_DIRECTORY is ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR} ")
+
   message( STATUS "Change a value with: cmake -D<Variable>=<Value>" )
   message( STATUS "----------------------------------------------------------------------------" )
   message( STATUS )

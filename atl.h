@@ -194,7 +194,7 @@ int
 attr_list_subset(attr_list l1, attr_list l2);
 
 extern void *
-encode_attr_for_xmit(attr_list l, AttrBuffer b, int *length);
+encode_attr_for_xmit(attr_list l, AttrBuffer b, size_t *length);
 
 extern attr_list 
 decode_attr_from_xmit(void * buf);

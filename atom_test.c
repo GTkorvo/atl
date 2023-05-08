@@ -36,7 +36,7 @@ main()
     while (1) {
 	char line[80];
 	long atom = 0;
-	int len;
+	size_t len;
 	int radix = 10;
 
 	if (fgets(line, sizeof(line), stdin) == NULL)

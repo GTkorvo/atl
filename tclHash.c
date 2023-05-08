@@ -22,6 +22,11 @@
 #  include <string.h>
 
 #include "tclHash.h"
+#include "sys/types.h"
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
 
 /* 
  * When there are this many entries per bucket, on average, rebuild
@@ -40,7 +45,7 @@
  */
 
 #define RANDOM_INDEX(tablePtr, i) \
-    (((((long) (i))*1103515245) >> (tablePtr)->downShift) & (tablePtr)->mask)
+    (((((ssize_t) (i))*1103515245) >> (tablePtr)->downShift) & (tablePtr)->mask)
 
 /* 
  * Procedure prototypes for static procedures in this file:
@@ -341,18 +346,19 @@ Tcl_HashTable *tablePtr;	/* Table for which to produce stats. */
      */
 
     result = (char *) malloc((unsigned) ((NUM_COUNTERS * 60) + 300));
-    sprintf(result, "%d entries in table, %d buckets\n",
+    char * result_end = result + ((unsigned)((NUM_COUNTERS * 60) + 300));
+    sprintf_s(result, result_end - result, "%d entries in table, %d buckets\n",
 	    tablePtr->numEntries, tablePtr->numBuckets);
     p = result + strlen(result);
     for (i = 0; i < NUM_COUNTERS; i++) {
-	sprintf(p, "number of buckets with %d entries: %d\n",
+	sprintf_s(p, result_end - result, "number of buckets with %d entries: %d\n",
 		i, count[i]);
 	p += strlen(p);
     }
-    sprintf(p, "number of buckets with %d or more entries: %d\n",
+    sprintf_s(p, result_end - result, "number of buckets with %d or more entries: %d\n",
 	    NUM_COUNTERS, overflow);
     p += strlen(p);
-    sprintf(p, "average search distance for entry: %.1f", average);
+    sprintf_s(p, result_end - result, "average search distance for entry: %.1f", average);
     return result;
 }
 
@@ -514,13 +520,13 @@ int *newPtr;			/* Store info here telling whether a new *
      */
 
     *newPtr = 1;
-    hPtr = (Tcl_HashEntry *) malloc((unsigned)
-	(sizeof(Tcl_HashEntry) + strlen(key) - (sizeof(hPtr->key) - 1)));
+    hPtr = (Tcl_HashEntry *) malloc((size_t)
+	(sizeof(Tcl_HashEntry) + strlen(key) + 1 - (sizeof(hPtr->key) - 1)));
     hPtr->tablePtr = tablePtr;
     hPtr->bucketPtr = &(tablePtr->buckets[index]);
     hPtr->nextPtr = *hPtr->bucketPtr;
     hPtr->clientData = 0;
-    strcpy(hPtr->key.string, key);
+    strcpy_s(&hPtr->key.string[0], strlen(key) + 1, key);
     *hPtr->bucketPtr = hPtr;
     tablePtr->numEntries++;
 
@@ -559,7 +565,7 @@ Tcl_HashTable *tablePtr;	/* Table in which to lookup entry. */
 register char *key;		/* Key to use to find matching entry. */
 {
     register Tcl_HashEntry *hPtr;
-    int index;
+    intptr_t index;
 
     index = RANDOM_INDEX(tablePtr, key);
 
@@ -606,7 +612,7 @@ int *newPtr;			/* Store info here telling whether a new *
 				 * entry was created. */
 {
     register Tcl_HashEntry *hPtr;
-    int index;
+    intptr_t index;
 
     index = RANDOM_INDEX(tablePtr, key);
 
