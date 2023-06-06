@@ -42,7 +42,7 @@ typedef struct attr_union {
 	double d;
 	float f;
 	int i;
-	long l;
+	ssize_t l;
 	void *p;
         attr_opaque o;
     }u;
@@ -446,7 +446,7 @@ set_float_attr(attr_list list, atom_t attr_id, double fvalue)
 }
 
 extern int
-set_long_attr(attr_list list, atom_t attr_id, long lvalue)
+set_long_attr(attr_list list, atom_t attr_id, ssize_t lvalue)
 {
     attr_value_type t = Attr_Int4;
     attr_union tmp;
@@ -1237,7 +1237,7 @@ get_int_attr(attr_list l, atom_t attr_id, int *valp)
 	*valp = v.u.i;
 	break;
     case Attr_Int8:
-	if (sizeof(long) == 8) *valp = v.u.l;
+	if (sizeof(size_t) == 8) *valp = (int)v.u.l;
 	*valp = v.u.i;
 	break;
     case Attr_Float16:
@@ -1259,7 +1259,7 @@ get_int_attr(attr_list l, atom_t attr_id, int *valp)
 }
 
 int
-get_long_attr(attr_list l, atom_t attr_id, long *valp)
+get_long_attr(attr_list l, atom_t attr_id, ssize_t *valp)
 {
     attr_value_type t;
     attr_union v;
@@ -1308,7 +1308,7 @@ get_double_attr(attr_list l, atom_t attr_id, double *valp)
 	*valp = v.u.i;
 	break;
     case Attr_Int8:
-	if (sizeof(long) == 8) *valp = v.u.l;
+	if (sizeof(ssize_t) == 8) *valp = (double) v.u.l;
 	*valp = v.u.i;
 	break;
     case Attr_Float16:
