@@ -165,8 +165,7 @@ add_pattr(attr_list list, atom_t attr_id, attr_value_type val_type,
 
 static
 void
-init_global_atom_server(asp)
-atom_server *asp;
+init_global_atom_server(atom_server *asp)
 {
     static int first = 1;
     if (*asp != NULL) return;
