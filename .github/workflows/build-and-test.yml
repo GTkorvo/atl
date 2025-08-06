@@ -28,14 +28,14 @@ jobs:
       fail-fast: false
       matrix:
         buildtype: [ release, debug ]
-        os: [ centos8, ubuntu2204, ubuntu2404 ]
+        os: [ alma8, ubuntu2204, ubuntu2404 ]
         compiler: [ clang, gcc, nvhpc ]
         exclude:
-          - { os: centos8, compiler: nvhpc }
+          - { os: alma8, compiler: nvhpc }
           - { os: ubuntu2204, compiler: nvhpc }
         include:
-        - os: centos8
-          container: centos:8
+        - os: alma8
+          container: alma:8
         - os: ubuntu2404
           container: ubuntu:24.04
         - os: ubuntu2204
@@ -78,13 +78,11 @@ jobs:
       matrix:
         buildtype: [ release, debug ]
         jobname: [
-          windows-vs2019-msvc,
-          windows-vs2019-clang,
+          windows2019-vs2019-clang,
+          windows2022-vs2022-msvc,
           macos-clang ]
         include:
-        - jobname: windows-vs2019-msvc
-          vm: windows-latest
-        - jobname: windows-vs2019-clang
+        - jobname: windows2019-vs2019-clang
           vm: windows-latest
         - jobname: macos-clang
           vm: macos-latest
