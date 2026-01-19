@@ -27,18 +27,22 @@
 /*
  * Definitions that allow this header file to be used either with or
  * without ANSI C features like function prototypes.
- * Updated: Always use prototypes for C23 compatibility.
  */
 
 #undef _ANSI_ARGS_
 #undef CONST
-#define _USING_PROTOTYPES_ 1
-#define _ANSI_ARGS_(x)	x
-#define CONST const
-#ifdef __cplusplus
-#   define VARARGS(first) (first, ...)
+#if ((defined(__STDC__) || defined(SABER)) && !defined(NO_PROTOTYPE)) || defined(__cplusplus)
+#   define _USING_PROTOTYPES_ 1
+#   define _ANSI_ARGS_(x)	x
+#   define CONST const
+#   ifdef __cplusplus
+#       define VARARGS(first) (first, ...)
+#   else
+#       define VARARGS(first) ()
+#   endif
 #else
-#   define VARARGS(first) (first, ...)
+#   define _ANSI_ARGS_(x)	()
+#   define CONST
 #endif
 
 #ifdef __cplusplus
