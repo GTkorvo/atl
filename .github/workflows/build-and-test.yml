@@ -1,12 +1,14 @@
 name: Build and Test
 
-on: 
-  push: 
-    branches: 
-    - master 
-  pull_request: 
-    branches: 
-    - master 
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+  schedule:
+    - cron: '0 6 * * 1'  # Monday 6am UTC - weekly build to catch dependency issues 
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
