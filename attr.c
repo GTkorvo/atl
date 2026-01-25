@@ -2003,3 +2003,9 @@ atl_base64_encode(char *buffer, unsigned int len)
 {
     return base64_encode(buffer, len);
 }
+
+void
+atl_free(void *ptr)
+{
+    free(ptr);
+}
