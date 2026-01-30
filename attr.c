@@ -1736,7 +1736,7 @@ recursive_encode(attr_list l, AttrBuffer b, attr_value_type t)
     } else {
         int i;
         for (i=0; i<l->l.lists.sublist_count; i++) {
-	    recursive_encode(l, b, t);
+	    recursive_encode(l->l.lists.lists[i], b, t);
 	}
     }
 }
