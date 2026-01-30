@@ -70,7 +70,11 @@ main()
     add_attr(list, red_atom, Attr_Int4, (attr_value) 2);
     add_attr(list, blue_atom, Attr_String, (attr_value) strdup("The sky"));
     add_double_attr(list, magenta_atom, 3.14159);
-    add_opaque_attr(list, cyan_atom, 48, &buffer[0]);
+    {
+        char *opaque_buf = malloc(48);
+        memcpy(opaque_buf, buffer, 48);
+        add_opaque_attr(list, cyan_atom, 48, opaque_buf);
+    }
     dump_attr_list(list);
 /*    add_attr(list2, RED_ATOM, Attr_Int4, (attr_value) 4);*/
     combined = attr_add_list(list, list2);
