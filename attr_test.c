@@ -51,7 +51,9 @@ main()
 
     dump_attr_list (combined);
     free_attr_list(combined);
-    
+    free_attr_list(al);
+    free_attr_list(al2);
+
     for (i=0; i < sizeof(buffer); i++) {
         buffer[i] = 0x30 + i;
     }
@@ -80,6 +82,8 @@ main()
     string = attr_list_to_string(combined);
     printf("stringified version is >%s<\n", string);
     free_attr_list(combined);
+    free_attr_list(list);
+    free_attr_list(list2);
     list2 = attr_list_from_string(string);
     free(string);
     dump_attr_list(list2);
