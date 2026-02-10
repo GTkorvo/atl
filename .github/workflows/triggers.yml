@@ -12,6 +12,6 @@ jobs:
     if: ${{ github.event.action == 'completed' }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Post CDash Status
       run: scripts/ci/scripts/post-cdash-status.sh ${{ github.event.repository.full_name }} ${{ github.event.workflow_run.head_sha }} ${{ secrets.GITHUB_TOKEN }}
