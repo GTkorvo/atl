@@ -33,11 +33,17 @@
 #pragma warning(disable: 4996)
 #endif
 
+#include <string>
+#include <unordered_map>
+
 #include "atl.h"
 #include "atom_internal.h"
 
 #define MAXDATASIZE 100
-#include "tclHash.h"
+
+/* string<->atom cache, formerly a pair of Tcl hash tables */
+typedef std::unordered_map<std::string, send_get_atom_msg_ptr> atom_string_map;
+typedef std::unordered_map<int64_t, send_get_atom_msg_ptr> atom_value_map;
 
 #ifndef HAVE_WINDOWS_H
 typedef int SOCKET;
@@ -57,8 +63,8 @@ typedef struct _atom_server {
     struct sockaddr_in their_addr;
     int flags;
     char *server_id;
-    Tcl_HashTable string_hash_table;
-    Tcl_HashTable value_hash_table;
+    atom_string_map string_hash_table;
+    atom_value_map value_hash_table;
 } atom_server_struct;
 
 static char *atom_server_host = NULL;
@@ -111,15 +117,14 @@ handle_unexpected_msg(atom_server as, char *msg)
 {
     switch (msg[0]) {
     case 'E':{
-	    Tcl_HashEntry *entry = NULL;
 	    char *str;
 	    int atom;
 	    atom = strtol(&msg[1], &str, 10);
 	    str++;
-	    entry = Tcl_FindHashEntry(&as->string_hash_table, str);
-	    if (entry != NULL) {
+	    {
+		auto it = as->string_hash_table.find(str);
 		send_get_atom_msg_ptr atom_entry =
-		(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
+		    (it != as->string_hash_table.end()) ? it->second : NULL;
 		if ((atom_entry != NULL) && (atom_entry->atom != atom)) {
 		    printf("Warning:  Atom use inconsistency.\n");
 		    printf("\tThis program associates the string \"%s\" with atom value %d, %x, '%c%c%c%c'\n",
@@ -134,25 +139,26 @@ handle_unexpected_msg(atom_server as, char *msg)
 			);
 		}
 	    }
-	    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (int64_t)atom);
-	    if (entry != NULL) {
+	    {
+		auto it = as->value_hash_table.find((int64_t)atom);
 		send_get_atom_msg_ptr atom_entry =
-		(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
-		if ((atom_entry != NULL) &&
-		    (strcmp(atom_entry->atom_string, str) != 0)) {
-		    printf("Warning:  Atom use inconsistency.\n");
-		    printf("\tThis program associates the string \"%s\" with atom value %d, %x, '%c%c%c%c'\n",
-			   atom_entry->atom_string, atom_entry->atom,
-			   atom_entry->atom, 
-			   ((char*)&atom_entry->atom)[0],
-			   ((char*)&atom_entry->atom)[1],
-			   ((char*)&atom_entry->atom)[2],
-			   ((char*)&atom_entry->atom)[3]);
-		    printf("\tOther programs associate the string \"%s\" with that value\n", str);
+		    (it != as->value_hash_table.end()) ? it->second : NULL;
+		if (atom_entry != NULL) {
+		    if (strcmp(atom_entry->atom_string, str) != 0) {
+			printf("Warning:  Atom use inconsistency.\n");
+			printf("\tThis program associates the string \"%s\" with atom value %d, %x, '%c%c%c%c'\n",
+			       atom_entry->atom_string, atom_entry->atom,
+			       atom_entry->atom,
+			       ((char*)&atom_entry->atom)[0],
+			       ((char*)&atom_entry->atom)[1],
+			       ((char*)&atom_entry->atom)[2],
+			       ((char*)&atom_entry->atom)[3]);
+			printf("\tOther programs associate the string \"%s\" with that value\n", str);
+		    }
+		    printf("Atom cache inconsistency, tried to associate value %d %x, '%c%c%c%c' with string \"%s\"\n	Previous association was string \"%s\"\n",
+			   atom, atom, ((char*)&atom)[0], ((char*)&atom)[1],
+			   ((char*)&atom)[2], ((char*)&atom)[3], str, atom_entry->atom_string);
 		}
-		printf("Atom cache inconsistency, tried to associate value %d %x, '%c%c%c%c' with string \"%s\"\n	Previous association was string \"%s\"\n",
-		       atom, atom, ((char*)&atom)[0], ((char*)&atom)[1], 
-		       ((char*)&atom)[2], ((char*)&atom)[3], str, atom_entry->atom_string);
 	    }
 	    break;
 	}
@@ -165,10 +171,8 @@ static
 int
 enter_atom_into_cache(atom_server as, send_get_atom_msg_ptr msg)
 {
-    int new;
     char *str;
     send_get_atom_msg_ptr stored;
-    Tcl_HashEntry *entry = NULL;
 
     if ((msg->atom_string == NULL) || (msg->atom == -1))
 	return 0;
@@ -178,39 +182,35 @@ enter_atom_into_cache(atom_server as, send_get_atom_msg_ptr msg)
     stored->atom = msg->atom;
 
     /* enter into string hash table */
-    entry = Tcl_CreateHashEntry(&as->string_hash_table, str, &new);
-    if (!new) {
+    if (!as->string_hash_table.emplace(str, stored).second) {
 	/* already inserted by someone else */
 	free(stored);
 	free(str);
 	return 0;
     }
-    Tcl_SetHashValue(entry, stored);
     /* enter into value hash table */
-    entry = Tcl_CreateHashEntry(&as->value_hash_table,
-				(char *) (int64_t) stored->atom, &new);
-    if (!new) {
+    if (!as->value_hash_table.emplace((int64_t) stored->atom, stored).second) {
 	printf("Serious internal error in atom cache.  Duplicate value hash entry.\n");
 	exit(1);
     }
-    Tcl_SetHashValue(entry, stored);
     return 1;
 }
 
-void
+/* Not declared in atl.h, but referenced by C translation units (atom_test.c,
+ * evpath); keep C linkage so the symbol name stays unmangled. */
+extern "C" void
 set_string_and_atom(atom_server as, char *str, atom_t atom)
 {
     send_get_atom_msg tmp_value;
-    Tcl_HashEntry *entry = NULL, *entry2 = NULL;
     long numbytes, len;
     unsigned char buf[MAXDATASIZE];
     socklen_t addr_len = sizeof(struct sockaddr);
-    int new;
+    int is_new;
 
-    entry = Tcl_FindHashEntry(&as->string_hash_table, str);
-    if (entry != NULL) {
+    {
+	auto it = as->string_hash_table.find(str);
 	send_get_atom_msg_ptr atom_entry =
-	(send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
+	    (it != as->string_hash_table.end()) ? it->second : NULL;
 	if ((atom_entry != NULL) && (atom_entry->atom != atom)) {
 	    printf("Atom cache inconsistency, tried to associate string \"%s\" with value %d, %x, '%c%c%c%c'\n	Previous association was value %d, %x, '%c%c%c%c'\n", 
 
@@ -223,10 +223,10 @@ set_string_and_atom(atom_server as, char *str, atom_t atom)
 	    return;
 	}
     }
-    entry2 = Tcl_FindHashEntry(&as->value_hash_table, (char *) (int64_t) atom);
-   if (entry2 != NULL) {
+    {
+	auto it = as->value_hash_table.find((int64_t) atom);
 	send_get_atom_msg_ptr atom_entry =
-	(send_get_atom_msg_ptr) Tcl_GetHashValue(entry2);
+	    (it != as->value_hash_table.end()) ? it->second : NULL;
 	if ((atom_entry != NULL) &&
 	    (strcmp(atom_entry->atom_string, str) != 0)) {
 	    printf("Atom cache inconsistency, tried to associate value %d, %x, '%c%c%c%c' with string \"%s\"\n	Previous association was string \"%s\"\n",
@@ -238,9 +238,9 @@ set_string_and_atom(atom_server as, char *str, atom_t atom)
     }
     tmp_value.atom = atom;
     tmp_value.atom_string = str;
-    new = enter_atom_into_cache(as, &tmp_value);
+    is_new = enter_atom_into_cache(as, &tmp_value);
     if (as->no_server) return;
-    if (!new) return;
+    if (!is_new) return;
     /* HTTP mode - dispatch to http_atom_client */
     if (atl_http_server_url != NULL) {
 	http_set_string_and_atom(str, atom);
@@ -401,7 +401,7 @@ establish_server_connection(atom_server as, int do_fallback)
     return 1;
 }
 
-extern atom_t ATLget_hash(const char *str);
+extern "C" atom_t ATLget_hash(const char *str);
 
 extern
  atom_t
@@ -422,13 +422,12 @@ string_from_atom(atom_server as, atom_t atom)
 {
     send_get_atom_msg tmp_rec;
     send_get_atom_msg_ptr stored;
-    Tcl_HashEntry *entry = NULL;
     int numbytes;
     char buf[MAXDATASIZE];
 
-    entry = Tcl_FindHashEntry(&as->value_hash_table, (char *) (int64_t) atom);
+    auto it = as->value_hash_table.find((int64_t) atom);
 
-    if (entry == NULL) {
+    if (it == as->value_hash_table.end()) {
 	/* HTTP mode - dispatch to http_atom_client */
 	if (atl_http_server_url != NULL) {
 	    char *str = http_string_from_atom(atom);
@@ -472,7 +471,7 @@ string_from_atom(atom_server as, atom_t atom)
 	(void) enter_atom_into_cache(as, &tmp_rec);
 	stored = &tmp_rec;
     } else {
-	stored = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
+	stored = it->second;
     }
     if (stored->atom_string != NULL) {
 	return strdup(stored->atom_string);
@@ -611,24 +610,18 @@ preload_in_use_atoms(atom_server as)
 void
 free_atom_server(atom_server as)
 {
-  Tcl_HashSearch search;
-  Tcl_HashEntry * entry = Tcl_FirstHashEntry(&as->string_hash_table, &search);
-  while (entry) {
-    send_get_atom_msg_ptr stored;
-    stored = (send_get_atom_msg_ptr) Tcl_GetHashValue(entry);
+  for (auto &kv : as->string_hash_table) {
+    send_get_atom_msg_ptr stored = kv.second;
     free(stored->atom_string);
     free(stored);
-    entry = Tcl_NextHashEntry(&search);
   }
-  Tcl_DeleteHashTable(&as->string_hash_table);
-  Tcl_DeleteHashTable(&as->value_hash_table);
-  free(as);
+  delete as;
 }
 
 atom_server
 init_atom_server(atom_cache_type cache_style)
 {
-    atom_server as = (atom_server) malloc(sizeof(atom_server_struct));
+    atom_server as = new atom_server_struct();
 
     nt_socket_init_func();
     if (atom_server_host == NULL) {	/* environment override */
@@ -641,9 +634,6 @@ init_atom_server(atom_cache_type cache_style)
     as->tcp_fd = -1;
     as->use_tcp = (getenv("ATL_USE_TCP") != NULL);
     as->no_server = 1;
-
-    Tcl_InitHashTable(&as->string_hash_table, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&as->value_hash_table, TCL_ONE_WORD_KEYS);
 
     /* Check for HTTP mode */
     if (strncmp(atom_server_host, "http://", 7) == 0) {
