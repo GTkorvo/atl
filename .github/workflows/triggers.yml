@@ -8,6 +8,8 @@ on:
 jobs:
   post_cdash_link:
     runs-on: ubuntu-latest
+    permissions:
+      statuses: write
     # Only post CDash link when workflow completes (results are available)
     if: ${{ github.event.action == 'completed' }}
 
