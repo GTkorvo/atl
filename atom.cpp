@@ -67,7 +67,7 @@ typedef struct _atom_server {
     atom_value_map value_hash_table;
 } atom_server_struct;
 
-static char *atom_server_host = NULL;
+static const char *atom_server_host = NULL;
 static int establish_server_connection(atom_server as, int do_fallback);
 
 #ifdef HAVE_SYS_TIME_H
@@ -246,7 +246,7 @@ set_string_and_atom(atom_server as, char *str, atom_t atom)
 	http_set_string_and_atom(str, atom);
 	return;
     }
-    sprintf((char *)&buf[1], "A%d %s", atom, str);
+    snprintf((char *)&buf[1], MAXDATASIZE - 1, "A%d %s", atom, str);
     len = (long) strlen((char*)&buf[1]);
     if (as->use_tcp) {
 	set_blocking(as, 1);
@@ -287,7 +287,7 @@ set_string_and_atom(atom_server as, char *str, atom_t atom)
 static int atom_server_verbose = 1;
 
 static int
-fill_hostaddr(void *addr, char *hostname)
+fill_hostaddr(void *addr, const char *hostname)
 {
     struct hostent *host_addr;
     
@@ -439,7 +439,7 @@ string_from_atom(atom_server as, atom_t atom)
 	    }
 	    return str;
 	}
-	sprintf(&buf[1], "N%d", atom);
+	snprintf(&buf[1], MAXDATASIZE - 1, "N%d", atom);
 	if (establish_server_connection(as, 1) == 0) return NULL;
 	buf[0] = (char) strlen(&buf[1]);
 	if (write(as->tcp_fd, buf, buf[0]+1) != buf[0] + 1) {
@@ -508,7 +508,7 @@ static void nt_socket_init_func(){}
 #endif
 
 
-static char *in_use_values[] = {
+static const char *in_use_values[] = {
 "CM_CMANAGER_ID",
 "CM_BW_MEASURED_COF",
 "CM_BW_MEASURED_VALUE",
@@ -601,7 +601,7 @@ preload_in_use_atoms(atom_server as)
     while (in_use_values[i] != NULL) {
 	send_get_atom_msg tmp;
 	tmp.atom = ATLget_hash(in_use_values[i]);
-	tmp.atom_string = in_use_values[i];
+	tmp.atom_string = const_cast<char *>(in_use_values[i]);
 	enter_atom_into_cache(as, &tmp);
 	i++;
     }
@@ -630,14 +630,14 @@ init_atom_server(atom_cache_type cache_style)
     if (atom_server_host == NULL) {
 	atom_server_host = ATOM_SERVER_HOST;	/* from configure */
     }
-    as->server_id = atom_server_host;
+    as->server_id = const_cast<char *>(atom_server_host);
     as->tcp_fd = -1;
     as->use_tcp = (getenv("ATL_USE_TCP") != NULL);
     as->no_server = 1;
 
     /* Check for HTTP mode */
     if (strncmp(atom_server_host, "http://", 7) == 0) {
-	atl_http_server_url = atom_server_host;
+	atl_http_server_url = const_cast<char *>(atom_server_host);
 	as->he = NULL;
 	as->their_addr.sin_addr.s_addr = 0;
 	as->sockfd = -1;

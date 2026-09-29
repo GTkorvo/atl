@@ -273,7 +273,7 @@ process_data(char* buf, char *response)
 	/* request translation of string to a numeric value */
 	int value = string_to_atom(stringhash, valuehash, &buf[1]);
 
-	sprintf(response, "N%d", value);
+	snprintf(response, MAXBUFLEN, "N%d", value);
 	if (verbose)
 	    printf("Sending %s\n", response);
 	return;
@@ -293,7 +293,7 @@ process_data(char* buf, char *response)
 		if (verbose)
 		    printf("Atom cache inconsistency, tried to associate string \"%s\" with value %d\n	Previous association was value %d\n",
 			   str, atom, atom_entry->atom);
-		sprintf(response, "E%d %s", atom_entry->atom,
+		snprintf(response, MAXBUFLEN, "E%d %s", atom_entry->atom,
 			atom_entry->atom_string);
 		if (verbose)
 		    printf("Sending %s\n", response);
@@ -310,7 +310,7 @@ process_data(char* buf, char *response)
 		if (verbose)
 		    printf("Atom cache inconsistency, tried to associate value %d with string \"%s\"\n	Previous association was string \"%s\"\n",
 			   atom, str, atom_entry->atom_string);
-		sprintf(response, "E%d %s", atom_entry->atom,
+		snprintf(response, MAXBUFLEN, "E%d %s", atom_entry->atom,
 			atom_entry->atom_string);
 		if (verbose)
 		    printf("Sending %s\n", response);
