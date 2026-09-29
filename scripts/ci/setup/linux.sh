@@ -43,9 +43,13 @@ ${PKG_CMD} install -y git
 # Compilers
 ########################################
 case ${GH_YML_JOBNAME} in
+  centos*|alma*) CXXPKG="gcc-c++" ;;
+  ubuntu*)       CXXPKG="g++" ;;
+esac
+case ${GH_YML_JOBNAME} in
   *-clang) PKGS="clang gcc" ;;
-  *-gcc)   PKGS="gcc" ;;
-  *-nvhpc) PKGS="gcc" ;;
+  *-gcc)   PKGS="gcc ${CXXPKG}" ;;
+  *-nvhpc) PKGS="gcc ${CXXPKG}" ;;
 esac
 ${PKG_CMD} install -y ${PKGS}
 
