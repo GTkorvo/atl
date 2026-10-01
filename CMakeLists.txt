@@ -95,6 +95,9 @@ add_library(atl atom.cpp attr.c lookup3.c http_atom_client.c)
 if(WIN32)
   target_link_libraries(atl wsock32 ws2_32)
 endif()
+# atom.cpp registers atoms with an HTTP atom server from a background thread
+find_package(Threads REQUIRED)
+target_link_libraries(atl Threads::Threads)
 add_library(atl::atl ALIAS atl)
 
 # MSVC warning suppressions
